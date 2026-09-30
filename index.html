@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>词境 - 词汇小说社区</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              xhs: "#ff2442",
+              ink: "#222222",
+              paper: "#f7f7f7",
+              mist: "#f1f1f1",
+            },
+            boxShadow: {
+              panel: "0 2px 12px rgba(0,0,0,.055)",
+              float: "0 12px 36px rgba(0,0,0,.12)",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+
+      .scrollbar-none::-webkit-scrollbar {
+        display: none;
+      }
+
+      .scrollbar-none {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .masonry {
+        column-count: 1;
+        column-gap: 12px;
+      }
+
+      .masonry > article {
+        break-inside: avoid;
+        margin-bottom: 12px;
+      }
+
+      .masonry article p {
+        overflow-wrap: anywhere;
+      }
+
+      @media (min-width: 640px) {
+        .masonry {
+          column-count: 2;
+        }
+      }
+
+      @media (min-width: 1120px) {
+        .masonry {
+          column-count: 3;
+        }
+      }
+
+      .book-cover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(
+            180deg,
+            transparent 42%,
+            rgba(0, 0, 0, 0.16) 100%
+          );
+        pointer-events: none;
+      }
+
+      .feed-cover {
+        min-height: 146px;
+      }
+
+      .image-cover {
+        background-position: center;
+        background-size: cover;
+      }
+
+      .modal-open {
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body class="bg-paper text-ink">
+    <div class="min-h-screen">
+      <header
+        class="sticky top-0 z-30 border-b border-black/5 bg-white/95 backdrop-blur"
+      >
+        <div class="mx-auto flex h-16 max-w-[1480px] items-center gap-3 px-4 lg:px-6">
+          <a href="#" class="flex shrink-0 items-center gap-2" aria-label="词境首页">
+            <span
+              class="grid size-8 place-items-center rounded-[7px] bg-xhs text-lg font-black text-white"
+              >词</span
+            >
+            <span class="text-lg font-bold tracking-[0]">词境</span>
+          </a>
+
+          <label
+            class="ml-1 hidden max-w-[420px] flex-1 items-center gap-2 rounded-[7px] bg-mist px-3 py-2 text-sm text-neutral-500 md:flex"
+          >
+            <i data-lucide="search" class="size-4"></i>
+            <input
+              class="w-full bg-transparent outline-none placeholder:text-neutral-400"
+              placeholder="搜作品、题材、作者"
+              aria-label="搜索"
+            />
+          </label>
+
+          <div class="ml-auto flex items-center gap-1">
+            <button
+              class="grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist md:hidden"
+              aria-label="搜索"
+            >
+              <i data-lucide="search" class="size-5"></i>
+            </button>
+            <button
+              id="notificationButton"
+              class="relative grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist"
+              aria-label="通知"
+            >
+              <i data-lucide="bell" class="size-5"></i>
+              <span class="absolute right-2 top-2 size-2 rounded-full bg-xhs"></span>
+            </button>
+            <button
+              id="openComposerTop"
+              class="hidden h-10 items-center gap-2 rounded-[7px] bg-xhs px-3 text-sm font-semibold text-white hover:bg-[#ea1835] sm:flex"
+            >
+              <i data-lucide="plus" class="size-4"></i>
+              写一篇
+            </button>
+            <button
+              class="ml-1 flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#ffd5dd] text-xs font-bold text-xhs"
+              aria-label="我的主页"
+            >
+              林
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main
+        class="mx-auto grid max-w-[1480px] grid-cols-1 gap-5 px-4 py-5 pb-20 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:px-6 lg:pb-5"
+      >
+        <aside class="hidden lg:block">
+          <div class="sticky top-20 space-y-1">
+            <a
+              href="#"
+              class="flex h-11 items-center gap-3 rounded-[7px] bg-[#fff0f2] px-3 text-sm font-semibold text-xhs"
+            >
+              <i data-lucide="compass" class="size-[18px]"></i>
+              发现
+            </a>
+            <a
+              href="#"
+              class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
+            >
+              <i data-lucide="bookmark" class="size-[18px]"></i>
+              我的书架
+            </a>
+            <a
+              href="#"
+              class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
+            >
+              <i data-lucide="users-round" class="size-[18px]"></i>
+              关注更新
+            </a>
+            <a
+              href="#"
+              class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
+            >
+              <i data-lucide="library-big" class="size-[18px]"></i>
+              我的作品
+            </a>
+
+            <div class="my-4 border-t border-black/5"></div>
+            <p class="px-3 pb-2 text-xs font-medium text-neutral-400">探索题材</p>
+            <div class="flex flex-wrap gap-2 px-3">
+              <button class="topic-pill">悬疑刑侦</button>
+              <button class="topic-pill">现代言情</button>
+              <button class="topic-pill">科幻西幻</button>
+              <button class="topic-pill">都市职场</button>
+              <button class="topic-pill">校园</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="min-w-0">
+          <div
+            class="mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap scrollbar-none"
+          >
+            <button class="feed-tab active-feed-tab">为你推荐</button>
+            <button class="feed-tab">新作</button>
+            <button class="feed-tab">悬疑刑侦</button>
+            <button class="feed-tab">都市职场</button>
+            <button class="feed-tab">校园</button>
+            <button class="feed-tab">科幻西幻</button>
+            <button class="feed-tab">古风</button>
+          </div>
+
+          <button
+            id="openComposer"
+            class="mb-5 flex w-full items-center gap-4 rounded-[8px] border border-black/5 bg-white p-3 text-left shadow-panel transition hover:border-xhs/30"
+          >
+            <span
+              class="grid size-10 shrink-0 place-items-center rounded-[7px] bg-[#fff0f2] text-xhs"
+            >
+              <i data-lucide="sparkles" class="size-5"></i>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold">把今天的词汇，写成一部故事</span>
+              <span class="mt-0.5 block truncate text-xs text-neutral-500"
+                >上传背词截图，从 50 个词开始</span
+              >
+            </span>
+            <i data-lucide="chevron-right" class="mr-1 size-5 text-neutral-400"></i>
+          </button>
+
+          <div class="masonry" id="feed">
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div
+                class="book-cover image-cover feed-cover relative flex items-end p-4 text-white"
+                style="background-image: url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=800&q=80')"
+              >
+                <div class="relative z-10">
+                  <span class="mb-2 inline-flex rounded bg-white/20 px-2 py-1 text-[11px]"
+                    >密室凶案</span
+                  >
+                  <h2 class="text-xl font-bold">雨夜的第七封信</h2>
+                  <p class="mt-1 text-xs text-white/85">26 个词 · 2 章</p>
+                </div>
+              </div>
+              <div class="p-3">
+                <p class="line-clamp-3 text-sm leading-6 text-neutral-700">
+                  档案室的灯在暴雨里忽明忽暗。陆川翻开那封被
+                  <b>concealed</b> 的来信，指尖停在一行被水迹晕开的名字上。
+                </p>
+                <div class="mt-3 flex items-center justify-between text-xs text-neutral-500">
+                  <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#d7ebee]"></span>木棉警报</span>
+                  <span class="flex items-center gap-3">
+                    <span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 184</span>
+                    <span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 21</span>
+                  </span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div class="p-4">
+                <div class="mb-6 flex items-center justify-between">
+                  <span class="rounded bg-[#eff7f6] px-2 py-1 text-[11px] text-[#39736f]">都市职场</span>
+                  <span class="text-xs text-neutral-400">18 词</span>
+                </div>
+                <p class="text-[22px] font-bold leading-[1.35] text-[#173b38]">
+                  “你迟到的理由，<br />最好足够 <b class="text-xhs">convincing</b>。”
+                </p>
+                <div class="mt-8 border-t border-dashed border-[#bdd7d3] pt-3">
+                  <p class="text-xs leading-5 text-neutral-500">
+                    晨会结束前，她把项目书推回他面前，却留下了一杯还温着的咖啡。
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between border-t border-black/5 px-3 py-3 text-xs text-neutral-500">
+                <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#f5d8c5]"></span>迟到的月亮</span>
+                <span class="flex items-center gap-3"><span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 92</span><span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 8</span></span>
+              </div>
+            </article>
+
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div
+                class="book-cover image-cover feed-cover relative flex items-end p-4 text-white"
+                style="background-image: url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80')"
+              >
+                <div class="relative z-10">
+                  <span class="mb-2 inline-flex rounded bg-white/20 px-2 py-1 text-[11px]">科幻西幻</span>
+                  <h2 class="text-xl font-bold">零号星港</h2>
+                  <p class="mt-1 text-xs text-white/85">34 个词 · 3 章</p>
+                </div>
+              </div>
+              <div class="p-3">
+                <p class="line-clamp-2 text-sm leading-6 text-neutral-700">
+                  在太阳熄灭前，舰长决定 <b>abandon</b> 航线，驶向一颗从未被标记的蓝色行星。
+                </p>
+                <div class="mt-3 flex items-center justify-between text-xs text-neutral-500">
+                  <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#dcd4f6]"></span>梦游太空</span>
+                  <span class="flex items-center gap-3"><span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 320</span><span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 48</span></span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div class="bg-[#f9f0eb] p-4">
+                <div class="mb-7 flex items-center justify-between">
+                  <span class="rounded bg-[#edd8cd] px-2 py-1 text-[11px] text-[#9c4d39]">古风言情</span>
+                  <i data-lucide="feather" class="size-4 text-[#a86250]"></i>
+                </div>
+                <h2 class="font-serif text-2xl font-bold text-[#73392e]">春山不见故人</h2>
+                <p class="mt-4 text-sm leading-7 text-[#74483e]">
+                  她将那枚 <b>fragile</b> 的玉扣握在掌心，终于明白，原来离别也能有如此沉静的声音。
+                </p>
+                <p class="mt-6 text-xs text-[#ad7669]">21 个词 · 2 章</p>
+              </div>
+              <div class="flex items-center justify-between border-t border-black/5 px-3 py-3 text-xs text-neutral-500">
+                <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#d6d0bd]"></span>雁回时</span>
+                <span class="flex items-center gap-3"><span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 156</span><span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 19</span></span>
+              </div>
+            </article>
+
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div
+                class="book-cover image-cover feed-cover relative flex items-end p-4 text-white"
+                style="background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=800&q=80')"
+              >
+                <div class="relative z-10">
+                  <span class="mb-2 inline-flex rounded bg-white/20 px-2 py-1 text-[11px]">校园</span>
+                  <h2 class="text-xl font-bold">图书馆闭馆以后</h2>
+                  <p class="mt-1 text-xs text-white/85">15 个词 · 1 章</p>
+                </div>
+              </div>
+              <div class="p-3">
+                <p class="line-clamp-3 text-sm leading-6 text-neutral-700">
+                  他把借书卡递过来，轻声说：别怕，这件事没有你想的那么 <b>complicated</b>。
+                </p>
+                <div class="mt-3 flex items-center justify-between text-xs text-neutral-500">
+                  <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#f3d5da]"></span>晴天偏北</span>
+                  <span class="flex items-center gap-3"><span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 67</span><span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 5</span></span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
+            >
+              <div class="bg-[#26212b] p-4 text-white">
+                <div class="mb-7 flex items-center justify-between">
+                  <span class="rounded bg-white/10 px-2 py-1 text-[11px] text-white/80">悬疑刑侦</span>
+                  <span class="text-xs text-white/45">29 词</span>
+                </div>
+                <p class="text-[22px] font-bold leading-[1.35]">
+                  “证据不会<br />自己 <b class="text-[#ff6e81]">vanish</b>。”
+                </p>
+                <p class="mt-6 text-xs leading-5 text-white/65">
+                  电梯停在不存在的第十三层，监控里却只剩下一把倒放的雨伞。
+                </p>
+              </div>
+              <div class="flex items-center justify-between border-t border-black/5 px-3 py-3 text-xs text-neutral-500">
+                <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#cbd8d2]"></span>未命名卷宗</span>
+                <span class="flex items-center gap-3"><span class="flex items-center gap-1"><i data-lucide="heart" class="size-3.5"></i> 243</span><span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i> 32</span></span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="hidden lg:block">
+          <div class="sticky top-20 space-y-4">
+            <section class="rounded-[8px] bg-white p-4 shadow-panel">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold">今天的创作</h2>
+                <span class="text-xs text-neutral-400">测试月卡</span>
+              </div>
+              <div class="mt-4">
+                <div class="mb-2 flex items-end justify-between">
+                  <span class="text-2xl font-bold">42</span>
+                  <span class="text-xs text-neutral-500">/ 60 次</span>
+                </div>
+                <div class="h-1.5 overflow-hidden rounded-full bg-mist">
+                  <div class="h-full w-[70%] rounded-full bg-xhs"></div>
+                </div>
+              </div>
+              <button
+                id="openComposerSide"
+                class="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-[7px] bg-ink text-sm font-semibold text-white hover:bg-black"
+              >
+                <i data-lucide="pen-line" class="size-4"></i>
+                开始创作
+              </button>
+            </section>
+
+            <section class="rounded-[8px] bg-white p-4 shadow-panel">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold">热门词境</h2>
+                <button class="text-xs text-neutral-400 hover:text-xhs">换一换</button>
+              </div>
+              <ol class="mt-2 space-y-1">
+                <li class="flex items-center gap-3 py-2 text-sm"><span class="w-4 font-bold text-xhs">1</span><span class="flex-1">密闭空间</span><span class="text-xs text-neutral-400">2.8k</span></li>
+                <li class="flex items-center gap-3 py-2 text-sm"><span class="w-4 font-bold text-[#f4a33b]">2</span><span class="flex-1">校园暗恋</span><span class="text-xs text-neutral-400">2.1k</span></li>
+                <li class="flex items-center gap-3 py-2 text-sm"><span class="w-4 font-bold text-[#8a9aaf]">3</span><span class="flex-1">先婚后爱</span><span class="text-xs text-neutral-400">1.7k</span></li>
+                <li class="flex items-center gap-3 py-2 text-sm"><span class="w-4 text-neutral-400">4</span><span class="flex-1">社会派推理</span><span class="text-xs text-neutral-400">1.3k</span></li>
+                <li class="flex items-center gap-3 py-2 text-sm"><span class="w-4 text-neutral-400">5</span><span class="flex-1">星际冒险</span><span class="text-xs text-neutral-400">963</span></li>
+              </ol>
+            </section>
+          </div>
+        </aside>
+      </main>
+
+      <nav
+        class="fixed inset-x-0 bottom-0 z-30 flex h-[62px] items-center justify-around border-t border-black/5 bg-white lg:hidden"
+      >
+        <button class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
+        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bookmark" class="size-5"></i><span class="text-[10px]">书架</span></button>
+        <button id="openComposerMobile" class="-mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
+        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
+        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
+      </nav>
+    </div>
+
+    <div
+      id="composer"
+      class="fixed inset-0 z-50 hidden bg-black/35 p-0 sm:p-5"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="composerTitle"
+    >
+      <div
+        class="ml-auto flex h-full w-full max-w-[720px] flex-col bg-white shadow-float"
+      >
+        <div class="flex h-16 shrink-0 items-center border-b border-black/5 px-5">
+          <button id="closeComposer" class="grid size-9 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist" aria-label="关闭">
+            <i data-lucide="x" class="size-5"></i>
+          </button>
+          <h1 id="composerTitle" class="ml-3 text-base font-bold">创建词汇小说</h1>
+          <span id="stepLabel" class="ml-auto text-xs text-neutral-400">1 / 3</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-5 py-6">
+          <section id="stepOne" class="composer-step">
+            <div class="mb-6">
+              <p class="text-xl font-bold">导入今天的单词</p>
+              <p class="mt-2 text-sm leading-6 text-neutral-500">上传背词 App 截图，系统会识别并整理单词。</p>
+            </div>
+            <label
+              id="uploadZone"
+              class="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-neutral-300 bg-[#fafafa] px-5 text-center transition hover:border-xhs hover:bg-[#fff7f8]"
+            >
+              <input id="screenshotInput" class="hidden" type="file" accept="image/*" />
+              <span class="grid size-12 place-items-center rounded-[7px] bg-[#fff0f2] text-xhs">
+                <i data-lucide="image-up" class="size-6"></i>
+              </span>
+              <span class="mt-3 text-sm font-semibold">选择背词截图</span>
+              <span id="uploadName" class="mt-1 text-xs text-neutral-400">仅支持图片，解析后原图不会保留</span>
+            </label>
+            <div class="mt-6 flex items-center gap-3 rounded-[8px] bg-[#fff8ed] p-3 text-xs leading-5 text-[#896321]">
+              <i data-lucide="shield-check" class="size-4 shrink-0"></i>
+              <span>识别结果可在下一步调整。每次最多纳入 50 个有效英语单词。</span>
+            </div>
+          </section>
+
+          <section id="stepTwo" class="composer-step hidden">
+            <div class="mb-5">
+              <p class="text-xl font-bold">确认本次词单</p>
+              <p class="mt-2 text-sm text-neutral-500"><span id="wordCount">12</span> 个词将被写入正文，每个词至少出现 2 次。</p>
+            </div>
+            <div id="wordChips" class="flex flex-wrap gap-2"></div>
+            <button id="addDemoWords" class="mt-5 text-sm font-medium text-xhs hover:underline">换一组识别结果</button>
+          </section>
+
+          <section id="stepThree" class="composer-step hidden">
+            <div class="mb-6">
+              <p class="text-xl font-bold">设定这次故事</p>
+              <p class="mt-2 text-sm text-neutral-500">选择题材和剧情梗，剩下的交给故事。</p>
+            </div>
+            <div class="space-y-6">
+              <div>
+                <label class="mb-2 block text-sm font-semibold">小说大类</label>
+                <div class="flex flex-wrap gap-2" data-group="genre">
+                  <button class="select-chip selected-chip">悬疑刑侦</button>
+                  <button class="select-chip">现代言情</button>
+                  <button class="select-chip">古风言情</button>
+                  <button class="select-chip">科幻西幻</button>
+                  <button class="select-chip">校园</button>
+                </div>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold">细分题材</label>
+                <div class="flex flex-wrap gap-2" data-group="subgenre">
+                  <button class="select-chip selected-chip">密室凶案</button>
+                  <button class="select-chip">社会派推理</button>
+                  <button class="select-chip">灵异探案</button>
+                  <button class="select-chip">连环杀人</button>
+                </div>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-semibold">核心剧情梗 <span class="font-normal text-neutral-400">1-3 个</span></label>
+                <div class="flex flex-wrap gap-2" data-group="trope" data-multiple="true">
+                  <button class="select-chip selected-chip">多重反转</button>
+                  <button class="select-chip">密闭空间</button>
+                  <button class="select-chip">隐藏凶手</button>
+                  <button class="select-chip">双向救赎</button>
+                </div>
+              </div>
+              <div>
+                <label for="storySetup" class="mb-2 block text-sm font-semibold">剧情设定 <span class="font-normal text-neutral-400">可选</span></label>
+                <textarea id="storySetup" rows="4" class="w-full resize-none rounded-[7px] border border-neutral-200 px-3 py-2.5 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="例如：暴雨夜，一名刑警在废弃疗养院收到失踪搭档的来信。"></textarea>
+              </div>
+              <div class="flex items-center justify-between rounded-[8px] bg-mist p-3">
+                <span>
+                  <span class="block text-sm font-semibold">公开发布</span>
+                  <span class="mt-0.5 block text-xs text-neutral-500">发布后将进入审核与推荐流</span>
+                </span>
+                <button id="privacyToggle" class="relative h-7 w-12 rounded-full bg-xhs transition" aria-label="切换发布隐私">
+                  <span class="absolute right-1 top-1 size-5 rounded-full bg-white shadow transition"></span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section id="stepGenerating" class="composer-step hidden py-12 text-center">
+            <div class="mx-auto grid size-14 place-items-center rounded-full bg-[#fff0f2] text-xhs">
+              <i data-lucide="sparkles" class="size-6 animate-pulse"></i>
+            </div>
+            <p class="mt-5 text-lg font-bold">故事正在成形</p>
+            <p class="mt-2 text-sm leading-6 text-neutral-500">正在安排词汇、推进剧情并检查每个单词的出现次数。</p>
+            <div class="mx-auto mt-6 h-1.5 w-56 overflow-hidden rounded-full bg-mist">
+              <div id="generationProgress" class="h-full w-[18%] rounded-full bg-xhs transition-all duration-500"></div>
+            </div>
+            <p id="generationStatus" class="mt-3 text-xs text-neutral-400">正在规划故事结构</p>
+          </section>
+        </div>
+
+        <div id="composerFooter" class="flex shrink-0 items-center justify-between border-t border-black/5 px-5 py-4">
+          <button id="backStep" class="invisible h-10 rounded-[7px] px-3 text-sm font-medium text-neutral-600 hover:bg-mist">上一步</button>
+          <button id="nextStep" class="h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#ea1835]">识别单词</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="notificationPanel" class="fixed right-4 top-[68px] z-40 hidden w-[320px] rounded-[8px] border border-black/5 bg-white p-3 shadow-float">
+      <div class="flex items-center justify-between px-1 pb-2">
+        <h2 class="text-sm font-bold">通知</h2>
+        <button class="text-xs text-neutral-400">全部已读</button>
+      </div>
+      <div class="space-y-1">
+        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#fff0f2] text-xhs"><i data-lucide="sparkles" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">《雨夜的第七封信》</b> 已生成完成。<span class="block text-neutral-400">刚刚</span></p></div>
+        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#fff3d8] text-[#c58821]"><i data-lucide="heart" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">木棉警报</b> 收藏了你的作品。<span class="block text-neutral-400">12 分钟前</span></p></div>
+      </div>
+    </div>
+
+    <style>
+      .topic-pill {
+        border-radius: 999px;
+        background: #f1f1f1;
+        padding: 5px 9px;
+        color: #666;
+        font-size: 12px;
+      }
+
+      .topic-pill:hover {
+        background: #fff0f2;
+        color: #ff2442;
+      }
+
+      .feed-tab {
+        height: 32px;
+        border-radius: 999px;
+        padding: 0 12px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .feed-tab:hover {
+        background: #eee;
+      }
+
+      .active-feed-tab {
+        background: #222;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .select-chip {
+        border: 1px solid #e5e5e5;
+        border-radius: 999px;
+        padding: 7px 11px;
+        color: #555;
+        font-size: 13px;
+        transition: all 0.15s ease;
+      }
+
+      .select-chip:hover {
+        border-color: #ffb3bf;
+        color: #ff2442;
+      }
+
+      .selected-chip {
+        border-color: #ff2442;
+        background: #fff0f2;
+        color: #ff2442;
+        font-weight: 600;
+      }
+
+      .word-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #ececec;
+        border-radius: 7px;
+        background: #fafafa;
+        padding: 8px 9px;
+        color: #333;
+        font-size: 13px;
+      }
+
+      .word-chip button {
+        color: #aaa;
+      }
+
+      .word-chip button:hover {
+        color: #ff2442;
+      }
+    </style>
+
+    <script>
+      const composer = document.getElementById("composer");
+      const openButtons = [
+        document.getElementById("openComposer"),
+        document.getElementById("openComposerTop"),
+        document.getElementById("openComposerSide"),
+        document.getElementById("openComposerMobile"),
+      ];
+      const closeComposer = document.getElementById("closeComposer");
+      const nextStep = document.getElementById("nextStep");
+      const backStep = document.getElementById("backStep");
+      const footer = document.getElementById("composerFooter");
+      const stepLabel = document.getElementById("stepLabel");
+      const steps = [
+        document.getElementById("stepOne"),
+        document.getElementById("stepTwo"),
+        document.getElementById("stepThree"),
+      ];
+      const screenshotInput = document.getElementById("screenshotInput");
+      const uploadName = document.getElementById("uploadName");
+      const wordChips = document.getElementById("wordChips");
+      const wordCount = document.getElementById("wordCount");
+      const privacyToggle = document.getElementById("privacyToggle");
+      const notificationButton = document.getElementById("notificationButton");
+      const notificationPanel = document.getElementById("notificationPanel");
+      let currentStep = 0;
+      let isPublic = true;
+      let words = [
+        "concealed",
+        "abandon",
+        "convincing",
+        "fragile",
+        "complicated",
+        "vanish",
+        "anticipate",
+        "reluctant",
+        "evidence",
+        "suspicious",
+        "inevitable",
+        "reveal",
+      ];
+
+      function refreshIcons() {
+        lucide.createIcons();
+      }
+
+      function openComposer() {
+        composer.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+        setStep(0);
+      }
+
+      function hideComposer() {
+        composer.classList.add("hidden");
+        document.body.classList.remove("modal-open");
+      }
+
+      function setStep(step) {
+        currentStep = step;
+        steps.forEach((item, index) => item.classList.toggle("hidden", index !== step));
+        document.getElementById("stepGenerating").classList.add("hidden");
+        footer.classList.remove("hidden");
+        stepLabel.textContent = `${step + 1} / 3`;
+        backStep.classList.toggle("invisible", step === 0);
+        nextStep.textContent = ["识别单词", "下一步", "开始生成"][step];
+        renderWords();
+      }
+
+      function renderWords() {
+        wordChips.innerHTML = "";
+        words.forEach((word, index) => {
+          const chip = document.createElement("span");
+          chip.className = "word-chip";
+          chip.innerHTML = `<span>${word}</span><button aria-label="删除 ${word}" data-word-index="${index}"><i data-lucide="x" class="size-3.5"></i></button>`;
+          wordChips.appendChild(chip);
+        });
+        wordCount.textContent = words.length;
+        refreshIcons();
+      }
+
+      function startGeneration() {
+        steps.forEach((item) => item.classList.add("hidden"));
+        footer.classList.add("hidden");
+        stepLabel.textContent = "生成中";
+        const generating = document.getElementById("stepGenerating");
+        generating.classList.remove("hidden");
+        const progress = document.getElementById("generationProgress");
+        const status = document.getElementById("generationStatus");
+        const states = [
+          ["正在规划故事结构", "36%"],
+          ["正在安排单词出场", "63%"],
+          ["正在检查词汇覆盖", "84%"],
+          ["故事已写入作品库", "100%"],
+        ];
+        states.forEach(([text, width], index) => {
+          setTimeout(() => {
+            status.textContent = text;
+            progress.style.width = width;
+          }, (index + 1) * 750);
+        });
+        setTimeout(() => {
+          hideComposer();
+          notificationPanel.classList.remove("hidden");
+        }, 3800);
+      }
+
+      openButtons.forEach((button) => button && button.addEventListener("click", openComposer));
+      closeComposer.addEventListener("click", hideComposer);
+      composer.addEventListener("click", (event) => {
+        if (event.target === composer) hideComposer();
+      });
+
+      screenshotInput.addEventListener("change", () => {
+        const file = screenshotInput.files[0];
+        uploadName.textContent = file ? `${file.name} · 已准备识别` : "仅支持图片，解析后原图不会保留";
+      });
+
+      nextStep.addEventListener("click", () => {
+        if (currentStep === 0) {
+          uploadName.textContent = screenshotInput.files[0]
+            ? `${screenshotInput.files[0].name} · 已识别 12 个单词`
+            : "未选择截图 · 已载入演示词单";
+          setStep(1);
+        } else if (currentStep === 1) {
+          setStep(2);
+        } else {
+          startGeneration();
+        }
+      });
+
+      backStep.addEventListener("click", () => {
+        if (currentStep > 0) setStep(currentStep - 1);
+      });
+
+      wordChips.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-word-index]");
+        if (!button) return;
+        words.splice(Number(button.dataset.wordIndex), 1);
+        renderWords();
+      });
+
+      document.getElementById("addDemoWords").addEventListener("click", () => {
+        words = ["reflect", "tension", "genuine", "observe", "shelter", "hesitate", "persistent", "remarkable", "previous", "ordinary", "confirm", "indicate"];
+        renderWords();
+      });
+
+      document.querySelectorAll("[data-group]").forEach((group) => {
+        group.addEventListener("click", (event) => {
+          const target = event.target.closest(".select-chip");
+          if (!target) return;
+          const multiple = group.dataset.multiple === "true";
+          if (multiple) {
+            const selected = group.querySelectorAll(".selected-chip");
+            if (!target.classList.contains("selected-chip") && selected.length >= 3) return;
+            target.classList.toggle("selected-chip");
+          } else {
+            group.querySelectorAll(".select-chip").forEach((chip) => chip.classList.remove("selected-chip"));
+            target.classList.add("selected-chip");
+          }
+        });
+      });
+
+      privacyToggle.addEventListener("click", () => {
+        isPublic = !isPublic;
+        privacyToggle.classList.toggle("bg-xhs", isPublic);
+        privacyToggle.classList.toggle("bg-neutral-300", !isPublic);
+        privacyToggle.querySelector("span").classList.toggle("right-1", isPublic);
+        privacyToggle.querySelector("span").classList.toggle("left-1", !isPublic);
+        privacyToggle.previousElementSibling.querySelector("span").textContent = isPublic ? "公开发布" : "私密保存";
+        privacyToggle.previousElementSibling.querySelector("span + span").textContent = isPublic ? "发布后将进入审核与推荐流" : "仅自己可见";
+      });
+
+      notificationButton.addEventListener("click", () => {
+        notificationPanel.classList.toggle("hidden");
+      });
+
+      document.querySelectorAll(".feed-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".feed-tab").forEach((item) => item.classList.remove("active-feed-tab"));
+          tab.classList.add("active-feed-tab");
+        });
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideComposer();
+          notificationPanel.classList.add("hidden");
+        }
+      });
+
+      refreshIcons();
+    </script>
+  </body>
+</html>
