@@ -693,13 +693,37 @@
         </div>
       </header>
 
-      <main id="profileGuest" class="mx-auto flex min-h-[calc(100vh-64px)] max-w-3xl flex-col items-center justify-center px-6 pb-20 text-center">
-        <span class="grid size-20 place-items-center rounded-full bg-[#dbe8ff] text-2xl font-bold text-xhs">词</span>
-        <h2 class="mt-5 text-2xl font-bold">登录词境</h2>
-        <p class="mt-2 max-w-xs text-sm leading-6 text-neutral-500">游客可浏览、阅读和试用创作；登录后可保存作品、收藏、点赞和互动记录。</p>
-        <button id="openLoginFromProfile" class="mt-6 h-11 rounded-[7px] bg-xhs px-8 text-sm font-semibold text-white hover:bg-[#1857d6]">登录 / 注册</button>
-        <button id="continueAsGuest" type="button" class="mt-3 text-sm font-medium text-xhs hover:underline">继续以游客身份浏览</button>
-        <p class="mt-3 text-xs text-neutral-400">手机号、邮箱或微信均可登录</p>
+      <main id="profileGuest" class="mx-auto max-w-3xl px-5 pb-16 pt-10 sm:px-6">
+        <section class="mx-auto max-w-sm text-center">
+          <span class="mx-auto grid size-18 place-items-center rounded-full bg-[#dbe8ff] text-2xl font-bold text-xhs">词</span>
+          <h2 class="mt-4 text-2xl font-bold">在词境留下你的故事</h2>
+          <p class="mt-2 text-sm leading-6 text-neutral-500">游客可以浏览、阅读和试用创作。登录或注册后，作品、收藏、点赞和互动记录会保存到你的账号。</p>
+        </section>
+
+        <section class="mx-auto mt-8 max-w-sm rounded-[8px] border border-[#dce6f5] bg-white p-4 shadow-panel sm:p-5">
+          <div class="grid grid-cols-2 rounded-[7px] bg-mist p-1">
+            <button class="auth-mode rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-auth-mode="login">登录</button>
+            <button class="auth-mode rounded-[5px] py-2 text-sm text-neutral-500" data-auth-mode="register">注册</button>
+          </div>
+          <h3 id="authTitle" class="mt-5 text-lg font-bold">登录词境</h3>
+          <p id="authSubtitle" class="mt-1 text-sm text-neutral-500">继续管理你的作品与阅读记录</p>
+
+          <div class="mt-5 grid grid-cols-2 rounded-[7px] bg-mist p-1">
+            <button class="auth-method rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-auth-method="phone">手机号</button>
+            <button class="auth-method rounded-[5px] py-2 text-sm text-neutral-500" data-auth-method="email">邮箱</button>
+          </div>
+          <label id="authFieldLabel" class="mt-5 block text-sm font-medium">手机号</label>
+          <input id="authIdentifier" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入手机号" inputmode="tel" />
+          <div class="mt-3 flex gap-2">
+            <input class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="验证码（演示）" />
+            <button type="button" class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs">获取验证码</button>
+          </div>
+          <button id="authSubmit" type="button" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6]">登录</button>
+          <div class="my-5 flex items-center gap-3 text-xs text-neutral-300"><span class="h-px flex-1 bg-[#e3e9f3]"></span>或<span class="h-px flex-1 bg-[#e3e9f3]"></span></div>
+          <button id="authWechat" type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#d6e1f0] text-sm font-semibold text-[#255d50] hover:bg-[#effaf6]"><i data-lucide="message-circle" class="size-5"></i>微信登录 / 注册</button>
+          <button id="continueAsGuest" type="button" class="mt-4 w-full text-sm font-medium text-xhs hover:underline">暂不登录，继续以游客身份使用</button>
+          <p id="authNotice" class="mt-3 text-center text-xs leading-5 text-neutral-400">演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。</p>
+        </section>
       </main>
 
       <main id="profileMember" class="hidden pb-16">
@@ -739,30 +763,6 @@
         </section>
       </main>
     </section>
-
-    <div id="loginModal" class="fixed inset-0 z-[80] hidden bg-[#10192c]/45 p-4 sm:grid sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-      <section class="mx-auto mt-16 w-full max-w-[420px] rounded-[10px] bg-white p-5 shadow-float sm:mt-0 sm:p-6">
-        <div class="flex items-center justify-between">
-          <div><h2 id="loginTitle" class="text-xl font-bold">登录词境</h2><p class="mt-1 text-sm text-neutral-500">保存创作、收藏和互动记录</p></div>
-          <button id="closeLogin" type="button" data-login-close onclick="this.closest('#loginModal').classList.add('hidden')" class="grid size-9 place-items-center rounded-[7px] text-neutral-500 hover:bg-mist" aria-label="关闭登录"><i data-lucide="x" class="size-5"></i></button>
-        </div>
-        <div class="mt-6 grid grid-cols-2 rounded-[7px] bg-mist p-1">
-          <button class="login-method rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-login-method="phone">手机号</button>
-          <button class="login-method rounded-[5px] py-2 text-sm text-neutral-500" data-login-method="email">邮箱</button>
-        </div>
-        <label id="loginFieldLabel" class="mt-5 block text-sm font-medium">手机号</label>
-        <input id="loginIdentifier" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入手机号" inputmode="tel" />
-        <div class="mt-3 flex gap-2">
-          <input class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="验证码（演示）" />
-          <button class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs">获取验证码</button>
-        </div>
-        <button id="loginSubmit" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6]">登录</button>
-        <div class="my-5 flex items-center gap-3 text-xs text-neutral-300"><span class="h-px flex-1 bg-[#e3e9f3]"></span>或<span class="h-px flex-1 bg-[#e3e9f3]"></span></div>
-        <button id="wechatLogin" class="flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#d6e1f0] text-sm font-semibold text-[#255d50] hover:bg-[#effaf6]"><i data-lucide="message-circle" class="size-5"></i>微信登录</button>
-        <button type="button" data-login-close class="mt-4 w-full text-sm font-medium text-xhs hover:underline">暂不登录，继续浏览</button>
-        <p class="mt-3 text-center text-xs leading-5 text-neutral-400">演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。</p>
-      </section>
-    </div>
 
     <div
       id="composer"
@@ -1120,15 +1120,15 @@
       const messagesView = document.getElementById("messagesView");
       const profileView = document.getElementById("profileView");
       const appViews = [followingView, messagesView, profileView];
-      const loginModal = document.getElementById("loginModal");
       const profileGuest = document.getElementById("profileGuest");
       const profileMember = document.getElementById("profileMember");
       const profileContent = document.getElementById("profileContent");
-      const loginIdentifier = document.getElementById("loginIdentifier");
+      const authIdentifier = document.getElementById("authIdentifier");
       let currentStep = 0;
       let isPublic = true;
       let activeWork = null;
-      let loginMethod = "phone";
+      let authMethod = "phone";
+      let authMode = "login";
       let simulatedUser = JSON.parse(localStorage.getItem("cijing-demo-user") || "null");
       let words = [
         "concealed",
@@ -1404,30 +1404,58 @@
         openAppView(profileView);
       }
 
-      function openLogin() {
-        loginModal.classList.remove("hidden");
-        document.body.classList.add("modal-open");
-        loginIdentifier.focus();
-        refreshIcons();
+      function setAuthMethod(method) {
+        authMethod = method;
+        document.querySelectorAll(".auth-method").forEach((button) => {
+          const active = button.dataset.authMethod === method;
+          button.classList.toggle("bg-white", active);
+          button.classList.toggle("text-ink", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("shadow-sm", active);
+          button.classList.toggle("text-neutral-500", !active);
+        });
+        const isPhone = method === "phone";
+        document.getElementById("authFieldLabel").textContent = isPhone ? "手机号" : "邮箱";
+        authIdentifier.placeholder = isPhone ? "输入手机号" : "输入邮箱";
+        authIdentifier.inputMode = isPhone ? "tel" : "email";
+        authIdentifier.value = "";
       }
 
-      function closeLogin() {
-        loginModal.classList.add("hidden");
+      function setAuthMode(mode) {
+        authMode = mode;
+        document.querySelectorAll(".auth-mode").forEach((button) => {
+          const active = button.dataset.authMode === mode;
+          button.classList.toggle("bg-white", active);
+          button.classList.toggle("text-ink", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("shadow-sm", active);
+          button.classList.toggle("text-neutral-500", !active);
+        });
+        const isRegister = mode === "register";
+        document.getElementById("authTitle").textContent = isRegister ? "注册词境" : "登录词境";
+        document.getElementById("authSubtitle").textContent = isRegister
+          ? "创建账号，保存你的创作与阅读偏好"
+          : "继续管理你的作品与阅读记录";
+        document.getElementById("authSubmit").textContent = isRegister ? "注册并登录" : "登录";
+        document.getElementById("authWechat").lastChild.textContent = isRegister ? "微信注册 / 登录" : "微信登录 / 注册";
+        document.getElementById("authNotice").textContent = isRegister
+          ? "注册即表示你同意以演示模式创建本地账号。"
+          : "演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。";
       }
 
-      function completeLogin(kind) {
-        const identifier = loginIdentifier.value.trim();
+      function completeAuth(kind) {
+        const identifier = authIdentifier.value.trim();
         if (kind !== "微信" && !identifier) {
-          loginIdentifier.focus();
+          authIdentifier.focus();
           return;
         }
         simulatedUser = {
-          name: kind === "微信" ? "微信用户" : "新朋友",
+          name: kind === "微信" ? "微信用户" : authMode === "register" ? "新作者" : "新朋友",
           kind,
         };
         localStorage.setItem("cijing-demo-user", JSON.stringify(simulatedUser));
-        closeLogin();
-        openProfile();
+        renderProfile();
+        refreshIcons();
       }
 
       openButtons.forEach((button) => button && button.addEventListener("click", openComposer));
@@ -1581,34 +1609,18 @@
         });
       });
 
-      document.getElementById("openLoginFromProfile").addEventListener("click", openLogin);
-      loginModal.addEventListener("click", (event) => {
-        if (event.target === loginModal || event.target.closest("[data-login-close]")) {
-          closeLogin();
-        }
-      });
       document.getElementById("continueAsGuest").addEventListener("click", closeAppViews);
-      document.querySelectorAll(".login-method").forEach((button) => {
+      document.querySelectorAll(".auth-method").forEach((button) => {
         button.addEventListener("click", () => {
-          loginMethod = button.dataset.loginMethod;
-          document.querySelectorAll(".login-method").forEach((item) => {
-            const active = item === button;
-            item.classList.toggle("bg-white", active);
-            item.classList.toggle("text-ink", active);
-            item.classList.toggle("font-semibold", active);
-            item.classList.toggle("shadow-sm", active);
-            item.classList.toggle("text-neutral-500", !active);
-          });
-          const isPhone = loginMethod === "phone";
-          document.getElementById("loginFieldLabel").textContent = isPhone ? "手机号" : "邮箱";
-          loginIdentifier.placeholder = isPhone ? "输入手机号" : "输入邮箱";
-          loginIdentifier.inputMode = isPhone ? "tel" : "email";
-          loginIdentifier.value = "";
-          loginIdentifier.focus();
+          setAuthMethod(button.dataset.authMethod);
+          authIdentifier.focus();
         });
       });
-      document.getElementById("loginSubmit").addEventListener("click", () => completeLogin(loginMethod === "phone" ? "手机号" : "邮箱"));
-      document.getElementById("wechatLogin").addEventListener("click", () => completeLogin("微信"));
+      document.querySelectorAll(".auth-mode").forEach((button) => {
+        button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+      });
+      document.getElementById("authSubmit").addEventListener("click", () => completeAuth(authMethod === "phone" ? "手机号" : "邮箱"));
+      document.getElementById("authWechat").addEventListener("click", () => completeAuth("微信"));
       profileContent.addEventListener("click", (event) => {
         const createButton = event.target.closest("[data-profile-create]");
         const workButton = event.target.closest(".profile-work");
@@ -1680,9 +1692,7 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          if (!loginModal.classList.contains("hidden")) {
-            closeLogin();
-          } else if (appViews.some((view) => !view.classList.contains("hidden"))) {
+          if (appViews.some((view) => !view.classList.contains("hidden"))) {
             closeAppViews();
           } else if (!readerView.classList.contains("hidden")) {
             closeReader();
