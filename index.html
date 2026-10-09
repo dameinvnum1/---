@@ -10,10 +10,10 @@
         theme: {
           extend: {
             colors: {
-              xhs: "#ff2442",
-              ink: "#222222",
-              paper: "#f7f7f7",
-              mist: "#f1f1f1",
+              xhs: "#246BFD",
+              ink: "#14213A",
+              paper: "#F5F7FC",
+              mist: "#EAF0FA",
             },
             boxShadow: {
               panel: "0 2px 12px rgba(0,0,0,.055)",
@@ -35,6 +35,9 @@
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
           "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at 90% -10%, rgba(97, 156, 255, 0.16), transparent 25rem),
+          #f5f7fc;
       }
 
       .scrollbar-none::-webkit-scrollbar {
@@ -97,6 +100,28 @@
       .modal-open {
         overflow: hidden;
       }
+
+      .mobile-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        min-height: calc(62px + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      @media (max-width: 1023px) {
+        .mobile-page-content {
+          padding-bottom: calc(86px + env(safe-area-inset-bottom));
+        }
+      }
+
+      .work-card {
+        cursor: pointer;
+      }
+
+      .work-card:focus-visible {
+        outline: 3px solid rgba(36, 107, 253, 0.35);
+        outline-offset: 3px;
+      }
     </style>
   </head>
   <body class="bg-paper text-ink">
@@ -141,13 +166,14 @@
             </button>
             <button
               id="openComposerTop"
-              class="hidden h-10 items-center gap-2 rounded-[7px] bg-xhs px-3 text-sm font-semibold text-white hover:bg-[#ea1835] sm:flex"
+              class="hidden h-10 items-center gap-2 rounded-[7px] bg-xhs px-3 text-sm font-semibold text-white hover:bg-[#1857d6] sm:flex"
             >
               <i data-lucide="plus" class="size-4"></i>
               写一篇
             </button>
             <button
-              class="ml-1 flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#ffd5dd] text-xs font-bold text-xhs"
+              id="openProfileTop"
+              class="ml-1 flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#dbe8ff] text-xs font-bold text-xhs"
               aria-label="我的主页"
             >
               林
@@ -157,25 +183,20 @@
       </header>
 
       <main
-        class="mx-auto grid max-w-[1480px] grid-cols-1 gap-5 px-4 py-5 pb-20 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:px-6 lg:pb-5"
+        class="mobile-page-content mx-auto grid max-w-[1480px] grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:px-6 lg:pb-5"
       >
         <aside class="hidden lg:block">
           <div class="sticky top-20 space-y-1">
             <a
+              id="navDiscoverDesktop"
               href="#"
-              class="flex h-11 items-center gap-3 rounded-[7px] bg-[#fff0f2] px-3 text-sm font-semibold text-xhs"
+              class="flex h-11 items-center gap-3 rounded-[7px] bg-[#eaf1ff] px-3 text-sm font-semibold text-xhs"
             >
               <i data-lucide="compass" class="size-[18px]"></i>
               发现
             </a>
             <a
-              href="#"
-              class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
-            >
-              <i data-lucide="bookmark" class="size-[18px]"></i>
-              我的书架
-            </a>
-            <a
+              id="navFollowingDesktop"
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
             >
@@ -183,6 +204,7 @@
               关注更新
             </a>
             <a
+              id="navProfileDesktop"
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
             >
@@ -220,7 +242,7 @@
             class="mb-5 flex w-full items-center gap-4 rounded-[8px] border border-black/5 bg-white p-3 text-left shadow-panel transition hover:border-xhs/30"
           >
             <span
-              class="grid size-10 shrink-0 place-items-center rounded-[7px] bg-[#fff0f2] text-xhs"
+              class="grid size-10 shrink-0 place-items-center rounded-[7px] bg-[#eaf1ff] text-xhs"
             >
               <i data-lucide="sparkles" class="size-5"></i>
             </span>
@@ -364,7 +386,7 @@
                   <span class="text-xs text-white/45">29 词</span>
                 </div>
                 <p class="text-[22px] font-bold leading-[1.35]">
-                  “证据不会<br />自己 <b class="text-[#ff6e81]">vanish</b>。”
+                  “证据不会<br />自己 <b class="text-[#67a0ff]">vanish</b>。”
                 </p>
                 <p class="mt-6 text-xs leading-5 text-white/65">
                   电梯停在不存在的第十三层，监控里却只剩下一把倒放的雨伞。
@@ -421,15 +443,339 @@
       </main>
 
       <nav
-        class="fixed inset-x-0 bottom-0 z-30 flex h-[62px] items-center justify-around border-t border-black/5 bg-white lg:hidden"
+        class="mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 items-center border-t border-black/5 bg-white lg:hidden"
       >
-        <button class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bookmark" class="size-5"></i><span class="text-[10px]">书架</span></button>
-        <button id="openComposerMobile" class="-mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
+        <button id="navDiscoverMobile" class="grid w-full place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
+        <button id="navFollowingMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
+        <button id="openComposerMobile" class="justify-self-center -mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
+        <button id="navMessagesMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
+        <button id="navProfileMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
       </nav>
     </div>
+
+    <section id="workDetail" class="fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="detail-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回发现页">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <div class="ml-2 min-w-0">
+            <p id="detailHeaderTitle" class="truncate text-sm font-semibold">作品详情</p>
+            <p class="mt-0.5 text-xs text-neutral-400">词境 · 语境复习小说</p>
+          </div>
+          <button class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-500 hover:bg-mist" aria-label="更多操作">
+            <i data-lucide="ellipsis" class="size-5"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-3xl px-4 pb-28 pt-5 sm:px-6 sm:pt-7">
+        <section id="detailHero" class="relative min-h-[285px] overflow-hidden rounded-[8px] bg-[#173761] p-5 text-white shadow-panel sm:min-h-[330px] sm:p-7">
+          <div class="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,41,75,.9),rgba(15,50,100,.42))]"></div>
+          <div class="relative z-10 flex h-full min-h-[245px] flex-col items-start justify-end sm:min-h-[290px]">
+            <div class="mb-auto flex w-full items-center justify-between">
+              <span id="detailTag" class="rounded bg-white/15 px-2.5 py-1 text-xs text-white/90">密室凶案</span>
+              <span id="detailCount" class="text-xs text-white/70">26 个词 · 2 章</span>
+            </div>
+            <p class="mb-3 text-xs tracking-[0.16em] text-[#c5dcff]">VOCABULARY FICTION</p>
+            <h1 id="detailTitle" class="max-w-xl text-3xl font-bold leading-tight sm:text-4xl">雨夜的第七封信</h1>
+            <p id="detailByline" class="mt-3 text-sm text-white/80">木棉警报 · 发布于今天</p>
+          </div>
+        </section>
+
+        <section class="py-7">
+          <p id="detailHook" class="text-xl font-bold leading-8 text-ink sm:text-2xl">
+            当失踪搭档的笔迹出现在密室里，陆川必须在天亮前找出第七封信真正的收件人。
+          </p>
+          <p id="detailSummary" class="mt-4 text-sm leading-7 text-neutral-600">
+            一场暴雨封住了城郊疗养院。刑警陆川循着匿名来信进入旧档案室，却发现每一封信都指向一个被刻意隐藏的名字。
+          </p>
+        </section>
+
+        <section class="border-y border-[#dce6f5] py-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold">本篇复习词汇</h2>
+              <p class="mt-1 text-xs text-neutral-400">正文中每个词至少出现 2 次</p>
+            </div>
+            <button id="openReaderTop" class="hidden h-10 items-center gap-2 rounded-[7px] bg-xhs px-4 text-sm font-semibold text-white hover:bg-[#1857d6] sm:flex">
+              开始阅读 <i data-lucide="arrow-right" class="size-4"></i>
+            </button>
+          </div>
+          <div id="detailWords" class="mt-4 flex flex-wrap gap-2"></div>
+        </section>
+
+        <section class="py-7">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold">评论 <span id="commentCount" class="text-sm font-normal text-neutral-400">21</span></h2>
+            <button class="text-xs font-medium text-xhs">按热度</button>
+          </div>
+          <div id="commentList" class="mt-4 space-y-5">
+            <article class="flex gap-3">
+              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#dcecff] text-xs font-bold text-[#3568b8]">未</span>
+              <div>
+                <div class="flex items-center gap-2"><span class="text-sm font-semibold">未命名卷宗</span><span class="text-xs text-neutral-400">18 分钟前</span></div>
+                <p class="mt-1 text-sm leading-6 text-neutral-600">第七封信的落点太妙了，读到最后一段才反应过来前面埋的 <b>concealed</b> 是提示。</p>
+              </div>
+            </article>
+            <article class="flex gap-3">
+              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#f9e5cf] text-xs font-bold text-[#9a6032]">迟</span>
+              <div>
+                <div class="flex items-center gap-2"><span class="text-sm font-semibold">迟到的月亮</span><span class="text-xs text-neutral-400">1 小时前</span></div>
+                <p class="mt-1 text-sm leading-6 text-neutral-600">剧情读起来很顺，词汇也不会打断节奏。希望有下一章。</p>
+              </div>
+            </article>
+          </div>
+          <div class="mt-6 flex gap-2 border-t border-[#dce6f5] pt-5">
+            <input id="commentInput" class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] bg-white px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="写下你的想法…" />
+            <button id="postComment" class="h-11 rounded-[7px] bg-ink px-4 text-sm font-semibold text-white hover:bg-[#0c1830]">发布</button>
+          </div>
+        </section>
+      </main>
+
+      <div class="fixed inset-x-0 bottom-0 z-30 border-t border-[#dce6f5] bg-white/95 px-4 py-3 backdrop-blur">
+        <div class="mx-auto flex max-w-3xl items-center gap-2">
+          <button id="detailLike" class="detail-action grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="点赞">
+            <i data-lucide="heart" class="size-5"></i>
+          </button>
+          <button id="detailComment" class="grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="评论">
+            <i data-lucide="message-circle" class="size-5"></i>
+          </button>
+          <button id="detailFavorite" class="detail-action grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="收藏">
+            <i data-lucide="bookmark" class="size-5"></i>
+          </button>
+          <button id="openReaderBottom" class="ml-auto flex h-11 items-center gap-2 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#1857d6]">
+            阅读正文 <i data-lucide="book-open" class="size-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="readerView" class="fixed inset-0 z-[70] hidden overflow-y-auto bg-[#fbf8f1] text-[#27354b]">
+      <header class="sticky top-0 z-20 border-b border-[#e9e2d5] bg-[#fbf8f1]/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="reader-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-[#f0ece3]" aria-label="返回作品详情">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <div class="ml-2 min-w-0">
+            <p id="readerHeaderTitle" class="truncate text-sm font-semibold">雨夜的第七封信</p>
+            <p class="mt-0.5 text-xs text-neutral-400">第一章 · 档案室</p>
+          </div>
+          <button id="readerSettings" class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-500 hover:bg-[#f0ece3]" aria-label="阅读设置">
+            <i data-lucide="type" class="size-5"></i>
+          </button>
+        </div>
+        <div class="mx-auto h-0.5 max-w-3xl bg-[#e9e2d5]"><div class="h-full w-[38%] bg-xhs"></div></div>
+      </header>
+
+      <main class="mx-auto max-w-2xl px-6 pb-28 pt-12 sm:px-10">
+        <p class="text-center text-xs font-semibold tracking-[0.2em] text-[#5e80b7]">CHAPTER 01</p>
+        <h1 id="readerTitle" class="mt-4 text-center font-serif text-3xl font-bold leading-tight text-[#1b335b] sm:text-4xl">雨夜的第七封信</h1>
+        <p class="mt-4 text-center text-sm text-neutral-400">木棉警报 · 26 个目标词</p>
+
+        <article id="readerContent" class="reader-prose mt-12 font-serif text-[18px] leading-9 text-[#34425b] sm:text-[19px] sm:leading-10">
+          <p>暴雨把城郊疗养院困成一座孤岛。陆川站在档案室门前，听见楼道尽头的应急灯发出短促的电流声。他本该在半小时前离开，却因为那封被人刻意 <button class="reader-word" data-word="concealed">concealed</button> 的来信，重新回到了这里。</p>
+          <p>信封没有署名，纸张被雨气浸得发软，只有一行打印字依旧清晰：<em>第七封信，不该由你收到。</em></p>
+          <aside class="my-8 rounded-[7px] border border-[#cfe0ff] bg-[#eef5ff] p-4 font-sans">
+            <div class="flex items-start gap-3">
+              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-xhs text-xs font-bold text-white">词</span>
+              <div>
+                <p class="text-sm font-bold text-[#1b4f9e]">concealed <span class="font-normal text-[#6181ae]">adj.</span></p>
+                <p class="mt-1 text-sm leading-6 text-[#42628d]">被隐藏的；隐瞒的。这里形容来信被刻意藏起来。</p>
+              </div>
+            </div>
+          </aside>
+          <p>档案柜最深处传来一声轻响。陆川没有立刻靠近，他已经学会 <button class="reader-word" data-word="anticipate">anticipate</button> 恐惧出现前的静默。搭档失踪后的第十九天，他第一次在现场看见同样的信纸。</p>
+          <p>“你不该来。”身后有人说。</p>
+          <p>陆川回过头，走廊里空无一人。雨水从破窗斜着落进来，在地面汇成一条细线，尽头是一枚 <button class="reader-word" data-word="fragile">fragile</button> 的银色纽扣。</p>
+        </article>
+      </main>
+
+      <div class="fixed inset-x-0 bottom-0 z-30 border-t border-[#e9e2d5] bg-[#fbf8f1]/95 px-4 py-3 backdrop-blur">
+        <div class="mx-auto flex max-w-2xl items-center justify-between">
+          <button class="flex h-10 items-center gap-2 rounded-[7px] px-3 text-sm text-neutral-400"><i data-lucide="chevron-left" class="size-4"></i> 上一章</button>
+          <span class="text-xs text-neutral-400">1 / 2</span>
+          <button class="flex h-10 items-center gap-2 rounded-[7px] px-3 text-sm font-medium text-[#285da9] hover:bg-[#eef5ff]">下一章 <i data-lucide="chevron-right" class="size-4"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="followingView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">关注更新</h1>
+          <button class="ml-auto text-xs font-medium text-xhs">管理关注</button>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-10 pt-5 sm:px-6">
+        <div class="mb-5 flex items-center gap-3 overflow-x-auto scrollbar-none">
+          <button class="follow-filter active-follow-filter">全部</button>
+          <button class="follow-filter">今天更新</button>
+          <button class="follow-filter">最近阅读</button>
+        </div>
+        <div class="space-y-3">
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="0">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#193d6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#d7ebee]"></span><span>木棉警报</span><span>更新了作品</span></div>
+                <h2 class="mt-2 text-base font-bold">雨夜的第七封信 · 第二章</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">她在雨声里读完第七封信，却发现收件人栏写着自己的名字。</p>
+              </div>
+            </div>
+          </article>
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="2">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#4c6b58]" style="background-image:url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f3d5da]"></span><span>晴天偏北</span><span>发布了新作</span></div>
+                <h2 class="mt-2 text-base font-bold">图书馆闭馆以后</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">闭馆铃响起时，她发现借书卡背面藏着一张写给自己的旧纸条。</p>
+              </div>
+            </div>
+          </article>
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="4">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#2f4c55]" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f5d8c5]"></span><span>迟到的月亮</span><span>更新了作品</span></div>
+                <h2 class="mt-2 text-base font-bold">你迟到的理由 · 第一章</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">项目发布会前十分钟，他带着一份足够 convincing 的理由站在门口。</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </main>
+    </section>
+
+    <section id="messagesView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">消息</h1>
+          <button class="ml-auto text-xs text-neutral-400">全部已读</button>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+        <div class="grid grid-cols-4 border-b border-[#dce6f5] py-4 text-center text-xs text-neutral-500">
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="heart" class="size-5"></i></span>赞和收藏</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#fff3df] text-[#b77426]"><i data-lucide="message-circle" class="size-5"></i></span>评论</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#e8f4ef] text-[#367564]"><i data-lucide="user-plus" class="size-5"></i></span>新增关注</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eef0f8] text-[#596a91]"><i data-lucide="bell" class="size-5"></i></span>系统</button>
+        </div>
+        <div class="divide-y divide-[#dce6f5]">
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="0">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#d7ebee] text-xs font-bold text-[#3a7773]">木</span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2"><b class="text-sm">木棉警报</b><span class="text-xs text-neutral-400">刚刚</span></span>
+              <span class="mt-1 block text-sm leading-6 text-neutral-500">收藏了你的作品《雨夜的第七封信》</span>
+            </span>
+            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#1c3e6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=120&q=80')"></span>
+          </button>
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="5">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#e7d9f5] text-xs font-bold text-[#735e9f]">未</span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2"><b class="text-sm">未命名卷宗</b><span class="text-xs text-neutral-400">28 分钟前</span></span>
+              <span class="mt-1 block text-sm leading-6 text-neutral-500">评论了你的作品：结局真的没猜到。</span>
+            </span>
+            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#2a2430]" style="background-image:url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=120&q=80')"></span>
+          </button>
+          <div class="flex gap-3 py-4">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-4"></i></span>
+            <span><span class="flex items-center gap-2"><b class="text-sm">词境助手</b><span class="text-xs text-neutral-400">今天</span></span><span class="mt-1 block text-sm leading-6 text-neutral-500">你的测试月卡还剩 42 次创作额度。</span></span>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <section id="profileView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">我</h1>
+          <button class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist" aria-label="设置">
+            <i data-lucide="settings-2" class="size-5"></i>
+          </button>
+        </div>
+      </header>
+
+      <main id="profileGuest" class="mx-auto max-w-3xl px-5 pb-16 pt-10 sm:px-6">
+        <section class="mx-auto max-w-sm text-center">
+          <span class="mx-auto grid size-18 place-items-center rounded-full bg-[#dbe8ff] text-2xl font-bold text-xhs">词</span>
+          <h2 class="mt-4 text-2xl font-bold">在词境留下你的故事</h2>
+          <p class="mt-2 text-sm leading-6 text-neutral-500">游客可以浏览、阅读和试用创作。登录或注册后，作品、收藏、点赞和互动记录会保存到你的账号。</p>
+        </section>
+
+        <section class="mx-auto mt-8 max-w-sm rounded-[8px] border border-[#dce6f5] bg-white p-4 shadow-panel sm:p-5">
+          <div class="grid grid-cols-2 rounded-[7px] bg-mist p-1">
+            <button class="auth-mode rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-auth-mode="login">登录</button>
+            <button class="auth-mode rounded-[5px] py-2 text-sm text-neutral-500" data-auth-mode="register">注册</button>
+          </div>
+          <h3 id="authTitle" class="mt-5 text-lg font-bold">登录词境</h3>
+          <p id="authSubtitle" class="mt-1 text-sm text-neutral-500">继续管理你的作品与阅读记录</p>
+
+          <div class="mt-5 grid grid-cols-2 rounded-[7px] bg-mist p-1">
+            <button class="auth-method rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-auth-method="phone">手机号</button>
+            <button class="auth-method rounded-[5px] py-2 text-sm text-neutral-500" data-auth-method="email">邮箱</button>
+          </div>
+          <label id="authFieldLabel" class="mt-5 block text-sm font-medium">手机号</label>
+          <input id="authIdentifier" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入手机号" inputmode="tel" />
+          <div class="mt-3 flex gap-2">
+            <input class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="验证码（演示）" />
+            <button type="button" class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs">获取验证码</button>
+          </div>
+          <button id="authSubmit" type="button" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6]">登录</button>
+          <div class="my-5 flex items-center gap-3 text-xs text-neutral-300"><span class="h-px flex-1 bg-[#e3e9f3]"></span>或<span class="h-px flex-1 bg-[#e3e9f3]"></span></div>
+          <button id="authWechat" type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#d6e1f0] text-sm font-semibold text-[#255d50] hover:bg-[#effaf6]"><i data-lucide="message-circle" class="size-5"></i>微信登录 / 注册</button>
+          <button id="continueAsGuest" type="button" class="mt-4 w-full text-sm font-medium text-xhs hover:underline">暂不登录，继续以游客身份使用</button>
+          <p id="authNotice" class="mt-3 text-center text-xs leading-5 text-neutral-400">演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。</p>
+        </section>
+      </main>
+
+      <main id="profileMember" class="hidden pb-16">
+        <section class="border-b border-[#dce6f5] bg-white px-4 pb-5 pt-6 sm:px-6">
+          <div class="mx-auto max-w-3xl">
+            <div class="flex items-start gap-4">
+              <span class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">林</span>
+              <div class="min-w-0 flex-1 pt-1">
+                <div class="flex items-center gap-2"><h2 id="profileNickname" class="truncate text-xl font-bold">林</h2><span class="rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[10px] font-semibold text-xhs">词境新作者</span></div>
+                <p class="mt-1 text-xs text-neutral-400">词境号：cj_1024</p>
+                <p class="mt-3 text-sm leading-6 text-neutral-600">今天也把单词，写进一个值得读完的故事。</p>
+              </div>
+            </div>
+            <div class="mt-5 flex items-center gap-8">
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
+            </div>
+            <div class="mt-5 flex gap-2">
+              <button class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
+              <button class="grid size-9 place-items-center rounded-[7px] bg-[#edf3ff] text-xhs" aria-label="分享主页"><i data-lucide="share-2" class="size-4"></i></button>
+            </div>
+          </div>
+        </section>
+        <section class="mx-auto max-w-3xl">
+          <div class="grid grid-cols-3 border-b border-[#dce6f5] bg-white">
+            <button class="profile-tab active-profile-tab" data-profile-tab="works"><i data-lucide="grid-2x2" class="size-4"></i><span>作品</span></button>
+            <button class="profile-tab" data-profile-tab="favorites"><i data-lucide="bookmark" class="size-4"></i><span>收藏</span></button>
+            <button class="profile-tab" data-profile-tab="likes"><i data-lucide="heart" class="size-4"></i><span>赞过</span></button>
+          </div>
+          <div id="profileContent" class="px-4 py-12 text-center sm:px-6">
+            <span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span>
+            <h3 class="mt-4 text-base font-bold">还没有作品</h3>
+            <p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p>
+            <button id="openComposerFromProfile" class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>
+          </div>
+        </section>
+      </main>
+    </section>
 
     <div
       id="composer"
@@ -457,10 +803,10 @@
             </div>
             <label
               id="uploadZone"
-              class="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-neutral-300 bg-[#fafafa] px-5 text-center transition hover:border-xhs hover:bg-[#fff7f8]"
+              class="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-neutral-300 bg-[#fafafa] px-5 text-center transition hover:border-xhs hover:bg-[#f4f8ff]"
             >
               <input id="screenshotInput" class="hidden" type="file" accept="image/*" />
-              <span class="grid size-12 place-items-center rounded-[7px] bg-[#fff0f2] text-xhs">
+              <span class="grid size-12 place-items-center rounded-[7px] bg-[#eaf1ff] text-xhs">
                 <i data-lucide="image-up" class="size-6"></i>
               </span>
               <span class="mt-3 text-sm font-semibold">选择背词截图</span>
@@ -495,6 +841,11 @@
                   <button class="select-chip">古风言情</button>
                   <button class="select-chip">科幻西幻</button>
                   <button class="select-chip">校园</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="20" placeholder="输入小说大类" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -504,6 +855,11 @@
                   <button class="select-chip">社会派推理</button>
                   <button class="select-chip">灵异探案</button>
                   <button class="select-chip">连环杀人</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="20" placeholder="输入细分题材" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -513,6 +869,11 @@
                   <button class="select-chip">密闭空间</button>
                   <button class="select-chip">隐藏凶手</button>
                   <button class="select-chip">双向救赎</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="30" placeholder="输入核心剧情梗" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -532,7 +893,7 @@
           </section>
 
           <section id="stepGenerating" class="composer-step hidden py-12 text-center">
-            <div class="mx-auto grid size-14 place-items-center rounded-full bg-[#fff0f2] text-xhs">
+            <div class="mx-auto grid size-14 place-items-center rounded-full bg-[#eaf1ff] text-xhs">
               <i data-lucide="sparkles" class="size-6 animate-pulse"></i>
             </div>
             <p class="mt-5 text-lg font-bold">故事正在成形</p>
@@ -546,7 +907,7 @@
 
         <div id="composerFooter" class="flex shrink-0 items-center justify-between border-t border-black/5 px-5 py-4">
           <button id="backStep" class="invisible h-10 rounded-[7px] px-3 text-sm font-medium text-neutral-600 hover:bg-mist">上一步</button>
-          <button id="nextStep" class="h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#ea1835]">识别单词</button>
+          <button id="nextStep" class="h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#1857d6]">识别单词</button>
         </div>
       </div>
     </div>
@@ -557,7 +918,7 @@
         <button class="text-xs text-neutral-400">全部已读</button>
       </div>
       <div class="space-y-1">
-        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#fff0f2] text-xhs"><i data-lucide="sparkles" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">《雨夜的第七封信》</b> 已生成完成。<span class="block text-neutral-400">刚刚</span></p></div>
+        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">《雨夜的第七封信》</b> 已生成完成。<span class="block text-neutral-400">刚刚</span></p></div>
         <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#fff3d8] text-[#c58821]"><i data-lucide="heart" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">木棉警报</b> 收藏了你的作品。<span class="block text-neutral-400">12 分钟前</span></p></div>
       </div>
     </div>
@@ -565,15 +926,15 @@
     <style>
       .topic-pill {
         border-radius: 999px;
-        background: #f1f1f1;
+        background: #eaf0fa;
         padding: 5px 9px;
         color: #666;
         font-size: 12px;
       }
 
       .topic-pill:hover {
-        background: #fff0f2;
-        color: #ff2442;
+        background: #eaf1ff;
+        color: #246bfd;
       }
 
       .feed-tab {
@@ -604,14 +965,45 @@
       }
 
       .select-chip:hover {
-        border-color: #ffb3bf;
-        color: #ff2442;
+        border-color: #9cbeff;
+        color: #246bfd;
       }
 
       .selected-chip {
-        border-color: #ff2442;
-        background: #fff0f2;
-        color: #ff2442;
+        border-color: #246bfd;
+        background: #eaf1ff;
+        color: #246bfd;
+        font-weight: 600;
+      }
+
+      .custom-entry {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .custom-input {
+        height: 34px;
+        min-width: 0;
+        flex: 1;
+        border: 1px solid #e5e5e5;
+        border-radius: 7px;
+        padding: 0 10px;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .custom-input:focus {
+        border-color: #246bfd;
+      }
+
+      .custom-add {
+        height: 34px;
+        border-radius: 7px;
+        background: #222;
+        padding: 0 12px;
+        color: #fff;
+        font-size: 13px;
         font-weight: 600;
       }
 
@@ -632,7 +1024,69 @@
       }
 
       .word-chip button:hover {
-        color: #ff2442;
+        color: #246bfd;
+      }
+
+      .reader-prose p + p {
+        margin-top: 1.8em;
+      }
+
+      .reader-prose em {
+        color: #254f88;
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      .reader-word {
+        border-bottom: 2px solid #9fc0ff;
+        color: #175ec9;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.93em;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .reader-word:hover {
+        border-color: #246bfd;
+        color: #0f4ead;
+      }
+
+      .is-active-action {
+        border-color: #246bfd !important;
+        background: #eaf1ff;
+        color: #246bfd !important;
+      }
+
+      .follow-filter {
+        height: 32px;
+        flex: none;
+        border-radius: 999px;
+        padding: 0 12px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .active-follow-filter {
+        background: #14213a;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .profile-tab {
+        display: flex;
+        height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border-bottom: 2px solid transparent;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .active-profile-tab {
+        border-bottom-color: #246bfd;
+        color: #246bfd;
+        font-weight: 700;
       }
     </style>
 
@@ -661,8 +1115,34 @@
       const privacyToggle = document.getElementById("privacyToggle");
       const notificationButton = document.getElementById("notificationButton");
       const notificationPanel = document.getElementById("notificationPanel");
+      const workDetail = document.getElementById("workDetail");
+      const readerView = document.getElementById("readerView");
+      const detailHero = document.getElementById("detailHero");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailHeaderTitle = document.getElementById("detailHeaderTitle");
+      const detailTag = document.getElementById("detailTag");
+      const detailCount = document.getElementById("detailCount");
+      const detailByline = document.getElementById("detailByline");
+      const detailHook = document.getElementById("detailHook");
+      const detailSummary = document.getElementById("detailSummary");
+      const detailWords = document.getElementById("detailWords");
+      const readerTitle = document.getElementById("readerTitle");
+      const readerHeaderTitle = document.getElementById("readerHeaderTitle");
+      const readerContent = document.getElementById("readerContent");
+      const followingView = document.getElementById("followingView");
+      const messagesView = document.getElementById("messagesView");
+      const profileView = document.getElementById("profileView");
+      const appViews = [followingView, messagesView, profileView];
+      const profileGuest = document.getElementById("profileGuest");
+      const profileMember = document.getElementById("profileMember");
+      const profileContent = document.getElementById("profileContent");
+      const authIdentifier = document.getElementById("authIdentifier");
       let currentStep = 0;
       let isPublic = true;
+      let activeWork = null;
+      let authMethod = "phone";
+      let authMode = "login";
+      let simulatedUser = null;
       let words = [
         "concealed",
         "abandon",
@@ -676,6 +1156,99 @@
         "suspicious",
         "inevitable",
         "reveal",
+      ];
+
+      const workCatalog = [
+        {
+          title: "雨夜的第七封信",
+          tag: "密室凶案",
+          count: "26 个词 · 2 章",
+          byline: "木棉警报 · 发布于今天",
+          image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1200&q=85",
+          hook: "当失踪搭档的笔迹出现在密室里，陆川必须在天亮前找出第七封信真正的收件人。",
+          summary: "一场暴雨封住了城郊疗养院。刑警陆川循着匿名来信进入旧档案室，却发现每一封信都指向一个被刻意隐藏的名字。",
+          words: ["concealed", "anticipate", "fragile", "evidence", "suspicious", "reveal"],
+          reader: [
+            "暴雨把城郊疗养院困成一座孤岛。陆川站在档案室门前，听见楼道尽头的应急灯发出短促的电流声。他本该在半小时前离开，却因为那封被人刻意 concealed 的来信，重新回到了这里。",
+            "信封没有署名，纸张被雨气浸得发软，只有一行打印字依旧清晰：第七封信，不该由你收到。",
+            "档案柜最深处传来一声轻响。陆川没有立刻靠近，他已经学会 anticipate 恐惧出现前的静默。",
+          ],
+        },
+        {
+          title: "零号星港",
+          tag: "科幻西幻",
+          count: "34 个词 · 3 章",
+          byline: "梦游太空 · 发布于昨天",
+          image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=85",
+          hook: "太阳熄灭前四十八小时，一艘货舰偏离航线，驶向从未被标记的蓝色行星。",
+          summary: "舰长沈遥收到一段来自未来的求救信号。为了救下仍在冬眠舱里的船员，她决定 abandon 原定路线。",
+          words: ["abandon", "inevitable", "previous", "shelter", "tension", "confirm"],
+          reader: [
+            "舷窗外的星云正缓慢褪色。沈遥把手放在导航台上，最终按下了 abandon 航线的确认键。",
+            "没有人知道那颗蓝色行星是否存在。她只知道，来自未来的信号已经持续了七十二小时。",
+            "这也许是 inevitable 的选择，但她仍希望在最后一刻听到船员们醒来的声音。",
+          ],
+        },
+        {
+          title: "图书馆闭馆以后",
+          tag: "校园",
+          count: "15 个词 · 1 章",
+          byline: "晴天偏北 · 发布于今天",
+          image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=85",
+          hook: "闭馆铃响起时，她发现借书卡背面藏着一张写给自己的旧纸条。",
+          summary: "许知遥原本只想归还一本逾期的书，却在最后一排书架后遇见了三年前不告而别的同桌。",
+          words: ["complicated", "genuine", "hesitate", "ordinary", "remarkable", "reflect"],
+          reader: [
+            "闭馆铃声响过两次，许知遥才在借书卡背面看见那行字：别怕，事情没有你想得那么 complicated。",
+            "她抬头时，陆沉正站在那排旧书后面，像三年前那个没有告别的傍晚。",
+            "他说自己曾经 hesitate 太久，久到一句原本 genuine 的道歉也失去了合适的时机。",
+          ],
+        },
+        {
+          title: "春山不见故人",
+          tag: "古风言情",
+          count: "21 个词 · 2 章",
+          byline: "雁回时 · 发布于昨天",
+          image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=85",
+          hook: "一枚旧玉扣将她带回雪夜，也让她不得不面对那个早已战死的人。",
+          summary: "城门重开那日，沈青梧收到故人留下的玉扣。她循着残缺的地图入山，只为还一句迟到多年的告别。",
+          words: ["fragile", "reluctant", "previous", "persistent", "shelter", "reveal"],
+          reader: [
+            "雪落在青石阶上，沈青梧握紧那枚 fragile 的玉扣，掌心被边缘硌得发疼。",
+            "她本不愿重返春山，却被一封 persistent 的来信一次次推回旧路。",
+            "山门后的灯火 reveal 了一个她从未敢相信的事实。",
+          ],
+        },
+        {
+          title: "你迟到的理由",
+          tag: "都市职场",
+          count: "18 个词 · 2 章",
+          byline: "迟到的月亮 · 发布于今天",
+          image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
+          hook: "项目发布会前十分钟，他带着一份足够 convincing 的理由，站在她办公室门口。",
+          summary: "品牌总监秦笙最讨厌迟到。但当合作方负责人再次失约，她第一次发现自己似乎在等一个解释。",
+          words: ["convincing", "observe", "previous", "tension", "indicate", "genuine"],
+          reader: [
+            "发布会倒计时十分钟，他终于出现，带着一份看上去足够 convincing 的方案。",
+            "秦笙没有立即接过文件，只是 observe 他领口还未擦干的雨水。",
+            "空气里的 tension 比会议室的温度更明显，却也 indicate 这次迟到并不只是借口。",
+          ],
+        },
+        {
+          title: "证据不会自己 vanish",
+          tag: "悬疑刑侦",
+          count: "29 个词 · 2 章",
+          byline: "未命名卷宗 · 发布于昨天",
+          image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
+          hook: "监控停在不存在的第十三层，而尸检报告上的时间，比报案早了整整一天。",
+          summary: "法医季然在废弃写字楼里找到一把倒放的雨伞。所有证据都指向同一个答案，却又在最后一刻 vanish。",
+          words: ["vanish", "evidence", "suspicious", "confirm", "concealed", "inevitable"],
+          reader: [
+            "电梯停在不存在的第十三层。季然盯着监控画面，确信那把雨伞没有可能自行 vanish。",
+            "每一项 evidence 都指向同一个人，但报告里一个被 concealed 的时间戳改变了一切。",
+            "她需要 confirm 最后一个细节，才能知道这个结局是否真的 inevitable。",
+          ],
+        },
       ];
 
       function refreshIcons() {
@@ -742,6 +1315,161 @@
         }, 3800);
       }
 
+      function renderReaderText(text, work) {
+        let content = text;
+        work.words.forEach((word) => {
+          const matcher = new RegExp(`\\b${word}\\b`, "gi");
+          content = content.replace(
+            matcher,
+            `<button class="reader-word" data-word="${word}">${word}</button>`
+          );
+        });
+        return content;
+      }
+
+      function openWorkDetail(work) {
+        activeWork = work;
+        detailTitle.textContent = work.title;
+        detailHeaderTitle.textContent = work.title;
+        detailTag.textContent = work.tag;
+        detailCount.textContent = work.count;
+        detailByline.textContent = work.byline;
+        detailHook.textContent = work.hook;
+        detailSummary.textContent = work.summary;
+        detailHero.style.backgroundImage = `linear-gradient(135deg, rgba(15, 41, 75, .9), rgba(15, 50, 100, .35)), url("${work.image}")`;
+        detailHero.style.backgroundPosition = "center";
+        detailHero.style.backgroundSize = "cover";
+        detailWords.innerHTML = work.words
+          .map((word) => `<span class="rounded-full border border-[#cfe0ff] bg-[#eef5ff] px-3 py-1.5 text-sm font-semibold text-[#285da9]">${word}</span>`)
+          .join("");
+        workDetail.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+        workDetail.scrollTop = 0;
+        refreshIcons();
+      }
+
+      function closeWorkDetail() {
+        workDetail.classList.add("hidden");
+        document.body.classList.remove("modal-open");
+      }
+
+      function openReader() {
+        if (!activeWork) return;
+        readerTitle.textContent = activeWork.title;
+        readerHeaderTitle.textContent = activeWork.title;
+        readerContent.innerHTML = [
+          `<p>${renderReaderText(activeWork.reader[0], activeWork)}</p>`,
+          `<p>${renderReaderText(activeWork.reader[1], activeWork)}</p>`,
+          `<aside class="my-8 rounded-[7px] border border-[#cfe0ff] bg-[#eef5ff] p-4 font-sans"><div class="flex items-start gap-3"><span class="grid size-8 shrink-0 place-items-center rounded-full bg-xhs text-xs font-bold text-white">词</span><div><p class="text-sm font-bold text-[#1b4f9e]">${activeWork.words[0]} <span class="font-normal text-[#6181ae]">v. / adj.</span></p><p class="mt-1 text-sm leading-6 text-[#42628d]">点击正文中的蓝色词汇，可在语境中复习它的词性与含义。</p></div></div></aside>`,
+          `<p>${renderReaderText(activeWork.reader[2], activeWork)}</p>`,
+        ].join("");
+        readerView.classList.remove("hidden");
+        readerView.scrollTop = 0;
+        refreshIcons();
+      }
+
+      function closeReader() {
+        readerView.classList.add("hidden");
+        workDetail.classList.remove("hidden");
+        workDetail.scrollTop = 0;
+      }
+
+      function openAppView(view) {
+        appViews.forEach((item) => item.classList.add("hidden"));
+        view.classList.remove("hidden");
+        view.scrollTop = 0;
+        notificationPanel.classList.add("hidden");
+        document.body.classList.add("modal-open");
+        refreshIcons();
+      }
+
+      function closeAppViews() {
+        appViews.forEach((item) => item.classList.add("hidden"));
+        document.body.classList.remove("modal-open");
+      }
+
+      function setProfileTab(tab) {
+        document.querySelectorAll(".profile-tab").forEach((button) => {
+          button.classList.toggle("active-profile-tab", button.dataset.profileTab === tab);
+        });
+        const tabContent = {
+          works: `<span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span><h3 class="mt-4 text-base font-bold">还没有作品</h3><p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p><button data-profile-create class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>`,
+          favorites: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="0"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#183b6c]" style="background-image:url('${workCatalog[0].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已收藏</span><b class="mt-1 block truncate text-base">${workCatalog[0].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[0].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
+          likes: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="2"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#506e5d]" style="background-image:url('${workCatalog[2].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已赞过</span><b class="mt-1 block truncate text-base">${workCatalog[2].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[2].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
+        };
+        profileContent.innerHTML = tabContent[tab];
+        refreshIcons();
+      }
+
+      function renderProfile() {
+        const loggedIn = Boolean(simulatedUser);
+        profileGuest.classList.toggle("hidden", loggedIn);
+        profileMember.classList.toggle("hidden", !loggedIn);
+        if (loggedIn) {
+          document.getElementById("profileNickname").textContent = simulatedUser.name;
+          document.getElementById("openProfileTop").textContent = simulatedUser.name.slice(0, 1);
+          setProfileTab("works");
+        }
+      }
+
+      function openProfile() {
+        renderProfile();
+        openAppView(profileView);
+      }
+
+      function setAuthMethod(method) {
+        authMethod = method;
+        document.querySelectorAll(".auth-method").forEach((button) => {
+          const active = button.dataset.authMethod === method;
+          button.classList.toggle("bg-white", active);
+          button.classList.toggle("text-ink", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("shadow-sm", active);
+          button.classList.toggle("text-neutral-500", !active);
+        });
+        const isPhone = method === "phone";
+        document.getElementById("authFieldLabel").textContent = isPhone ? "手机号" : "邮箱";
+        authIdentifier.placeholder = isPhone ? "输入手机号" : "输入邮箱";
+        authIdentifier.inputMode = isPhone ? "tel" : "email";
+        authIdentifier.value = "";
+      }
+
+      function setAuthMode(mode) {
+        authMode = mode;
+        document.querySelectorAll(".auth-mode").forEach((button) => {
+          const active = button.dataset.authMode === mode;
+          button.classList.toggle("bg-white", active);
+          button.classList.toggle("text-ink", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("shadow-sm", active);
+          button.classList.toggle("text-neutral-500", !active);
+        });
+        const isRegister = mode === "register";
+        document.getElementById("authTitle").textContent = isRegister ? "注册词境" : "登录词境";
+        document.getElementById("authSubtitle").textContent = isRegister
+          ? "创建账号，保存你的创作与阅读偏好"
+          : "继续管理你的作品与阅读记录";
+        document.getElementById("authSubmit").textContent = isRegister ? "注册并登录" : "登录";
+        document.getElementById("authWechat").lastChild.textContent = isRegister ? "微信注册 / 登录" : "微信登录 / 注册";
+        document.getElementById("authNotice").textContent = isRegister
+          ? "注册即表示你同意以演示模式创建本地账号。"
+          : "演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。";
+      }
+
+      function completeAuth(kind) {
+        const identifier = authIdentifier.value.trim();
+        if (kind !== "微信" && !identifier) {
+          authIdentifier.focus();
+          return;
+        }
+        simulatedUser = {
+          name: kind === "微信" ? "微信用户" : authMode === "register" ? "新作者" : "新朋友",
+          kind,
+        };
+        renderProfile();
+        refreshIcons();
+      }
+
       openButtons.forEach((button) => button && button.addEventListener("click", openComposer));
       closeComposer.addEventListener("click", hideComposer);
       composer.addEventListener("click", (event) => {
@@ -786,6 +1514,12 @@
         group.addEventListener("click", (event) => {
           const target = event.target.closest(".select-chip");
           if (!target) return;
+          if (target.dataset.customTrigger !== undefined) {
+            const entry = group.nextElementSibling;
+            entry.classList.toggle("hidden");
+            if (!entry.classList.contains("hidden")) entry.querySelector("input").focus();
+            return;
+          }
           const multiple = group.dataset.multiple === "true";
           if (multiple) {
             const selected = group.querySelectorAll(".selected-chip");
@@ -794,6 +1528,53 @@
           } else {
             group.querySelectorAll(".select-chip").forEach((chip) => chip.classList.remove("selected-chip"));
             target.classList.add("selected-chip");
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-custom-add]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const entry = button.parentElement;
+          const input = entry.querySelector("input");
+          const value = input.value.trim();
+          const group = entry.previousElementSibling;
+          if (!value) {
+            input.focus();
+            return;
+          }
+          const existing = Array.from(group.querySelectorAll(".select-chip")).find(
+            (chip) => chip.textContent.trim() === value
+          );
+          if (existing) {
+            existing.click();
+          } else {
+            const multiple = group.dataset.multiple === "true";
+            if (multiple && group.querySelectorAll(".selected-chip").length >= 3) {
+              input.setCustomValidity("核心剧情梗最多选择 3 个");
+              input.reportValidity();
+              input.setCustomValidity("");
+              return;
+            }
+            const chip = document.createElement("button");
+            chip.className = "select-chip";
+            chip.type = "button";
+            chip.textContent = value;
+            group.insertBefore(chip, group.querySelector("[data-custom-trigger]"));
+            if (!multiple) {
+              group.querySelectorAll(".select-chip").forEach((item) => item.classList.remove("selected-chip"));
+            }
+            chip.classList.add("selected-chip");
+          }
+          input.value = "";
+          entry.classList.add("hidden");
+        });
+      });
+
+      document.querySelectorAll(".custom-input").forEach((input) => {
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            input.nextElementSibling.click();
           }
         });
       });
@@ -808,8 +1589,110 @@
         privacyToggle.previousElementSibling.querySelector("span + span").textContent = isPublic ? "发布后将进入审核与推荐流" : "仅自己可见";
       });
 
-      notificationButton.addEventListener("click", () => {
-        notificationPanel.classList.toggle("hidden");
+      notificationButton.addEventListener("click", () => openAppView(messagesView));
+      document.getElementById("openProfileTop").addEventListener("click", openProfile);
+      document.getElementById("navFollowingDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        openAppView(followingView);
+      });
+      document.getElementById("navProfileDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        openProfile();
+      });
+      document.getElementById("navDiscoverDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        closeAppViews();
+      });
+      document.getElementById("navDiscoverMobile").addEventListener("click", closeAppViews);
+      document.getElementById("navFollowingMobile").addEventListener("click", () => openAppView(followingView));
+      document.getElementById("navMessagesMobile").addEventListener("click", () => openAppView(messagesView));
+      document.getElementById("navProfileMobile").addEventListener("click", openProfile);
+      document.querySelectorAll(".app-back").forEach((button) => button.addEventListener("click", closeAppViews));
+      document.querySelectorAll(".follow-work, .message-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          closeAppViews();
+          openWorkDetail(workCatalog[Number(item.dataset.workIndex)]);
+        });
+      });
+      document.querySelectorAll(".follow-filter").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".follow-filter").forEach((item) => item.classList.remove("active-follow-filter"));
+          button.classList.add("active-follow-filter");
+        });
+      });
+
+      document.getElementById("continueAsGuest").addEventListener("click", closeAppViews);
+      document.querySelectorAll(".auth-method").forEach((button) => {
+        button.addEventListener("click", () => {
+          setAuthMethod(button.dataset.authMethod);
+          authIdentifier.focus();
+        });
+      });
+      document.querySelectorAll(".auth-mode").forEach((button) => {
+        button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+      });
+      document.getElementById("authSubmit").addEventListener("click", () => completeAuth(authMethod === "phone" ? "手机号" : "邮箱"));
+      document.getElementById("authWechat").addEventListener("click", () => completeAuth("微信"));
+      profileContent.addEventListener("click", (event) => {
+        const createButton = event.target.closest("[data-profile-create]");
+        const workButton = event.target.closest(".profile-work");
+        if (createButton) {
+          closeAppViews();
+          openComposer();
+        }
+        if (workButton) {
+          closeAppViews();
+          openWorkDetail(workCatalog[Number(workButton.dataset.workIndex)]);
+        }
+      });
+      document.querySelectorAll(".profile-tab").forEach((button) => {
+        button.addEventListener("click", () => setProfileTab(button.dataset.profileTab));
+      });
+
+      document.querySelectorAll("#feed article").forEach((card, index) => {
+        card.classList.add("work-card");
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `打开作品：${workCatalog[index].title}`);
+        card.addEventListener("click", () => openWorkDetail(workCatalog[index]));
+        card.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openWorkDetail(workCatalog[index]);
+          }
+        });
+      });
+
+      document.querySelectorAll(".detail-back").forEach((button) => {
+        button.addEventListener("click", closeWorkDetail);
+      });
+      document.querySelectorAll(".reader-back").forEach((button) => {
+        button.addEventListener("click", closeReader);
+      });
+      document.getElementById("openReaderTop").addEventListener("click", openReader);
+      document.getElementById("openReaderBottom").addEventListener("click", openReader);
+      document.querySelectorAll(".detail-action").forEach((button) => {
+        button.addEventListener("click", () => button.classList.toggle("is-active-action"));
+      });
+      document.getElementById("detailComment").addEventListener("click", () => {
+        document.getElementById("commentInput").focus();
+        document.getElementById("commentInput").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      document.getElementById("postComment").addEventListener("click", () => {
+        const input = document.getElementById("commentInput");
+        const text = input.value.trim();
+        if (!text) {
+          input.focus();
+          return;
+        }
+        const comment = document.createElement("article");
+        comment.className = "flex gap-3";
+        comment.innerHTML = `<span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#dbe8ff] text-xs font-bold text-[#3568b8]">林</span><div><div class="flex items-center gap-2"><span class="text-sm font-semibold">林</span><span class="text-xs text-neutral-400">刚刚</span></div><p class="mt-1 text-sm leading-6 text-neutral-600"></p></div>`;
+        comment.querySelector("p").textContent = text;
+        document.getElementById("commentList").prepend(comment);
+        const count = document.getElementById("commentCount");
+        count.textContent = String(Number(count.textContent) + 1);
+        input.value = "";
       });
 
       document.querySelectorAll(".feed-tab").forEach((tab) => {
@@ -821,8 +1704,16 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          hideComposer();
-          notificationPanel.classList.add("hidden");
+          if (appViews.some((view) => !view.classList.contains("hidden"))) {
+            closeAppViews();
+          } else if (!readerView.classList.contains("hidden")) {
+            closeReader();
+          } else if (!workDetail.classList.contains("hidden")) {
+            closeWorkDetail();
+          } else {
+            hideComposer();
+            notificationPanel.classList.add("hidden");
+          }
         }
       });
 
