@@ -159,6 +159,7 @@
               写一篇
             </button>
             <button
+              id="openProfileTop"
               class="ml-1 flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#dbe8ff] text-xs font-bold text-xhs"
               aria-label="我的主页"
             >
@@ -174,6 +175,7 @@
         <aside class="hidden lg:block">
           <div class="sticky top-20 space-y-1">
             <a
+              id="navDiscoverDesktop"
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] bg-[#eaf1ff] px-3 text-sm font-semibold text-xhs"
             >
@@ -181,6 +183,7 @@
               发现
             </a>
             <a
+              id="navFollowingDesktop"
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
             >
@@ -188,6 +191,7 @@
               关注更新
             </a>
             <a
+              id="navProfileDesktop"
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
             >
@@ -428,11 +432,11 @@
       <nav
         class="fixed inset-x-0 bottom-0 z-30 flex h-[62px] items-center justify-around border-t border-black/5 bg-white lg:hidden"
       >
-        <button class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
+        <button id="navDiscoverMobile" class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
+        <button id="navFollowingMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
         <button id="openComposerMobile" class="-mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
+        <button id="navMessagesMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
+        <button id="navProfileMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
       </nav>
     </div>
 
@@ -467,8 +471,7 @@
         </section>
 
         <section class="py-7">
-          <p class="text-xs font-semibold tracking-[0.12em] text-xhs">一句话钩子</p>
-          <p id="detailHook" class="mt-3 text-xl font-bold leading-8 text-ink sm:text-2xl">
+          <p id="detailHook" class="text-xl font-bold leading-8 text-ink sm:text-2xl">
             当失踪搭档的笔迹出现在密室里，陆川必须在天亮前找出第七封信真正的收件人。
           </p>
           <p id="detailSummary" class="mt-4 text-sm leading-7 text-neutral-600">
@@ -583,6 +586,181 @@
         </div>
       </div>
     </section>
+
+    <section id="followingView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">关注更新</h1>
+          <button class="ml-auto text-xs font-medium text-xhs">管理关注</button>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-10 pt-5 sm:px-6">
+        <div class="mb-5 flex items-center gap-3 overflow-x-auto scrollbar-none">
+          <button class="follow-filter active-follow-filter">全部</button>
+          <button class="follow-filter">今天更新</button>
+          <button class="follow-filter">最近阅读</button>
+        </div>
+        <div class="space-y-3">
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="0">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#193d6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#d7ebee]"></span><span>木棉警报</span><span>更新了作品</span></div>
+                <h2 class="mt-2 text-base font-bold">雨夜的第七封信 · 第二章</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">她在雨声里读完第七封信，却发现收件人栏写着自己的名字。</p>
+              </div>
+            </div>
+          </article>
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="2">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#4c6b58]" style="background-image:url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f3d5da]"></span><span>晴天偏北</span><span>发布了新作</span></div>
+                <h2 class="mt-2 text-base font-bold">图书馆闭馆以后</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">闭馆铃响起时，她发现借书卡背面藏着一张写给自己的旧纸条。</p>
+              </div>
+            </div>
+          </article>
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="4">
+            <div class="flex gap-3">
+              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#2f4c55]" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&q=80')"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f5d8c5]"></span><span>迟到的月亮</span><span>更新了作品</span></div>
+                <h2 class="mt-2 text-base font-bold">你迟到的理由 · 第一章</h2>
+                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">项目发布会前十分钟，他带着一份足够 convincing 的理由站在门口。</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </main>
+    </section>
+
+    <section id="messagesView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">消息</h1>
+          <button class="ml-auto text-xs text-neutral-400">全部已读</button>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+        <div class="grid grid-cols-4 border-b border-[#dce6f5] py-4 text-center text-xs text-neutral-500">
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="heart" class="size-5"></i></span>赞和收藏</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#fff3df] text-[#b77426]"><i data-lucide="message-circle" class="size-5"></i></span>评论</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#e8f4ef] text-[#367564]"><i data-lucide="user-plus" class="size-5"></i></span>新增关注</button>
+          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eef0f8] text-[#596a91]"><i data-lucide="bell" class="size-5"></i></span>系统</button>
+        </div>
+        <div class="divide-y divide-[#dce6f5]">
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="0">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#d7ebee] text-xs font-bold text-[#3a7773]">木</span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2"><b class="text-sm">木棉警报</b><span class="text-xs text-neutral-400">刚刚</span></span>
+              <span class="mt-1 block text-sm leading-6 text-neutral-500">收藏了你的作品《雨夜的第七封信》</span>
+            </span>
+            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#1c3e6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=120&q=80')"></span>
+          </button>
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="5">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#e7d9f5] text-xs font-bold text-[#735e9f]">未</span>
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2"><b class="text-sm">未命名卷宗</b><span class="text-xs text-neutral-400">28 分钟前</span></span>
+              <span class="mt-1 block text-sm leading-6 text-neutral-500">评论了你的作品：结局真的没猜到。</span>
+            </span>
+            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#2a2430]" style="background-image:url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=120&q=80')"></span>
+          </button>
+          <div class="flex gap-3 py-4">
+            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-4"></i></span>
+            <span><span class="flex items-center gap-2"><b class="text-sm">词境助手</b><span class="text-xs text-neutral-400">今天</span></span><span class="mt-1 block text-sm leading-6 text-neutral-500">你的测试月卡还剩 42 次创作额度。</span></span>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <section id="profileView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">我</h1>
+          <button class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist" aria-label="设置">
+            <i data-lucide="settings-2" class="size-5"></i>
+          </button>
+        </div>
+      </header>
+
+      <main id="profileGuest" class="mx-auto flex min-h-[calc(100vh-64px)] max-w-3xl flex-col items-center justify-center px-6 pb-20 text-center">
+        <span class="grid size-20 place-items-center rounded-full bg-[#dbe8ff] text-2xl font-bold text-xhs">词</span>
+        <h2 class="mt-5 text-2xl font-bold">登录词境</h2>
+        <p class="mt-2 max-w-xs text-sm leading-6 text-neutral-500">登录后管理你的作品、收藏与点赞，也能同步创作额度。</p>
+        <button id="openLoginFromProfile" class="mt-6 h-11 rounded-[7px] bg-xhs px-8 text-sm font-semibold text-white hover:bg-[#1857d6]">登录 / 注册</button>
+        <p class="mt-4 text-xs text-neutral-400">手机号、邮箱或微信均可登录</p>
+      </main>
+
+      <main id="profileMember" class="hidden pb-16">
+        <section class="border-b border-[#dce6f5] bg-white px-4 pb-5 pt-6 sm:px-6">
+          <div class="mx-auto max-w-3xl">
+            <div class="flex items-start gap-4">
+              <span class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">林</span>
+              <div class="min-w-0 flex-1 pt-1">
+                <div class="flex items-center gap-2"><h2 id="profileNickname" class="truncate text-xl font-bold">林</h2><span class="rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[10px] font-semibold text-xhs">词境新作者</span></div>
+                <p class="mt-1 text-xs text-neutral-400">词境号：cj_1024</p>
+                <p class="mt-3 text-sm leading-6 text-neutral-600">今天也把单词，写进一个值得读完的故事。</p>
+              </div>
+            </div>
+            <div class="mt-5 flex items-center gap-8">
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
+              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
+            </div>
+            <div class="mt-5 flex gap-2">
+              <button class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
+              <button class="grid size-9 place-items-center rounded-[7px] bg-[#edf3ff] text-xhs" aria-label="分享主页"><i data-lucide="share-2" class="size-4"></i></button>
+            </div>
+          </div>
+        </section>
+        <section class="mx-auto max-w-3xl">
+          <div class="grid grid-cols-3 border-b border-[#dce6f5] bg-white">
+            <button class="profile-tab active-profile-tab" data-profile-tab="works"><i data-lucide="grid-2x2" class="size-4"></i><span>作品</span></button>
+            <button class="profile-tab" data-profile-tab="favorites"><i data-lucide="bookmark" class="size-4"></i><span>收藏</span></button>
+            <button class="profile-tab" data-profile-tab="likes"><i data-lucide="heart" class="size-4"></i><span>赞过</span></button>
+          </div>
+          <div id="profileContent" class="px-4 py-12 text-center sm:px-6">
+            <span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span>
+            <h3 class="mt-4 text-base font-bold">还没有作品</h3>
+            <p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p>
+            <button id="openComposerFromProfile" class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <div id="loginModal" class="fixed inset-0 z-[80] hidden bg-[#10192c]/45 p-4 sm:grid sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+      <section class="mx-auto mt-16 w-full max-w-[420px] rounded-[10px] bg-white p-5 shadow-float sm:mt-0 sm:p-6">
+        <div class="flex items-center justify-between">
+          <div><h2 id="loginTitle" class="text-xl font-bold">登录词境</h2><p class="mt-1 text-sm text-neutral-500">保存创作、收藏和互动记录</p></div>
+          <button id="closeLogin" class="grid size-9 place-items-center rounded-[7px] text-neutral-500 hover:bg-mist" aria-label="关闭登录"><i data-lucide="x" class="size-5"></i></button>
+        </div>
+        <div class="mt-6 grid grid-cols-2 rounded-[7px] bg-mist p-1">
+          <button class="login-method rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-login-method="phone">手机号</button>
+          <button class="login-method rounded-[5px] py-2 text-sm text-neutral-500" data-login-method="email">邮箱</button>
+        </div>
+        <label id="loginFieldLabel" class="mt-5 block text-sm font-medium">手机号</label>
+        <input id="loginIdentifier" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入手机号" inputmode="tel" />
+        <div class="mt-3 flex gap-2">
+          <input class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="验证码（演示）" />
+          <button class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs">获取验证码</button>
+        </div>
+        <button id="loginSubmit" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6]">登录</button>
+        <div class="my-5 flex items-center gap-3 text-xs text-neutral-300"><span class="h-px flex-1 bg-[#e3e9f3]"></span>或<span class="h-px flex-1 bg-[#e3e9f3]"></span></div>
+        <button id="wechatLogin" class="flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#d6e1f0] text-sm font-semibold text-[#255d50] hover:bg-[#effaf6]"><i data-lucide="message-circle" class="size-5"></i>微信登录</button>
+        <p class="mt-4 text-center text-xs leading-5 text-neutral-400">演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。</p>
+      </section>
+    </div>
 
     <div
       id="composer"
@@ -863,6 +1041,38 @@
         background: #eaf1ff;
         color: #246bfd !important;
       }
+
+      .follow-filter {
+        height: 32px;
+        flex: none;
+        border-radius: 999px;
+        padding: 0 12px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .active-follow-filter {
+        background: #14213a;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .profile-tab {
+        display: flex;
+        height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border-bottom: 2px solid transparent;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .active-profile-tab {
+        border-bottom-color: #246bfd;
+        color: #246bfd;
+        font-weight: 700;
+      }
     </style>
 
     <script>
@@ -904,9 +1114,20 @@
       const readerTitle = document.getElementById("readerTitle");
       const readerHeaderTitle = document.getElementById("readerHeaderTitle");
       const readerContent = document.getElementById("readerContent");
+      const followingView = document.getElementById("followingView");
+      const messagesView = document.getElementById("messagesView");
+      const profileView = document.getElementById("profileView");
+      const appViews = [followingView, messagesView, profileView];
+      const loginModal = document.getElementById("loginModal");
+      const profileGuest = document.getElementById("profileGuest");
+      const profileMember = document.getElementById("profileMember");
+      const profileContent = document.getElementById("profileContent");
+      const loginIdentifier = document.getElementById("loginIdentifier");
       let currentStep = 0;
       let isPublic = true;
       let activeWork = null;
+      let loginMethod = "phone";
+      let simulatedUser = JSON.parse(localStorage.getItem("cijing-demo-user") || "null");
       let words = [
         "concealed",
         "abandon",
@@ -1138,6 +1359,75 @@
         workDetail.scrollTop = 0;
       }
 
+      function openAppView(view) {
+        appViews.forEach((item) => item.classList.add("hidden"));
+        view.classList.remove("hidden");
+        view.scrollTop = 0;
+        notificationPanel.classList.add("hidden");
+        document.body.classList.add("modal-open");
+        refreshIcons();
+      }
+
+      function closeAppViews() {
+        appViews.forEach((item) => item.classList.add("hidden"));
+        document.body.classList.remove("modal-open");
+      }
+
+      function setProfileTab(tab) {
+        document.querySelectorAll(".profile-tab").forEach((button) => {
+          button.classList.toggle("active-profile-tab", button.dataset.profileTab === tab);
+        });
+        const tabContent = {
+          works: `<span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span><h3 class="mt-4 text-base font-bold">还没有作品</h3><p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p><button data-profile-create class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>`,
+          favorites: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="0"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#183b6c]" style="background-image:url('${workCatalog[0].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已收藏</span><b class="mt-1 block truncate text-base">${workCatalog[0].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[0].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
+          likes: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="2"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#506e5d]" style="background-image:url('${workCatalog[2].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已赞过</span><b class="mt-1 block truncate text-base">${workCatalog[2].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[2].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
+        };
+        profileContent.innerHTML = tabContent[tab];
+        refreshIcons();
+      }
+
+      function renderProfile() {
+        const loggedIn = Boolean(simulatedUser);
+        profileGuest.classList.toggle("hidden", loggedIn);
+        profileMember.classList.toggle("hidden", !loggedIn);
+        if (loggedIn) {
+          document.getElementById("profileNickname").textContent = simulatedUser.name;
+          document.getElementById("openProfileTop").textContent = simulatedUser.name.slice(0, 1);
+          setProfileTab("works");
+        }
+      }
+
+      function openProfile() {
+        renderProfile();
+        openAppView(profileView);
+      }
+
+      function openLogin() {
+        loginModal.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+        loginIdentifier.focus();
+        refreshIcons();
+      }
+
+      function closeLogin() {
+        loginModal.classList.add("hidden");
+      }
+
+      function completeLogin(kind) {
+        const identifier = loginIdentifier.value.trim();
+        if (kind !== "微信" && !identifier) {
+          loginIdentifier.focus();
+          return;
+        }
+        simulatedUser = {
+          name: kind === "微信" ? "微信用户" : "新朋友",
+          kind,
+        };
+        localStorage.setItem("cijing-demo-user", JSON.stringify(simulatedUser));
+        closeLogin();
+        openProfile();
+      }
+
       openButtons.forEach((button) => button && button.addEventListener("click", openComposer));
       closeComposer.addEventListener("click", hideComposer);
       composer.addEventListener("click", (event) => {
@@ -1257,8 +1547,78 @@
         privacyToggle.previousElementSibling.querySelector("span + span").textContent = isPublic ? "发布后将进入审核与推荐流" : "仅自己可见";
       });
 
-      notificationButton.addEventListener("click", () => {
-        notificationPanel.classList.toggle("hidden");
+      notificationButton.addEventListener("click", () => openAppView(messagesView));
+      document.getElementById("openProfileTop").addEventListener("click", openProfile);
+      document.getElementById("navFollowingDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        openAppView(followingView);
+      });
+      document.getElementById("navProfileDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        openProfile();
+      });
+      document.getElementById("navDiscoverDesktop").addEventListener("click", (event) => {
+        event.preventDefault();
+        closeAppViews();
+      });
+      document.getElementById("navDiscoverMobile").addEventListener("click", closeAppViews);
+      document.getElementById("navFollowingMobile").addEventListener("click", () => openAppView(followingView));
+      document.getElementById("navMessagesMobile").addEventListener("click", () => openAppView(messagesView));
+      document.getElementById("navProfileMobile").addEventListener("click", openProfile);
+      document.querySelectorAll(".app-back").forEach((button) => button.addEventListener("click", closeAppViews));
+      document.querySelectorAll(".follow-work, .message-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          closeAppViews();
+          openWorkDetail(workCatalog[Number(item.dataset.workIndex)]);
+        });
+      });
+      document.querySelectorAll(".follow-filter").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".follow-filter").forEach((item) => item.classList.remove("active-follow-filter"));
+          button.classList.add("active-follow-filter");
+        });
+      });
+
+      document.getElementById("openLoginFromProfile").addEventListener("click", openLogin);
+      document.getElementById("closeLogin").addEventListener("click", closeLogin);
+      loginModal.addEventListener("click", (event) => {
+        if (event.target === loginModal) closeLogin();
+      });
+      document.querySelectorAll(".login-method").forEach((button) => {
+        button.addEventListener("click", () => {
+          loginMethod = button.dataset.loginMethod;
+          document.querySelectorAll(".login-method").forEach((item) => {
+            const active = item === button;
+            item.classList.toggle("bg-white", active);
+            item.classList.toggle("text-ink", active);
+            item.classList.toggle("font-semibold", active);
+            item.classList.toggle("shadow-sm", active);
+            item.classList.toggle("text-neutral-500", !active);
+          });
+          const isPhone = loginMethod === "phone";
+          document.getElementById("loginFieldLabel").textContent = isPhone ? "手机号" : "邮箱";
+          loginIdentifier.placeholder = isPhone ? "输入手机号" : "输入邮箱";
+          loginIdentifier.inputMode = isPhone ? "tel" : "email";
+          loginIdentifier.value = "";
+          loginIdentifier.focus();
+        });
+      });
+      document.getElementById("loginSubmit").addEventListener("click", () => completeLogin(loginMethod === "phone" ? "手机号" : "邮箱"));
+      document.getElementById("wechatLogin").addEventListener("click", () => completeLogin("微信"));
+      profileContent.addEventListener("click", (event) => {
+        const createButton = event.target.closest("[data-profile-create]");
+        const workButton = event.target.closest(".profile-work");
+        if (createButton) {
+          closeAppViews();
+          openComposer();
+        }
+        if (workButton) {
+          closeAppViews();
+          openWorkDetail(workCatalog[Number(workButton.dataset.workIndex)]);
+        }
+      });
+      document.querySelectorAll(".profile-tab").forEach((button) => {
+        button.addEventListener("click", () => setProfileTab(button.dataset.profileTab));
       });
 
       document.querySelectorAll("#feed article").forEach((card, index) => {
@@ -1316,7 +1676,11 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          if (!readerView.classList.contains("hidden")) {
+          if (!loginModal.classList.contains("hidden")) {
+            closeLogin();
+          } else if (appViews.some((view) => !view.classList.contains("hidden"))) {
+            closeAppViews();
+          } else if (!readerView.classList.contains("hidden")) {
             closeReader();
           } else if (!workDetail.classList.contains("hidden")) {
             closeWorkDetail();
