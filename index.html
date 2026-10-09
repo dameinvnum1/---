@@ -172,13 +172,6 @@
               href="#"
               class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
             >
-              <i data-lucide="bookmark" class="size-[18px]"></i>
-              我的书架
-            </a>
-            <a
-              href="#"
-              class="flex h-11 items-center gap-3 rounded-[7px] px-3 text-sm text-neutral-600 hover:bg-white"
-            >
               <i data-lucide="users-round" class="size-[18px]"></i>
               关注更新
             </a>
@@ -424,7 +417,7 @@
         class="fixed inset-x-0 bottom-0 z-30 flex h-[62px] items-center justify-around border-t border-black/5 bg-white lg:hidden"
       >
         <button class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
-        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bookmark" class="size-5"></i><span class="text-[10px]">书架</span></button>
+        <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
         <button id="openComposerMobile" class="-mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
         <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
         <button class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
@@ -495,6 +488,11 @@
                   <button class="select-chip">古风言情</button>
                   <button class="select-chip">科幻西幻</button>
                   <button class="select-chip">校园</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="20" placeholder="输入小说大类" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -504,6 +502,11 @@
                   <button class="select-chip">社会派推理</button>
                   <button class="select-chip">灵异探案</button>
                   <button class="select-chip">连环杀人</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="20" placeholder="输入细分题材" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -513,6 +516,11 @@
                   <button class="select-chip">密闭空间</button>
                   <button class="select-chip">隐藏凶手</button>
                   <button class="select-chip">双向救赎</button>
+                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
+                </div>
+                <div class="custom-entry mt-2 hidden">
+                  <input class="custom-input" maxlength="30" placeholder="输入核心剧情梗" />
+                  <button class="custom-add" data-custom-add>添加</button>
                 </div>
               </div>
               <div>
@@ -612,6 +620,37 @@
         border-color: #ff2442;
         background: #fff0f2;
         color: #ff2442;
+        font-weight: 600;
+      }
+
+      .custom-entry {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .custom-input {
+        height: 34px;
+        min-width: 0;
+        flex: 1;
+        border: 1px solid #e5e5e5;
+        border-radius: 7px;
+        padding: 0 10px;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .custom-input:focus {
+        border-color: #ff2442;
+      }
+
+      .custom-add {
+        height: 34px;
+        border-radius: 7px;
+        background: #222;
+        padding: 0 12px;
+        color: #fff;
+        font-size: 13px;
         font-weight: 600;
       }
 
@@ -786,6 +825,12 @@
         group.addEventListener("click", (event) => {
           const target = event.target.closest(".select-chip");
           if (!target) return;
+          if (target.dataset.customTrigger !== undefined) {
+            const entry = group.nextElementSibling;
+            entry.classList.toggle("hidden");
+            if (!entry.classList.contains("hidden")) entry.querySelector("input").focus();
+            return;
+          }
           const multiple = group.dataset.multiple === "true";
           if (multiple) {
             const selected = group.querySelectorAll(".selected-chip");
@@ -794,6 +839,53 @@
           } else {
             group.querySelectorAll(".select-chip").forEach((chip) => chip.classList.remove("selected-chip"));
             target.classList.add("selected-chip");
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-custom-add]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const entry = button.parentElement;
+          const input = entry.querySelector("input");
+          const value = input.value.trim();
+          const group = entry.previousElementSibling;
+          if (!value) {
+            input.focus();
+            return;
+          }
+          const existing = Array.from(group.querySelectorAll(".select-chip")).find(
+            (chip) => chip.textContent.trim() === value
+          );
+          if (existing) {
+            existing.click();
+          } else {
+            const multiple = group.dataset.multiple === "true";
+            if (multiple && group.querySelectorAll(".selected-chip").length >= 3) {
+              input.setCustomValidity("核心剧情梗最多选择 3 个");
+              input.reportValidity();
+              input.setCustomValidity("");
+              return;
+            }
+            const chip = document.createElement("button");
+            chip.className = "select-chip";
+            chip.type = "button";
+            chip.textContent = value;
+            group.insertBefore(chip, group.querySelector("[data-custom-trigger]"));
+            if (!multiple) {
+              group.querySelectorAll(".select-chip").forEach((item) => item.classList.remove("selected-chip"));
+            }
+            chip.classList.add("selected-chip");
+          }
+          input.value = "";
+          entry.classList.add("hidden");
+        });
+      });
+
+      document.querySelectorAll(".custom-input").forEach((input) => {
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            input.nextElementSibling.click();
           }
         });
       });
