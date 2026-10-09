@@ -101,6 +101,19 @@
         overflow: hidden;
       }
 
+      .mobile-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        min-height: calc(62px + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      @media (max-width: 1023px) {
+        .mobile-page-content {
+          padding-bottom: calc(86px + env(safe-area-inset-bottom));
+        }
+      }
+
       .work-card {
         cursor: pointer;
       }
@@ -170,7 +183,7 @@
       </header>
 
       <main
-        class="mx-auto grid max-w-[1480px] grid-cols-1 gap-5 px-4 py-5 pb-20 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:px-6 lg:pb-5"
+        class="mobile-page-content mx-auto grid max-w-[1480px] grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:px-6 lg:pb-5"
       >
         <aside class="hidden lg:block">
           <div class="sticky top-20 space-y-1">
@@ -430,13 +443,13 @@
       </main>
 
       <nav
-        class="fixed inset-x-0 bottom-0 z-30 flex h-[62px] items-center justify-around border-t border-black/5 bg-white lg:hidden"
+        class="mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 items-center border-t border-black/5 bg-white lg:hidden"
       >
-        <button id="navDiscoverMobile" class="grid place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
-        <button id="navFollowingMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
-        <button id="openComposerMobile" class="-mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
-        <button id="navMessagesMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
-        <button id="navProfileMobile" class="grid place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
+        <button id="navDiscoverMobile" class="grid w-full place-items-center gap-1 text-xhs"><i data-lucide="compass" class="size-5"></i><span class="text-[10px] font-medium">发现</span></button>
+        <button id="navFollowingMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="users-round" class="size-5"></i><span class="text-[10px]">关注</span></button>
+        <button id="openComposerMobile" class="justify-self-center -mt-5 grid size-12 place-items-center rounded-full border-4 border-paper bg-xhs text-white shadow-lg" aria-label="创作"><i data-lucide="plus" class="size-6"></i></button>
+        <button id="navMessagesMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="bell" class="size-5"></i><span class="text-[10px]">消息</span></button>
+        <button id="navProfileMobile" class="grid w-full place-items-center gap-1 text-neutral-500"><i data-lucide="circle-user-round" class="size-5"></i><span class="text-[10px]">我</span></button>
       </nav>
     </div>
 
@@ -1129,7 +1142,7 @@
       let activeWork = null;
       let authMethod = "phone";
       let authMode = "login";
-      let simulatedUser = JSON.parse(localStorage.getItem("cijing-demo-user") || "null");
+      let simulatedUser = null;
       let words = [
         "concealed",
         "abandon",
@@ -1453,7 +1466,6 @@
           name: kind === "微信" ? "微信用户" : authMode === "register" ? "新作者" : "新朋友",
           kind,
         };
-        localStorage.setItem("cijing-demo-user", JSON.stringify(simulatedUser));
         renderProfile();
         refreshIcons();
       }
