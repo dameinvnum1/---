@@ -26,6 +26,7 @@
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://unpkg.com" />
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./ai-config.js"></script>
     <style>
       * {
         -webkit-tap-highlight-color: transparent;
@@ -902,6 +903,8 @@
               <div id="generationProgress" class="h-full w-[18%] rounded-full bg-xhs transition-all duration-500"></div>
             </div>
             <p id="generationStatus" class="mt-3 text-xs text-neutral-400">正在规划故事结构</p>
+            <p id="generationError" class="mx-auto mt-4 hidden max-w-sm text-sm leading-6 text-red-600"></p>
+            <button id="generationRetry" type="button" class="mt-4 hidden h-10 rounded-[7px] border border-[#cfe0ff] bg-[#eef5ff] px-4 text-sm font-semibold text-xhs">重试生成</button>
           </section>
         </div>
 
@@ -1103,6 +1106,8 @@
       const backStep = document.getElementById("backStep");
       const footer = document.getElementById("composerFooter");
       const stepLabel = document.getElementById("stepLabel");
+      const generationError = document.getElementById("generationError");
+      const generationRetry = document.getElementById("generationRetry");
       const steps = [
         document.getElementById("stepOne"),
         document.getElementById("stepTwo"),
@@ -1143,6 +1148,7 @@
       let authMethod = "phone";
       let authMode = "login";
       let simulatedUser = null;
+      let generationFailed = false;
       let words = [
         "concealed",
         "abandon",
@@ -1289,7 +1295,87 @@
         refreshIcons();
       }
 
-      function startGeneration() {
+      function selectedValues(groupName) {
+        return Array.from(document.querySelectorAll(`[data-group="${groupName}"] .selected-chip`))
+          .map((chip) => chip.textContent.trim())
+          .filter(Boolean);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderGeneratedWork(result, payload) {
+        const content = String(result.content || "").trim();
+        const generatedWork = {
+          title: String(result.title || "未命名词汇小说").trim(),
+          tag: payload.subgenre || payload.genre || "词汇小说",
+          count: `${payload.words.length} 个词 · 1 章`,
+          byline: "我 · 刚刚生成",
+          image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
+          hook: String(result.hook || "一组单词把故事推向了一个意料之外的夜晚。").trim(),
+          summary: String(result.summary || "这是一部根据今日词单生成的复习小说。").trim(),
+          words: payload.words,
+          reader: [content, "", ""],
+        };
+        workCatalog.unshift(generatedWork);
+        return generatedWork;
+      }
+
+      function generationPayload() {
+        return {
+          words: [...words],
+          genre: selectedValues("genre")[0] || "悬疑刑侦",
+          subgenre: selectedValues("subgenre")[0] || "密室凶案",
+          tropes: selectedValues("trope").slice(0, 3),
+          storySetup: document.getElementById("storySetup").value.trim(),
+          visibility: isPublic ? "public" : "private",
+        };
+      }
+
+      async function requestAiGeneration(payload) {
+        const endpoint = String(window.CIJING_AI_ENDPOINT || "").trim();
+        if (!endpoint) return null;
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result.error || `生成接口返回 ${response.status}`);
+        }
+        if (!result.title || !result.content) {
+          throw new Error("生成接口返回内容不完整");
+        }
+        return result;
+      }
+
+      function runDemoGeneration() {
+        return new Promise((resolve) => {
+          const states = [
+            ["正在规划故事结构", "36%"],
+            ["正在安排词汇出场", "63%"],
+            ["正在检查词汇覆盖", "84%"],
+            ["故事已写入作品库", "100%"],
+          ];
+          states.forEach(([text, width], index) => {
+            setTimeout(() => {
+              document.getElementById("generationStatus").textContent = text;
+              document.getElementById("generationProgress").style.width = width;
+            }, (index + 1) * 500);
+          });
+          setTimeout(resolve, 2300);
+        });
+      }
+
+      async function startGeneration() {
+        generationFailed = false;
         steps.forEach((item) => item.classList.add("hidden"));
         footer.classList.add("hidden");
         stepLabel.textContent = "生成中";
@@ -1297,26 +1383,40 @@
         generating.classList.remove("hidden");
         const progress = document.getElementById("generationProgress");
         const status = document.getElementById("generationStatus");
-        const states = [
-          ["正在规划故事结构", "36%"],
-          ["正在安排单词出场", "63%"],
-          ["正在检查词汇覆盖", "84%"],
-          ["故事已写入作品库", "100%"],
-        ];
-        states.forEach(([text, width], index) => {
-          setTimeout(() => {
-            status.textContent = text;
-            progress.style.width = width;
-          }, (index + 1) * 750);
-        });
-        setTimeout(() => {
+        generationError.classList.add("hidden");
+        generationRetry.classList.add("hidden");
+        progress.style.width = "18%";
+        status.textContent = window.CIJING_AI_ENDPOINT ? "正在连接 AI 创作接口" : "演示模式：正在规划故事结构";
+        const payload = generationPayload();
+
+        try {
+          const result = await requestAiGeneration(payload);
+          progress.style.width = "100%";
+          status.textContent = "AI 故事已生成";
+          const generatedWork = renderGeneratedWork(result, payload);
+          await new Promise((resolve) => setTimeout(resolve, 450));
           hideComposer();
           notificationPanel.classList.remove("hidden");
-        }, 3800);
+          openWorkDetail(generatedWork);
+        } catch (error) {
+          if (window.CIJING_AI_ENDPOINT) {
+            generationFailed = true;
+            progress.style.width = "100%";
+            status.textContent = "生成失败";
+            generationError.textContent = error.message || "暂时无法连接生成服务，请稍后重试。";
+            generationError.classList.remove("hidden");
+            generationRetry.classList.remove("hidden");
+            footer.classList.add("hidden");
+            return;
+          }
+          await runDemoGeneration();
+          hideComposer();
+          notificationPanel.classList.remove("hidden");
+        }
       }
 
       function renderReaderText(text, work) {
-        let content = text;
+        let content = escapeHtml(text || "");
         work.words.forEach((word) => {
           const matcher = new RegExp(`\\b${word}\\b`, "gi");
           content = content.replace(
@@ -1490,9 +1590,10 @@
         } else if (currentStep === 1) {
           setStep(2);
         } else {
-          startGeneration();
+          if (!generationFailed) startGeneration();
         }
       });
+      generationRetry.addEventListener("click", startGeneration);
 
       backStep.addEventListener("click", () => {
         if (currentStep > 0) setStep(currentStep - 1);

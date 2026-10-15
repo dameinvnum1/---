@@ -1,0 +1,8 @@
+name = "cijing-ai-generator"
+main = "src/index.js"
+compatibility_date = "2026-10-15"
+
+[vars]
+AI_BASE_URL = "https://api.deepseek.com"
+AI_MODEL = "deepseek-chat"
+ALLOWED_ORIGIN = "*"
