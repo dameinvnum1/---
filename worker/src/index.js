@@ -54,9 +54,48 @@ function buildPrompt(input) {
 2. 正文使用中文叙事，英文目标单词自然嵌入句子，不要把单词集中堆在一起。
 3. 生成约 800 至 1400 个中文字符，有开端、冲突、推进和结尾。
 4. 不要输出 Markdown，不要加粗标记，不要解释创作过程。
-5. 只返回一个合法 JSON 对象，字段必须是：
-{"title":"标题","hook":"一句话简介","summary":"不超过120字的简介","content":"小说正文"}
+5. 正文的段落之间用空行分隔，不要编号，不要在段首加标点。
+6. 只返回一个合法 JSON 对象，字段必须是：
+{"title":"标题","hook":"一句话简介","summary":"不超过120字的简介","content":"小说正文","vocab":[{"word":"原形小写","pos":"词性缩写","meaning":"中文语境释义","forms":["正文中出现的变形"]}]}
+7. vocab 必须为每一个目标单词返回一条记录，顺序与上面「目标单词」给出的顺序完全一致，不多不少。
+8. meaning 不超过 40 个中文字符：先写词典义，再用「这里指……」结合本篇正文的具体情节补充说明。不要复制粘贴正文原句。
+9. pos 使用 n. / v. / adj. / adv. / prep. 等缩写，多个词性用 / 连接，总长不超过 8 个字符。
+10. forms 只填正文中真实出现过的变形（把原形也写进去），最多 6 个；正文里没有变形就返回空数组。
 `;
+}
+
+function normalizeVocab(rawVocab, words) {
+  const byWord = new Map();
+  const push = (entry) => {
+    if (!entry || typeof entry !== "object") return;
+    const key = cleanText(entry.word, 40).toLowerCase();
+    if (!key) return;
+    byWord.set(key, {
+      pos: cleanText(entry.pos, 12),
+      meaning: cleanText(entry.meaning, 80),
+      forms: Array.isArray(entry.forms)
+        ? entry.forms.map((item) => cleanText(item, 30).toLowerCase()).filter(Boolean).slice(0, 6)
+        : [],
+    });
+  };
+
+  if (Array.isArray(rawVocab)) {
+    rawVocab.forEach(push);
+  } else if (rawVocab && typeof rawVocab === "object") {
+    // 兜底：模型可能返回 {"word": {...}} 的对象形态
+    Object.entries(rawVocab).forEach(([key, value]) => push({ word: key, ...(value || {}) }));
+  }
+
+  // 以请求词表为准输出，保证长度与顺序完全可控：模型漏词也不会造成前后端长度不匹配
+  return words.map((word) => {
+    const hit = byWord.get(word.toLowerCase()) || {};
+    return {
+      word,
+      pos: hit.pos || "",
+      meaning: hit.meaning || "",
+      forms: hit.forms || [],
+    };
+  });
 }
 
 export default {
@@ -90,7 +129,7 @@ export default {
         body: JSON.stringify({
           model,
           temperature: 0.8,
-          max_tokens: 5000,
+          max_tokens: 8000,
           messages: [
             {
               role: "system",
@@ -121,6 +160,11 @@ export default {
         );
       }
 
+      // 被 max_tokens 截断时 extractJson 会抛出难以理解的解析错误，这里先给出可读原因
+      if (upstreamBody.choices?.[0]?.finish_reason === "length") {
+        return json({ error: "生成内容过长被截断，请减少词量后重试" }, 502, request, env);
+      }
+
       const message = upstreamBody.choices?.[0]?.message?.content;
       const result = extractJson(message);
       if (!result.title || !result.content) {
@@ -132,6 +176,7 @@ export default {
           hook: cleanText(result.hook, 220),
           summary: cleanText(result.summary, 600),
           content: cleanText(result.content, 20000),
+          vocab: normalizeVocab(result.vocab, words),
         },
         200,
         request,
