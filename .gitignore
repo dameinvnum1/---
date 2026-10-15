@@ -1,0 +1,13 @@
+# 密钥与本地开发配置 —— 绝对不能提交
+# 用 .dev.vars* 覆盖 .dev.vars.doc / .dev.vars.txt 等误建变体
+.dev.vars*
+.env
+.env.*
+*.local
+
+# 依赖与构建产物
+node_modules/
+.wrangler/
+
+# 浏览器测试用的临时 profile 目录
+.chrome-*/
