@@ -258,6 +258,7 @@
 
           <div class="masonry" id="feed">
             <article
+              data-work-id="demo-rain-letter"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div
@@ -288,6 +289,7 @@
             </article>
 
             <article
+              data-work-id="demo-late-reason"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div class="p-4">
@@ -311,6 +313,7 @@
             </article>
 
             <article
+              data-work-id="demo-zero-port"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div
@@ -335,6 +338,7 @@
             </article>
 
             <article
+              data-work-id="demo-spring-mountain"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div class="bg-[#f9f0eb] p-4">
@@ -355,6 +359,7 @@
             </article>
 
             <article
+              data-work-id="demo-library"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div
@@ -379,6 +384,7 @@
             </article>
 
             <article
+              data-work-id="demo-evidence"
               class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5"
             >
               <div class="bg-[#26212b] p-4 text-white">
@@ -630,7 +636,7 @@
           <button class="follow-filter">最近阅读</button>
         </div>
         <div class="space-y-3">
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="0">
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-rain-letter">
             <div class="flex gap-3">
               <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#193d6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=240&q=80')"></div>
               <div class="min-w-0 flex-1">
@@ -640,7 +646,7 @@
               </div>
             </div>
           </article>
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="2">
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-library">
             <div class="flex gap-3">
               <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#4c6b58]" style="background-image:url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=240&q=80')"></div>
               <div class="min-w-0 flex-1">
@@ -650,7 +656,7 @@
               </div>
             </div>
           </article>
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-index="4">
+          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-late-reason">
             <div class="flex gap-3">
               <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#2f4c55]" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&q=80')"></div>
               <div class="min-w-0 flex-1">
@@ -682,7 +688,7 @@
           <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eef0f8] text-[#596a91]"><i data-lucide="bell" class="size-5"></i></span>系统</button>
         </div>
         <div class="divide-y divide-[#dce6f5]">
-          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="0">
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-id="demo-rain-letter">
             <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#d7ebee] text-xs font-bold text-[#3a7773]">木</span>
             <span class="min-w-0 flex-1">
               <span class="flex items-center gap-2"><b class="text-sm">木棉警报</b><span class="text-xs text-neutral-400">刚刚</span></span>
@@ -690,7 +696,7 @@
             </span>
             <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#1c3e6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=120&q=80')"></span>
           </button>
-          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-index="5">
+          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-id="demo-evidence">
             <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#e7d9f5] text-xs font-bold text-[#735e9f]">未</span>
             <span class="min-w-0 flex-1">
               <span class="flex items-center gap-2"><b class="text-sm">未命名卷宗</b><span class="text-xs text-neutral-400">28 分钟前</span></span>
@@ -944,7 +950,7 @@
         <button class="text-xs text-neutral-400">全部已读</button>
       </div>
       <div class="space-y-1">
-        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">《雨夜的第七封信》</b> 已生成完成。<span class="block text-neutral-400">刚刚</span></p></div>
+        <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink" id="notificationGeneratedTitle">《雨夜的第七封信》</b> 已生成完成。<span class="block text-neutral-400" id="notificationGeneratedTime">刚刚</span></p></div>
         <div class="flex gap-3 rounded-[7px] p-2 hover:bg-mist"><span class="mt-1 grid size-7 place-items-center rounded-full bg-[#fff3d8] text-[#c58821]"><i data-lucide="heart" class="size-3.5"></i></span><p class="text-xs leading-5 text-neutral-600"><b class="text-ink">木棉警报</b> 收藏了你的作品。<span class="block text-neutral-400">12 分钟前</span></p></div>
       </div>
     </div>
@@ -1195,6 +1201,7 @@
 
       const workCatalog = [
         {
+          id: "demo-rain-letter",
           title: "雨夜的第七封信",
           tag: "密室凶案",
           count: "26 个词 · 全文阅读",
@@ -1210,6 +1217,7 @@
           ],
         },
         {
+          id: "demo-zero-port",
           title: "零号星港",
           tag: "科幻西幻",
           count: "34 个词 · 全文阅读",
@@ -1225,6 +1233,7 @@
           ],
         },
         {
+          id: "demo-library",
           title: "图书馆闭馆以后",
           tag: "校园",
           count: "15 个词 · 全文阅读",
@@ -1240,6 +1249,7 @@
           ],
         },
         {
+          id: "demo-spring-mountain",
           title: "春山不见故人",
           tag: "古风言情",
           count: "21 个词 · 全文阅读",
@@ -1255,6 +1265,7 @@
           ],
         },
         {
+          id: "demo-late-reason",
           title: "你迟到的理由",
           tag: "都市职场",
           count: "18 个词 · 全文阅读",
@@ -1270,6 +1281,7 @@
           ],
         },
         {
+          id: "demo-evidence",
           title: "证据不会自己 vanish",
           tag: "悬疑刑侦",
           count: "29 个词 · 全文阅读",
@@ -1285,6 +1297,200 @@
           ],
         },
       ];
+
+      // ---------- 作品与登录态的本地持久化 ----------
+      // 数据从此跨越「内存」边界进入可被用户篡改的 localStorage，
+      // 所以凡是拼进 innerHTML 的字段都必须走 escapeHtml。
+      const STORAGE_KEYS = { works: "cijing.works.v1", session: "cijing.session.v1" };
+      const WORKS_SCHEMA_VERSION = 1;
+      const SESSION_SCHEMA_VERSION = 1;
+      const MAX_SAVED_WORKS = 30;
+      const MAX_WORKS_BYTES = 2 * 1024 * 1024;
+      // 生成作品的封面恒为此值。不落盘（派生数据没必要存两份），hydrate 时补回。
+      // 漏补的症状是详情页背景空白且不报错 —— 本模块最容易漏的一处。
+      const GENERATED_WORK_IMAGE = "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85";
+
+      function makeWorkId() {
+        try {
+          if (window.crypto && typeof window.crypto.randomUUID === "function") {
+            return `w_${window.crypto.randomUUID()}`;
+          }
+        } catch (error) { /* 非安全上下文，走回退 */ }
+        return `w_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      // 唯一的作品查找入口。全在点击回调里惰性调用，所以初始化顺序不敏感。
+      function workById(id) {
+        if (!id) return null;
+        return workCatalog.find((work) => work.id === id) || null;
+      }
+
+      function savedWorks() {
+        return workCatalog
+          .filter((work) => work.generated)
+          .sort((a, b) => b.createdAt - a.createdAt);
+      }
+
+      // 隐身模式 / 禁用存储 / 沙箱 iframe 下访问 localStorage 会直接抛
+      function storageAvailable() {
+        try {
+          const probe = "__cijing_probe__";
+          window.localStorage.setItem(probe, "1");
+          window.localStorage.removeItem(probe);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      // 逐条校验：坏一条丢一条，不连坐整库
+      function normalizeWork(raw) {
+        if (!raw || typeof raw !== "object") return null;
+        const id = String(raw.id || "");
+        const title = String(raw.title || "").trim();
+        if (!id || !title) return null;
+        const words = Array.isArray(raw.words) ? raw.words.map((word) => String(word)) : [];
+        const reader = Array.isArray(raw.reader)
+          ? raw.reader.filter((part) => typeof part === "string" && part.trim())
+          : [];
+        return {
+          id,
+          generated: true,
+          createdAt: Number(raw.createdAt) || Date.now(),
+          title,
+          tag: String(raw.tag || "词汇小说"),
+          count: String(raw.count || `${words.length} 个词 · 全文阅读`),
+          byline: "",
+          image: String(raw.image || GENERATED_WORK_IMAGE),
+          hook: String(raw.hook || ""),
+          summary: String(raw.summary || ""),
+          words,
+          reader,
+          vocab: raw.vocab && typeof raw.vocab === "object" ? raw.vocab : {},
+        };
+      }
+
+      function loadSavedWorks() {
+        if (!storageAvailable()) return [];
+        let raw = null;
+        try {
+          raw = window.localStorage.getItem(STORAGE_KEYS.works);
+        } catch (error) {
+          return [];
+        }
+        if (!raw) return [];
+
+        let payload;
+        try {
+          payload = JSON.parse(raw);
+        } catch (error) {
+          console.warn("[词境] 本地作品数据损坏，已清除。", error);
+          try { window.localStorage.removeItem(STORAGE_KEYS.works); } catch (e) { /* 忽略 */ }
+          return [];
+        }
+        if (!payload || !Array.isArray(payload.works)) return [];
+        if (Number(payload.version) > WORKS_SCHEMA_VERSION) {
+          // 数据来自更新版本：不读也不写，避免把新版数据降级覆盖
+          console.warn("[词境] 本地作品版本较新，暂不读取。");
+          return [];
+        }
+        return payload.works.map(normalizeWork).filter(Boolean);
+      }
+
+      let persistWarned = false;
+
+      function warnPersistFailure() {
+        if (persistWarned) return;   // 每次会话只提示一次
+        persistWarned = true;
+        const toast = document.createElement("div");
+        toast.className = "fixed inset-x-4 bottom-6 z-[90] mx-auto max-w-md rounded-[8px] bg-[#7a2e2e] px-4 py-3 text-sm leading-6 text-white shadow-float";
+        toast.setAttribute("role", "status");
+        toast.textContent = "作品已生成，但本地保存失败（存储空间不足或被禁用），刷新后可能丢失。";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 8000);
+      }
+
+      // 全程 try/catch，永不向上抛 —— 存不下也必须让用户当场读到作品
+      function persistWorks() {
+        if (!storageAvailable()) return { ok: false, reason: "unavailable" };
+        let works = savedWorks().slice(0, MAX_SAVED_WORKS);
+
+        for (;;) {
+          let serialized;
+          try {
+            serialized = JSON.stringify({ version: WORKS_SCHEMA_VERSION, updatedAt: Date.now(), works });
+          } catch (error) {
+            console.warn("[词境] 作品序列化失败:", error);
+            return { ok: false, reason: "serialize" };
+          }
+
+          if (serialized.length > MAX_WORKS_BYTES && works.length > 1) {
+            works = works.slice(0, Math.max(1, Math.floor(works.length / 2)));
+            continue;
+          }
+
+          try {
+            window.localStorage.setItem(STORAGE_KEYS.works, serialized);
+            return { ok: true, count: works.length };
+          } catch (error) {
+            const quota = error && (
+              error.name === "QuotaExceededError" ||
+              error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+              error.code === 22 ||
+              error.code === 1014   // Safari 私有模式
+            );
+            if (!quota || works.length <= 1) {
+              console.warn("[词境] 作品保存失败:", error);
+              warnPersistFailure();
+              return { ok: false, reason: quota ? "quota" : "error" };
+            }
+            works = works.slice(0, Math.max(1, Math.floor(works.length / 2)));   // 淘汰较旧的一半后重试
+          }
+        }
+      }
+
+      function restoreWorks() {
+        loadSavedWorks().forEach((work) => {
+          if (!workById(work.id)) workCatalog.push(work);   // 幂等，防重复插入
+        });
+      }
+
+      function persistSession() {
+        if (!storageAvailable()) return;
+        try {
+          if (simulatedUser) {
+            window.localStorage.setItem(
+              STORAGE_KEYS.session,
+              JSON.stringify({ version: SESSION_SCHEMA_VERSION, user: simulatedUser })
+            );
+          } else {
+            window.localStorage.removeItem(STORAGE_KEYS.session);
+          }
+        } catch (error) {
+          console.warn("[词境] 登录态保存失败:", error);
+        }
+      }
+
+      function loadSession() {
+        if (!storageAvailable()) return null;
+        try {
+          const payload = JSON.parse(window.localStorage.getItem(STORAGE_KEYS.session) || "null");
+          const user = payload && payload.user;
+          if (!user || typeof user.name !== "string") return null;
+          return {
+            name: String(user.name),
+            kind: String(user.kind || "邮箱"),
+            uid: String(user.uid || makeWorkId()),   // 旧数据无 uid 时现场补一个
+          };
+        } catch (error) {
+          return null;
+        }
+      }
+
+      // ---- 启动恢复 ----
+      // 必须早于下面所有事件监听注册：推荐流的 aria-label 在注册时就要读作品标题。
+      simulatedUser = loadSession();
+      restoreWorks();
 
       function refreshIcons() {
         lucide.createIcons();
@@ -1603,18 +1809,22 @@
       function renderGeneratedWork(result, payload) {
         const content = String(result.content || "").trim();
         const generatedWork = {
+          id: makeWorkId(),
+          generated: true,
+          createdAt: Date.now(),
           title: String(result.title || "未命名词汇小说").trim(),
           tag: payload.subgenre || payload.genre || "词汇小说",
           count: `${payload.words.length} 个词 · 全文阅读`,
-          byline: "我 · 刚刚生成",
-          image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
+          byline: "",                       // 展示时由 createdAt 现场格式化，避免「刚刚生成」过期
+          image: GENERATED_WORK_IMAGE,
           hook: String(result.hook || "一组单词把故事推向了一个意料之外的夜晚。").trim(),
           summary: String(result.summary || "这是一部根据今日词单生成的复习小说。").trim(),
           words: payload.words,
           reader: readingParagraphs({ reader: [content] }),
           vocab: buildVocabMap(result.vocab, payload.words),
         };
-        workCatalog.unshift(generatedWork);
+        workCatalog.unshift(generatedWork);   // 新作品排最前；下标耦合已消除，不再有错位副作用
+        persistWorks();
         return generatedWork;
       }
 
@@ -1774,6 +1984,9 @@
 
           finishGenerationProgress("故事已写入作品库");
           const generatedWork = renderGeneratedWork(result, payload);
+          // 用 textContent 更新，天然免疫注入；此前这条通知硬编码《雨夜的第七封信》
+          document.getElementById("notificationGeneratedTitle").textContent = `《${generatedWork.title}》`;
+          document.getElementById("notificationGeneratedTime").textContent = "刚刚";
           await new Promise((resolve) => setTimeout(resolve, 450));
           if (myRun !== generationRunId) return;
           hideComposer();
@@ -1933,14 +2146,14 @@
         detailHeaderTitle.textContent = work.title;
         detailTag.textContent = work.tag;
         detailCount.textContent = work.count;
-        detailByline.textContent = work.byline;
+        detailByline.textContent = workByline(work);
         detailHook.textContent = work.hook;
         detailSummary.textContent = work.summary;
         detailHero.style.backgroundImage = `linear-gradient(135deg, rgba(15, 41, 75, .9), rgba(15, 50, 100, .35)), url("${work.image}")`;
         detailHero.style.backgroundPosition = "center";
         detailHero.style.backgroundSize = "cover";
         detailWords.innerHTML = work.words
-          .map((word) => `<span class="rounded-full border border-[#cfe0ff] bg-[#eef5ff] px-3 py-1.5 text-sm font-semibold text-[#285da9]">${word}</span>`)
+          .map((word) => `<span class="rounded-full border border-[#cfe0ff] bg-[#eef5ff] px-3 py-1.5 text-sm font-semibold text-[#285da9]">${escapeHtml(word)}</span>`)
           .join("");
         workDetail.classList.remove("hidden");
         document.body.classList.add("modal-open");
@@ -2014,14 +2227,64 @@
         document.body.classList.remove("modal-open");
       }
 
+      // ---- 「我的作品」渲染 ----
+      const EMPTY_WORKS_HTML = `<span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span><h3 class="mt-4 text-base font-bold">还没有作品</h3><p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p><button data-profile-create class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>`;
+
+      function relativeTime(ts) {
+        const minutes = Math.floor((Date.now() - Number(ts || Date.now())) / 60000);
+        if (minutes < 1) return "刚刚生成";
+        if (minutes < 60) return `${minutes} 分钟前`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} 小时前`;
+        return `${Math.floor(hours / 24)} 天前`;
+      }
+
+      // 生成作品的 byline 不落盘（「刚刚生成」刷新后就过期），展示时按 createdAt 现场算
+      function workByline(work) {
+        if (work && work.generated) return `我 · ${relativeTime(work.createdAt)}`;
+        return (work && work.byline) || "";
+      }
+
+      // DOM 结构对齐既有 favorites 那条 .profile-work，
+      // 因此 profileContent 的事件委托无需改动即可复用
+      function profileWorkCard(work, label) {
+        if (!work) return "";
+        return `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-id="${escapeHtml(work.id)}"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#183b6c]" style="background-image:url('${escapeHtml(work.image)}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">${escapeHtml(label)}</span><b class="mt-1 block truncate text-base">${escapeHtml(work.title)}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${escapeHtml(work.hook)}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`;
+      }
+
+      function renderMyWorks() {
+        const works = savedWorks();
+        if (!works.length) return EMPTY_WORKS_HTML;
+        // ⚠️ 删除按钮必须是 .profile-work 的兄弟节点而非子节点：
+        // <button> 内嵌 <button> 是非法 HTML，浏览器会提前闭合外层标签导致委托失效
+        const rows = works.map((work) => `
+          <div class="mx-auto flex w-full max-w-md items-start gap-2">
+            ${profileWorkCard(work, relativeTime(work.createdAt))}
+            <button class="mt-7 grid size-8 shrink-0 place-items-center rounded-[7px] text-neutral-400 hover:bg-mist hover:text-xhs" data-work-delete="${escapeHtml(work.id)}" aria-label="删除作品 ${escapeHtml(work.title)}"><i data-lucide="trash-2" class="size-4"></i></button>
+          </div>`).join("");
+        return `<p class="mx-auto mb-3 w-full max-w-md text-xs text-neutral-400">共 ${works.length} 部作品</p><div class="flex flex-col gap-4">${rows}</div>`;
+      }
+
+      // 本地存储有配额上限，没有删除入口用户迟早撞墙
+      function removeWorkById(id) {
+        const index = workCatalog.findIndex((work) => work.id === id && work.generated);
+        if (index < 0) return;
+        const work = workCatalog[index];
+        if (!window.confirm(`确定删除《${work.title}》？删除后无法恢复。`)) return;
+        workCatalog.splice(index, 1);   // const 数组允许原地 splice
+        persistWorks();
+        setProfileTab("works");         // 重新渲染列表与「共 N 部」
+        refreshIcons();
+      }
+
       function setProfileTab(tab) {
         document.querySelectorAll(".profile-tab").forEach((button) => {
           button.classList.toggle("active-profile-tab", button.dataset.profileTab === tab);
         });
         const tabContent = {
-          works: `<span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span><h3 class="mt-4 text-base font-bold">还没有作品</h3><p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p><button data-profile-create class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>`,
-          favorites: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="0"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#183b6c]" style="background-image:url('${workCatalog[0].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已收藏</span><b class="mt-1 block truncate text-base">${workCatalog[0].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[0].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
-          likes: `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-index="2"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#506e5d]" style="background-image:url('${workCatalog[2].image}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">已赞过</span><b class="mt-1 block truncate text-base">${workCatalog[2].title}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${workCatalog[2].hook}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`,
+          works: renderMyWorks(),
+          favorites: profileWorkCard(workById("demo-rain-letter"), "已收藏"),
+          likes: profileWorkCard(workById("demo-library"), "已赞过"),
         };
         profileContent.innerHTML = tabContent[tab];
         refreshIcons();
@@ -2091,7 +2354,9 @@
         simulatedUser = {
           name: kind === "微信" ? "微信用户" : authMode === "register" ? "新作者" : "新朋友",
           kind,
+          uid: makeWorkId(),   // 稳定本地用户标识，供未来按账号分桶
         };
+        persistSession();
         renderProfile();
         refreshIcons();
       }
@@ -2261,8 +2526,10 @@
       document.querySelectorAll(".app-back").forEach((button) => button.addEventListener("click", closeAppViews));
       document.querySelectorAll(".follow-work, .message-item").forEach((item) => {
         item.addEventListener("click", () => {
+          const work = workById(item.dataset.workId);
+          if (!work) return;
           closeAppViews();
-          openWorkDetail(workCatalog[Number(item.dataset.workIndex)]);
+          openWorkDetail(work);
         });
       });
       document.querySelectorAll(".follow-filter").forEach((button) => {
@@ -2285,6 +2552,12 @@
       document.getElementById("authSubmit").addEventListener("click", () => completeAuth(authMethod === "phone" ? "手机号" : "邮箱"));
       document.getElementById("authWechat").addEventListener("click", () => completeAuth("微信"));
       profileContent.addEventListener("click", (event) => {
+        // 删除必须最先判并 return，否则点击删除会先命中 .profile-work 打开详情
+        const deleteButton = event.target.closest("[data-work-delete]");
+        if (deleteButton) {
+          removeWorkById(deleteButton.dataset.workDelete);
+          return;
+        }
         const createButton = event.target.closest("[data-profile-create]");
         const workButton = event.target.closest(".profile-work");
         if (createButton) {
@@ -2292,24 +2565,30 @@
           openComposer();
         }
         if (workButton) {
+          const work = workById(workButton.dataset.workId);
           closeAppViews();
-          openWorkDetail(workCatalog[Number(workButton.dataset.workIndex)]);
+          if (work) openWorkDetail(work);
         }
       });
       document.querySelectorAll(".profile-tab").forEach((button) => {
         button.addEventListener("click", () => setProfileTab(button.dataset.profileTab));
       });
 
-      document.querySelectorAll("#feed article").forEach((card, index) => {
+      // 按 data-work-id 显式绑定，不再靠 DOM 位置 —— 位置绑定正是此前 3 张卡
+      // 「显示 A 却打开 B」的成因。显示什么标题，就打开那部作品。
+      document.querySelectorAll("#feed article").forEach((card) => {
+        const work = workById(card.dataset.workId);
+        if (!work) return;                       // id 写错时跳过该卡，不炸整页
         card.classList.add("work-card");
         card.tabIndex = 0;
         card.setAttribute("role", "button");
-        card.setAttribute("aria-label", `打开作品：${workCatalog[index].title}`);
-        card.addEventListener("click", () => openWorkDetail(workCatalog[index]));
+        card.setAttribute("aria-label", `打开作品：${work.title}`);
+        const open = () => openWorkDetail(work);
+        card.addEventListener("click", open);
         card.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            openWorkDetail(workCatalog[index]);
+            open();
           }
         });
       });
