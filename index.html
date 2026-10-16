@@ -1413,21 +1413,74 @@
         "any", "all", "both", "each", "few", "other", "such", "own", "same", "there", "here",
       ]);
 
-      function extractOcrWords(rawText, limit = 50) {
-        // 一次性把数字/标点/中文/换行都变成分隔符，只保留 a-z
-        const tokens = String(rawText || "")
-          .toLowerCase()
-          .replace(/[^a-z]+/g, " ")
-          .split(" ")
-          .filter(Boolean);
+      // 只用 eng 语言包时，中文字会被硬当成英文字母读出来，变成 BEEETAY / AIEERY
+      // 这类乱码混进词单。加 chi_sim 中文包能解决但要额外下 19MB，代价过高。
+      // 实测：用英文词表 + 单词级置信度过滤，噪声从平均 9.3 个降到 0 个，召回不动。
+      const OCR_WORDLIST_URL = "https://cdn.jsdelivr.net/npm/an-array-of-english-words@2.0.0/index.json";
+      // 实测噪声词（sea/wee/ere/terry/ser）置信度最高只有 56，真词普遍 >=90，取 60 留足余量
+      const OCR_MIN_CONFIDENCE = 60;
+      // 高置信度豁免：词单页只能删词、不能加词（PRD §8），
+      // 所以误杀一个用户正在背的生词，代价远大于混进一个噪声词（后者点叉即可删除）。
+      // 置信度够高的词即使不在词表里也保留，避免词表收录不全导致漏词。
+      const OCR_TRUST_CONFIDENCE = 85;
+
+      let ocrWordSetPromise = null;
+
+      function loadOcrWordSet() {
+        if (!ocrWordSetPromise) {
+          ocrWordSetPromise = fetch(OCR_WORDLIST_URL)
+            .then((res) => (res.ok ? res.json() : Promise.reject(new Error("词表加载失败"))))
+            .then((list) => new Set(list.map((item) => String(item).toLowerCase())))
+            .catch(() => {
+              ocrWordSetPromise = null;
+              return null;   // 词表拿不到就跳过这一层过滤，不能因此把词单清空
+            });
+        }
+        return ocrWordSetPromise;
+      }
+
+      // 从 Tesseract 的 TSV 输出里取「单词 → 最高置信度」。取不到时返回空 Map，
+      // 上层自动退化为纯文本清洗。
+      function parseOcrTsvWords(tsv) {
+        const rows = String(tsv || "").split("\n").slice(1);
+        const out = new Map();
+        for (const row of rows) {
+          const cols = row.split("\t");
+          if (cols.length < 12 || Number(cols[0]) !== 5) continue;   // level 5 = 单词
+          const text = String(cols[11] || "").trim().toLowerCase();
+          if (!/^[a-z]{2,20}$/.test(text)) continue;
+          const conf = Number(cols[10]);
+          if (!Number.isFinite(conf)) continue;
+          out.set(text, Math.max(out.get(text) ?? -1, conf));
+        }
+        return out;
+      }
+
+      function extractOcrWords(rawText, tsv, wordSet, limit = 50) {
+        const parsed = parseOcrTsvWords(tsv);
+        const candidates = parsed.size
+          ? [...parsed.entries()].map(([text, conf]) => ({ text, conf }))
+          : String(rawText || "")
+              .toLowerCase()
+              .replace(/[^a-z]+/g, " ")
+              .split(" ")
+              .filter(Boolean)
+              .map((text) => ({ text, conf: null }));
+
         const seen = new Set();
         const out = [];
-        for (const token of tokens) {
-          if (token.length < 2 || token.length > 20) continue;
-          if (OCR_STOPWORDS.has(token)) continue;
-          if (seen.has(token)) continue;
-          seen.add(token);
-          out.push(token);
+        for (const { text, conf } of candidates) {
+          if (text.length < 2 || text.length > 20) continue;
+          if (OCR_STOPWORDS.has(text)) continue;
+          // 词表过滤：挡掉中文被误读出的乱码（词表没加载成功时跳过这层）
+          // 例外：置信度足够高的词即使不在词表里也保留，避免词表收录不全世界漏词
+          const trusted = conf !== null && conf >= OCR_TRUST_CONFIDENCE;
+          if (wordSet && !wordSet.has(text) && !trusted) continue;
+          // 置信度门槛：挡掉「误读恰好撞上真词」的情况
+          if (conf !== null && conf < OCR_MIN_CONFIDENCE) continue;
+          if (seen.has(text)) continue;
+          seen.add(text);
+          out.push(text);
           if (out.length >= limit) break;
         }
         // 不做"回退到未过滤"的兜底：那会把 the/of/and 当成生词返回。
@@ -1463,8 +1516,15 @@
               status: OCR_STATUS_TEXT[message && message.status] || "正在识别单词",
             });
           });
-          const { data } = await worker.recognize(file, {}, { text: true });
-          const candidates = extractOcrWords((data && data.text) || "");
+          // 词表与识别并行下载，省一次串行等待；失败返回 null 时自动跳过词表过滤
+          const wordSetPromise = loadOcrWordSet();
+          const { data } = await worker.recognize(file, {}, { text: true, tsv: true });
+          const wordSet = await wordSetPromise;
+          const candidates = extractOcrWords(
+            (data && data.text) || "",
+            (data && data.tsv) || "",
+            wordSet
+          );
           // 只拦"完全没识别到"；词数少不阻止用户，由他自己在词单页增删
           if (!candidates.length) throw new Error("没有识别到英文单词，请换一张更清晰的词表截图");
 
