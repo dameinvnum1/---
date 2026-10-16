@@ -6,3 +6,11 @@ compatibility_date = "2026-10-15"
 AI_BASE_URL = "https://api.deepseek.com"
 AI_MODEL = "deepseek-chat"
 ALLOWED_ORIGIN = "*"
+# 邮箱验证码开关。设成 "true" 需要同时配好 RESEND_API_KEY 与已验证的发件域名。
+# 关闭时：注册只需「邀请码 + 邮箱 + 密码」，登录只用密码。用户体系与作品隔离不受影响。
+EMAIL_OTP_ENABLED = "false"
+
+[[d1_databases]]
+binding = "cijing_db"
+database_name = "cijing-db"
+database_id = "25726682-536e-45e2-bd10-90cfdcd4d4cf"

@@ -740,21 +740,33 @@
           <h3 id="authTitle" class="mt-5 text-lg font-bold">登录词境</h3>
           <p id="authSubtitle" class="mt-1 text-sm text-neutral-500">继续管理你的作品与阅读记录</p>
 
-          <div class="mt-5 grid grid-cols-2 rounded-[7px] bg-mist p-1">
-            <button class="auth-method rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-auth-method="phone">手机号</button>
-            <button class="auth-method rounded-[5px] py-2 text-sm text-neutral-500" data-auth-method="email">邮箱</button>
+          <div id="authInviteRow" class="mt-5 hidden">
+            <label class="block text-sm font-medium" for="authInvite">邀请码</label>
+            <input id="authInvite" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入邀请码" autocomplete="off" spellcheck="false" />
+            <p id="authInviteHint" class="mt-1.5 text-xs leading-5 text-neutral-400"></p>
           </div>
-          <label id="authFieldLabel" class="mt-5 block text-sm font-medium">手机号</label>
-          <input id="authIdentifier" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入手机号" inputmode="tel" />
-          <div class="mt-3 flex gap-2">
-            <input class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="验证码（演示）" />
-            <button type="button" class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs">获取验证码</button>
+
+          <label id="authFieldLabel" class="mt-5 block text-sm font-medium" for="authIdentifier">邮箱</label>
+          <input id="authIdentifier" type="email" class="mt-2 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="输入邮箱" inputmode="email" autocomplete="email" spellcheck="false" />
+
+          <div id="authCodeRow" class="mt-3">
+            <div class="flex gap-2">
+              <input id="authCode" class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="6 位验证码" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+              <button id="authSendCode" type="button" class="h-11 shrink-0 rounded-[7px] bg-[#edf3ff] px-3 text-sm font-semibold text-xhs disabled:opacity-50">获取验证码</button>
+            </div>
           </div>
-          <button id="authSubmit" type="button" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6]">登录</button>
-          <div class="my-5 flex items-center gap-3 text-xs text-neutral-300"><span class="h-px flex-1 bg-[#e3e9f3]"></span>或<span class="h-px flex-1 bg-[#e3e9f3]"></span></div>
-          <button id="authWechat" type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-[7px] border border-[#d6e1f0] text-sm font-semibold text-[#255d50] hover:bg-[#effaf6]"><i data-lucide="message-circle" class="size-5"></i>微信登录 / 注册</button>
-          <button id="continueAsGuest" type="button" class="mt-4 w-full text-sm font-medium text-xhs hover:underline">暂不登录，继续以游客身份使用</button>
-          <p id="authNotice" class="mt-3 text-center text-xs leading-5 text-neutral-400">演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。</p>
+
+          <input id="authName" class="mt-3 hidden h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="笔名（可留空）" maxlength="24" />
+
+          <input id="authPassword" type="password" class="mt-3 h-11 w-full rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="密码（至少 6 位）" autocomplete="current-password" />
+
+          <p id="authError" class="mt-3 hidden text-xs leading-5 text-red-600"></p>
+
+          <button id="authSubmit" type="button" class="mt-5 h-11 w-full rounded-[7px] bg-xhs text-sm font-semibold text-white hover:bg-[#1857d6] disabled:opacity-60">登录</button>
+          <button id="authWayToggle" type="button" class="mt-3 w-full text-sm font-medium text-xhs hover:underline">用验证码登录</button>
+
+          <button id="continueAsGuest" type="button" class="mt-4 w-full text-sm font-medium text-neutral-500 hover:underline">暂不登录，继续以游客身份使用</button>
+          <p id="authNotice" class="mt-3 text-center text-xs leading-5 text-neutral-400">收不到验证码时，请查看垃圾邮件文件夹。</p>
         </section>
       </main>
 
@@ -765,8 +777,8 @@
               <span class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">林</span>
               <div class="min-w-0 flex-1 pt-1">
                 <div class="flex items-center gap-2"><h2 id="profileNickname" class="truncate text-xl font-bold">林</h2><span class="rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[10px] font-semibold text-xhs">词境新作者</span></div>
-                <p class="mt-1 text-xs text-neutral-400">词境号：cj_1024</p>
-                <p class="mt-3 text-sm leading-6 text-neutral-600">今天也把单词，写进一个值得读完的故事。</p>
+                <p id="profileHandle" class="mt-1 text-xs text-neutral-400">词境号：—</p>
+                <p id="profileQuota" class="mt-2 text-xs text-neutral-400">—</p>
               </div>
             </div>
             <div class="mt-5 flex items-center gap-8">
@@ -777,6 +789,7 @@
             <div class="mt-5 flex gap-2">
               <button class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
               <button class="grid size-9 place-items-center rounded-[7px] bg-[#edf3ff] text-xhs" aria-label="分享主页"><i data-lucide="share-2" class="size-4"></i></button>
+              <button id="signOutButton" class="h-9 rounded-[7px] bg-mist px-3 text-sm font-medium text-neutral-500 hover:text-xhs">退出登录</button>
             </div>
           </div>
         </section>
@@ -1179,7 +1192,8 @@
       let activeWork = null;
       let authMethod = "phone";
       let authMode = "login";
-      let simulatedUser = null;
+      let remoteWorks = [];          // 从服务器拉回来的作品（推荐流 / 作品库）
+      let activeProfileTab = "works";
       let generationFailed = false;
       const DEMO_WORD_SETS = [
         ["concealed", "abandon", "convincing", "fragile", "complicated", "vanish", "anticipate", "reluctant", "evidence", "suspicious", "inevitable", "reveal"],
@@ -1302,6 +1316,7 @@
       // 数据从此跨越「内存」边界进入可被用户篡改的 localStorage，
       // 所以凡是拼进 innerHTML 的字段都必须走 escapeHtml。
       const STORAGE_KEYS = { works: "cijing.works.v1", session: "cijing.session.v1" };
+      const MIGRATED_KEY = "cijing.migrated.v1";   // 本机作品是否已询问过上传
       const WORKS_SCHEMA_VERSION = 1;
       const SESSION_SCHEMA_VERSION = 1;
       const MAX_SAVED_WORKS = 30;
@@ -1322,7 +1337,9 @@
       // 唯一的作品查找入口。全在点击回调里惰性调用，所以初始化顺序不敏感。
       function workById(id) {
         if (!id) return null;
-        return workCatalog.find((work) => work.id === id) || null;
+        return remoteWorks.find((work) => work.id === id)
+          || workCatalog.find((work) => work.id === id)
+          || null;
       }
 
       function savedWorks() {
@@ -1455,13 +1472,64 @@
         });
       }
 
-      function persistSession() {
+      // ---------- 后端 API ----------
+
+      function apiBase() {
+        const base = String(window.CIJING_API_BASE || "").trim();
+        if (base) return base.replace(/\/+$/, "");
+        // 兼容旧配置：从完整的 generate 地址反推基础地址
+        return String(window.CIJING_AI_ENDPOINT || "").trim()
+          .replace(/\/api\/generate\/?$/, "")
+          .replace(/\/+$/, "");
+      }
+
+      let authToken = "";
+      let authUser = null;
+      // 服务端下发的运行开关（是否启用邮箱验证码），启动时拉取。
+      // 由服务端决定而不是写死在前端，因为校验的权威在服务端。
+      const appConfig = { emailOtp: false };
+
+      async function loadAppConfig() {
+        try {
+          const data = await apiFetch("/api/config");
+          appConfig.emailOtp = Boolean(data.emailOtp);
+        } catch (error) {
+          console.warn("[词境] 配置拉取失败，按「不启用验证码」处理：", error);
+        }
+      }
+
+      async function apiFetch(path, { method = "GET", body, auth = false } = {}) {
+        const base = apiBase();
+        if (!base) throw new Error("接口地址未配置");
+        const headers = { "Content-Type": "application/json" };
+        if (auth && authToken) headers.Authorization = `Bearer ${authToken}`;
+        let response;
+        try {
+          response = await fetch(base + path, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : undefined,
+          });
+        } catch (error) {
+          throw new Error("无法连接服务器，请检查网络后重试");
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401 && auth) clearSession();   // token 失效则静默登出
+          throw new Error(data.error || `请求失败（${response.status}）`);
+        }
+        return data;
+      }
+
+      // ---------- 会话 ----------
+
+      function persistToken() {
         if (!storageAvailable()) return;
         try {
-          if (simulatedUser) {
+          if (authToken) {
             window.localStorage.setItem(
               STORAGE_KEYS.session,
-              JSON.stringify({ version: SESSION_SCHEMA_VERSION, user: simulatedUser })
+              JSON.stringify({ version: SESSION_SCHEMA_VERSION, token: authToken })
             );
           } else {
             window.localStorage.removeItem(STORAGE_KEYS.session);
@@ -1471,25 +1539,46 @@
         }
       }
 
-      function loadSession() {
-        if (!storageAvailable()) return null;
+      // 只存 token：用户资料每次启动都从服务器取，避免本地副本过期
+      function loadToken() {
+        if (!storageAvailable()) return "";
         try {
           const payload = JSON.parse(window.localStorage.getItem(STORAGE_KEYS.session) || "null");
-          const user = payload && payload.user;
-          if (!user || typeof user.name !== "string") return null;
-          return {
-            name: String(user.name),
-            kind: String(user.kind || "邮箱"),
-            uid: String(user.uid || makeWorkId()),   // 旧数据无 uid 时现场补一个
-          };
+          return String((payload && payload.token) || "");
         } catch (error) {
-          return null;
+          return "";
+        }
+      }
+
+      function clearSession() {
+        authToken = "";
+        authUser = null;
+        persistToken();
+      }
+
+      function applySession(token, user) {
+        authToken = token || "";
+        authUser = user || null;
+        persistToken();
+        renderProfile();
+        refreshIcons();
+      }
+
+      // 启动时用本地 token 换回用户资料；token 失效则静默登出
+      async function restoreSession() {
+        authToken = loadToken();
+        if (!authToken) return;
+        try {
+          const data = await apiFetch("/api/me", { auth: true });
+          authUser = data.user;
+          renderProfile();
+        } catch (error) {
+          clearSession();
         }
       }
 
       // ---- 启动恢复 ----
-      // 必须早于下面所有事件监听注册：推荐流的 aria-label 在注册时就要读作品标题。
-      simulatedUser = loadSession();
+      // restoreWorks 必须早于下面所有事件监听注册：推荐流的 aria-label 在注册时就要读作品标题。
       restoreWorks();
 
       function refreshIcons() {
@@ -1914,23 +2003,30 @@
       let generationRunId = 0;
       let generationAbort = null;
 
+      // 服务端生成并直接落库，返回 { work, quotaLeft }
       async function requestAiGeneration(payload, signal) {
-        const endpoint = String(window.CIJING_AI_ENDPOINT || "").trim();
-        if (!endpoint) return null;
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal,
-        });
-        const result = await response.json().catch(() => ({}));
+        const base = apiBase();
+        if (!base) return null;
+        if (!authToken) throw new Error("请先登录后再创作");
+        let response;
+        try {
+          response = await fetch(`${base}/api/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+            body: JSON.stringify(payload),
+            signal,
+          });
+        } catch (error) {
+          if (error && error.name === "AbortError") throw error;
+          throw new Error("无法连接生成服务，请检查网络后重试");
+        }
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(result.error || `生成接口返回 ${response.status}`);
+          if (response.status === 401) clearSession();
+          throw new Error(data.error || `生成接口返回 ${response.status}`);
         }
-        if (!result.title || !result.content) {
-          throw new Error("生成接口返回内容不完整");
-        }
-        return result;
+        if (!data.work) throw new Error("生成接口返回内容不完整");
+        return data;
       }
 
       function runDemoGeneration(myRun) {
@@ -1969,11 +2065,18 @@
 
         const payload = generationPayload();
 
+        // 作品要存到账号里，所以必须先登录
+        if (!authToken) {
+          hideComposer();
+          openProfile();
+          return;
+        }
+
         try {
-          const result = await requestAiGeneration(payload, generationAbort.signal);
+          const data = await requestAiGeneration(payload, generationAbort.signal);
           if (myRun !== generationRunId) return;      // 已被新一轮或关闭弹窗打断
 
-          if (!result) {                              // 未配置接口 → 演示路径
+          if (!data) {                                // 未配置接口 → 演示路径
             stopGenerationProgress();                 // 交还给演示的分段推进
             await runDemoGeneration(myRun);
             if (myRun !== generationRunId) return;
@@ -1983,7 +2086,14 @@
           }
 
           finishGenerationProgress("故事已写入作品库");
-          const generatedWork = renderGeneratedWork(result, payload);
+          const generatedWork = apiWorkToLocal(data.work);
+          cacheRemoteWorks([generatedWork]);
+          // 配额由服务端扣减，本地同步一份用于展示
+          if (authUser && typeof data.quotaLeft === "number") {
+            authUser.quotaLeft = data.quotaLeft;
+            authUser.quotaUsed = Math.max(0, authUser.quotaTotal - data.quotaLeft);
+            renderProfile();
+          }
           // 用 textContent 更新，天然免疫注入；此前这条通知硬编码《雨夜的第七封信》
           document.getElementById("notificationGeneratedTitle").textContent = `《${generatedWork.title}》`;
           document.getElementById("notificationGeneratedTime").textContent = "刚刚";
@@ -2252,75 +2362,289 @@
         return `<button class="profile-work mx-auto flex w-full max-w-md items-center gap-3 text-left" data-work-id="${escapeHtml(work.id)}"><span class="image-cover h-20 w-16 shrink-0 rounded-[7px] bg-[#183b6c]" style="background-image:url('${escapeHtml(work.image)}')"></span><span class="min-w-0 flex-1"><span class="text-xs text-xhs">${escapeHtml(label)}</span><b class="mt-1 block truncate text-base">${escapeHtml(work.title)}</b><span class="mt-1 block line-clamp-2 text-sm leading-5 text-neutral-500">${escapeHtml(work.hook)}</span></span><i data-lucide="chevron-right" class="size-4 text-neutral-400"></i></button>`;
       }
 
-      function renderMyWorks() {
-        const works = savedWorks();
+      function loadingHtml(text) {
+        return `<p class="py-8 text-sm text-neutral-400">${escapeHtml(text || "加载中…")}</p>`;
+      }
+
+      function renderMyWorks(works) {
         if (!works.length) return EMPTY_WORKS_HTML;
-        // ⚠️ 删除按钮必须是 .profile-work 的兄弟节点而非子节点：
+        // ⚠️ 操作按钮必须是 .profile-work 的兄弟节点而非子节点：
         // <button> 内嵌 <button> 是非法 HTML，浏览器会提前闭合外层标签导致委托失效
-        const rows = works.map((work) => `
+        const rows = works.map((work) => {
+          const isPublic = work.visibility === "public";
+          return `
           <div class="mx-auto flex w-full max-w-md items-start gap-2">
-            ${profileWorkCard(work, relativeTime(work.createdAt))}
-            <button class="mt-7 grid size-8 shrink-0 place-items-center rounded-[7px] text-neutral-400 hover:bg-mist hover:text-xhs" data-work-delete="${escapeHtml(work.id)}" aria-label="删除作品 ${escapeHtml(work.title)}"><i data-lucide="trash-2" class="size-4"></i></button>
-          </div>`).join("");
+            ${profileWorkCard(work, isPublic ? "已发布" : "私密")}
+            <div class="mt-7 flex shrink-0 flex-col gap-1">
+              <button class="grid size-8 place-items-center rounded-[7px] text-neutral-400 hover:bg-mist hover:text-xhs" data-work-publish="${escapeHtml(work.id)}" aria-label="${isPublic ? "取消发布" : "公开发布"} ${escapeHtml(work.title)}"><i data-lucide="${isPublic ? "eye-off" : "send"}" class="size-4"></i></button>
+              <button class="grid size-8 place-items-center rounded-[7px] text-neutral-400 hover:bg-mist hover:text-xhs" data-work-delete="${escapeHtml(work.id)}" aria-label="删除作品 ${escapeHtml(work.title)}"><i data-lucide="trash-2" class="size-4"></i></button>
+            </div>
+          </div>`;
+        }).join("");
         return `<p class="mx-auto mb-3 w-full max-w-md text-xs text-neutral-400">共 ${works.length} 部作品</p><div class="flex flex-col gap-4">${rows}</div>`;
       }
 
-      // 本地存储有配额上限，没有删除入口用户迟早撞墙
-      function removeWorkById(id) {
-        const index = workCatalog.findIndex((work) => work.id === id && work.generated);
-        if (index < 0) return;
-        const work = workCatalog[index];
-        if (!window.confirm(`确定删除《${work.title}》？删除后无法恢复。`)) return;
-        workCatalog.splice(index, 1);   // const 数组允许原地 splice
-        persistWorks();
-        setProfileTab("works");         // 重新渲染列表与「共 N 部」
-        refreshIcons();
+      async function loadMyWorks() {
+        const data = await apiFetch("/api/works?scope=mine", { auth: true });
+        const works = (data.works || []).map(apiWorkToLocal);
+        // 必须进查找索引，否则列表里的发布/删除按钮拿着 id 却查不到作品
+        cacheRemoteWorks(works);
+        return works;
       }
 
-      function setProfileTab(tab) {
+      async function removeWorkById(id) {
+        const work = workById(id);
+        if (!work) return;
+        if (!window.confirm(`确定删除《${work.title}》？删除后无法恢复。`)) return;
+        try {
+          await apiFetch(`/api/works/${encodeURIComponent(id)}`, { method: "DELETE", auth: true });
+        } catch (error) {
+          window.alert(error.message);
+          return;
+        }
+        remoteWorks = remoteWorks.filter((item) => item.id !== id);
+        setProfileTab("works");
+      }
+
+      async function togglePublish(id) {
+        const work = workById(id);
+        if (!work) return;
+        const next = work.visibility === "public" ? "private" : "public";
+        try {
+          const data = await apiFetch(`/api/works/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            auth: true,
+            body: { visibility: next },
+          });
+          const updated = apiWorkToLocal(data.work);
+          const index = remoteWorks.findIndex((item) => item.id === id);
+          if (index >= 0) remoteWorks[index] = updated;
+        } catch (error) {
+          window.alert(error.message);
+          return;
+        }
+        setProfileTab("works");
+        loadFeed();   // 公开流随之变化
+      }
+
+      async function setProfileTab(tab) {
+        activeProfileTab = tab;
         document.querySelectorAll(".profile-tab").forEach((button) => {
           button.classList.toggle("active-profile-tab", button.dataset.profileTab === tab);
         });
+
+        if (tab === "works") {
+          profileContent.innerHTML = loadingHtml("正在读取作品…");
+          refreshIcons();
+          let works = [];
+          try {
+            works = await loadMyWorks();
+          } catch (error) {
+            profileContent.innerHTML = `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+            return;
+          }
+          if (activeProfileTab !== tab) return;   // 用户已切到别的 tab
+          profileContent.innerHTML = renderMyWorks(works);
+          refreshIcons();
+          return;
+        }
+
         const tabContent = {
-          works: renderMyWorks(),
           favorites: profileWorkCard(workById("demo-rain-letter"), "已收藏"),
           likes: profileWorkCard(workById("demo-library"), "已赞过"),
         };
-        profileContent.innerHTML = tabContent[tab];
+        profileContent.innerHTML = tabContent[tab] || "";
+        refreshIcons();
+      }
+
+      // ---------- 推荐流 ----------
+
+      const GENRE_IMAGES = {
+        "悬疑刑侦": "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1200&q=85",
+        "科幻西幻": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=85",
+        "古风言情": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=85",
+        "现代言情": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
+        "校园": "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=85",
+      };
+      // 生成作品的封面不落盘（服务端只存业务字段），按题材在前端派生
+      function imageForGenre(genre) {
+        return GENRE_IMAGES[genre] || GENERATED_WORK_IMAGE;
+      }
+
+      // 4 种版式由题材决定 —— 作品数据里没有字段能表达版式，只能在这里映射
+      function layoutForGenre(genre) {
+        if (genre === "悬疑刑侦") return "quote-dark";
+        if (genre === "古风言情") return "serif";
+        if (genre === "现代言情") return "quote-light";
+        return "cover";   // 科幻西幻 / 校园 / 自定义题材 兜底
+      }
+
+      function apiWorkToLocal(work) {
+        const words = work.words || [];
+        return {
+          id: work.id,
+          generated: true,
+          remote: true,
+          createdAt: work.createdAt,
+          title: work.title,
+          genre: work.genre,
+          tag: work.subgenre || work.tag || work.genre,
+          count: work.count || `${words.length} 个词 · 全文阅读`,
+          byline: work.authorName ? `${work.authorName} · ${relativeTime(work.createdAt)}` : "",
+          authorName: work.authorName || "",
+          image: imageForGenre(work.genre),
+          hook: work.hook || "",
+          summary: work.summary || "",
+          words,
+          reader: work.reader || [],
+          vocab: work.vocab || {},
+          visibility: work.visibility,
+          publishedAt: work.publishedAt,
+          mine: Boolean(work.mine),
+        };
+      }
+
+      // 服务器作品进同一个查找索引，workById 才能解析动态流里的 id
+      function cacheRemoteWorks(works) {
+        works.forEach((work) => {
+          const index = remoteWorks.findIndex((item) => item.id === work.id);
+          if (index >= 0) remoteWorks[index] = work;
+          else remoteWorks.push(work);
+        });
+      }
+
+      function feedCardFoot(work, extraClass) {
+        return `<div class="mt-4 flex items-center justify-between ${extraClass || ""} text-xs">
+          <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#d7ebee]"></span>${escapeHtml(work.authorName || "词境作者")}</span>
+          ${work.mine ? '<span class="rounded bg-[#eaf1ff] px-1.5 py-0.5 text-[10px] font-semibold text-xhs">我的</span>' : ""}
+        </div>`;
+      }
+
+      function renderFeedCard(work) {
+        const tag = escapeHtml(work.tag || work.genre || "词汇小说");
+        const title = escapeHtml(work.title || "未命名词汇小说");
+        const hook = escapeHtml(work.hook || "");
+        const count = escapeHtml(work.count || "");
+        const inner = (body) => `<article data-work-id="${escapeHtml(work.id)}" class="overflow-hidden rounded-[8px] bg-white shadow-panel transition hover:-translate-y-0.5">${body}</article>`;
+
+        const layout = layoutForGenre(work.genre || work.tag);
+
+        if (layout === "quote-dark") {
+          return inner(`<div class="bg-[#26212b] p-4 text-white">
+            <div class="mb-6 flex items-center justify-between"><span class="rounded bg-white/10 px-2 py-1 text-[11px] text-white/80">${tag}</span><span class="text-xs text-white/45">${count}</span></div>
+            <p class="line-clamp-3 text-[22px] font-bold leading-[1.35]">${hook || title}</p>
+            <p class="mt-5 text-sm font-semibold text-white/90">${title}</p>
+            ${feedCardFoot(work, "border-t border-white/10 pt-3 text-white/60")}
+          </div>`);
+        }
+
+        if (layout === "serif") {
+          return inner(`<div class="bg-[#f9f0eb] p-4">
+            <div class="mb-4 flex items-center justify-between"><span class="rounded bg-[#edd8cd] px-2 py-1 text-[11px] text-[#9c4d39]">${tag}</span><span class="text-xs text-[#b08a7c]">${count}</span></div>
+            <h2 class="font-serif text-2xl font-bold leading-tight text-[#73392e]">${title}</h2>
+            <p class="mt-3 line-clamp-3 text-sm leading-6 text-[#74483e]">${hook}</p>
+            ${feedCardFoot(work, "border-t border-[#e7d5cc] pt-3 text-[#a3796c]")}
+          </div>`);
+        }
+
+        if (layout === "quote-light") {
+          return inner(`<div class="p-4">
+            <div class="mb-4 flex items-center justify-between"><span class="rounded bg-[#eff7f6] px-2 py-1 text-[11px] text-[#39736f]">${tag}</span><span class="text-xs text-neutral-400">${count}</span></div>
+            <p class="line-clamp-3 text-[22px] font-bold leading-[1.35] text-[#173b38]">${hook || title}</p>
+            <p class="mt-4 text-sm font-semibold text-[#173b38]">${title}</p>
+            ${feedCardFoot(work, "border-t border-dashed border-[#bdd7d3] pt-3 text-neutral-500")}
+          </div>`);
+        }
+
+        return inner(`<div class="book-cover image-cover feed-cover relative flex items-end p-4 text-white" style="background-image: url('${escapeHtml(work.image)}')">
+            <div class="relative z-10">
+              <span class="mb-2 inline-flex rounded bg-white/20 px-2 py-1 text-[11px]">${tag}</span>
+              <h2 class="text-xl font-bold leading-tight">${title}</h2>
+              <p class="mt-1 text-xs text-white/85">${count}</p>
+            </div>
+          </div>
+          <div class="p-3">
+            <p class="line-clamp-3 text-sm leading-6 text-neutral-700">${hook}</p>
+            ${feedCardFoot(work, "text-neutral-500")}
+          </div>`);
+      }
+
+      // demo 作品也走同一套模板，保证冷启动时视觉一致
+      function renderDemoFeedCard(work) {
+        return renderFeedCard({
+          id: work.id,
+          title: work.title,
+          genre: work.tag,
+          tag: work.tag,
+          count: work.count,
+          hook: work.hook,
+          authorName: String(work.byline || "").split("·")[0].trim(),
+          image: work.image,
+        });
+      }
+
+      function bindFeedCards() {
+        document.querySelectorAll("#feed article").forEach((card) => {
+          const work = workById(card.dataset.workId);
+          if (!work) return;
+          card.classList.add("work-card");
+          card.tabIndex = 0;
+          card.setAttribute("role", "button");
+          card.setAttribute("aria-label", `打开作品：${work.title}`);
+          card.addEventListener("click", () => openWorkDetail(work));
+        });
+      }
+
+      async function loadFeed() {
+        const feed = document.getElementById("feed");
+        if (!feed) return;
+        let works = [];
+        try {
+          const data = await apiFetch("/api/works?scope=feed");
+          works = (data.works || []).map(apiWorkToLocal);
+        } catch (error) {
+          console.warn("[词境] 推荐流加载失败，回退到示例作品：", error);
+        }
+        cacheRemoteWorks(works);
+
+        // 真作品优先；冷启动（还没人发布）才用 demo 兜底
+        feed.innerHTML = works.length
+          ? works.map(renderFeedCard).join("")
+          : workCatalog.filter((work) => work.id.startsWith("demo-")).map(renderDemoFeedCard).join("");
+        bindFeedCards();
         refreshIcons();
       }
 
       function renderProfile() {
-        const loggedIn = Boolean(simulatedUser);
+        const loggedIn = Boolean(authUser);
         profileGuest.classList.toggle("hidden", loggedIn);
         profileMember.classList.toggle("hidden", !loggedIn);
-        if (loggedIn) {
-          document.getElementById("profileNickname").textContent = simulatedUser.name;
-          document.getElementById("openProfileTop").textContent = simulatedUser.name.slice(0, 1);
-          setProfileTab("works");
-        }
+        if (!loggedIn) return;
+        document.getElementById("profileNickname").textContent = authUser.name;
+        document.getElementById("openProfileTop").textContent = authUser.name.slice(0, 1);
+        document.getElementById("profileHandle").textContent = `词境号：${String(authUser.id).slice(0, 10)}`;
+        document.getElementById("profileQuota").textContent =
+          `还可创作 ${authUser.quotaLeft} 次（套餐共 ${authUser.quotaTotal} 次）`;
       }
 
       function openProfile() {
         renderProfile();
         openAppView(profileView);
+        if (authUser) setProfileTab(activeProfileTab);
       }
 
-      function setAuthMethod(method) {
-        authMethod = method;
-        document.querySelectorAll(".auth-method").forEach((button) => {
-          const active = button.dataset.authMethod === method;
-          button.classList.toggle("bg-white", active);
-          button.classList.toggle("text-ink", active);
-          button.classList.toggle("font-semibold", active);
-          button.classList.toggle("shadow-sm", active);
-          button.classList.toggle("text-neutral-500", !active);
-        });
-        const isPhone = method === "phone";
-        document.getElementById("authFieldLabel").textContent = isPhone ? "手机号" : "邮箱";
-        authIdentifier.placeholder = isPhone ? "输入手机号" : "输入邮箱";
-        authIdentifier.inputMode = isPhone ? "tel" : "email";
-        authIdentifier.value = "";
+      // 登录方式：密码 或 验证码（仅登录模式可切换；注册固定「验证码 + 密码」）
+      let loginWay = "password";
+
+      function setAuthError(message) {
+        const el = document.getElementById("authError");
+        el.textContent = message || "";
+        el.classList.toggle("hidden", !message);
+      }
+
+      function authBusy(busy) {
+        document.getElementById("authSubmit").disabled = busy;
+        document.getElementById("authSendCode").disabled = busy;
       }
 
       function setAuthMode(mode) {
@@ -2333,30 +2657,172 @@
           button.classList.toggle("shadow-sm", active);
           button.classList.toggle("text-neutral-500", !active);
         });
-        const isRegister = mode === "register";
-        document.getElementById("authTitle").textContent = isRegister ? "注册词境" : "登录词境";
-        document.getElementById("authSubtitle").textContent = isRegister
-          ? "创建账号，保存你的创作与阅读偏好"
-          : "继续管理你的作品与阅读记录";
-        document.getElementById("authSubmit").textContent = isRegister ? "注册并登录" : "登录";
-        document.getElementById("authWechat").lastChild.textContent = isRegister ? "微信注册 / 登录" : "微信登录 / 注册";
-        document.getElementById("authNotice").textContent = isRegister
-          ? "注册即表示你同意以演示模式创建本地账号。"
-          : "演示模式：不会发送验证码，也不会保存真实手机号、邮箱或微信账号。";
+        syncAuthForm();
       }
 
-      function completeAuth(kind) {
-        const identifier = authIdentifier.value.trim();
-        if (kind !== "微信" && !identifier) {
-          authIdentifier.focus();
-          return;
+      function syncAuthForm() {
+        const isRegister = authMode === "register";
+        document.getElementById("authTitle").textContent = isRegister ? "注册词境" : "登录词境";
+        document.getElementById("authSubtitle").textContent = isRegister
+          ? "需要邀请码。注册后作品存在账号里，换设备登录也在。"
+          : "继续管理你的作品与阅读记录";
+
+        document.getElementById("authInviteRow").classList.toggle("hidden", !isRegister);
+        document.getElementById("authName").classList.toggle("hidden", !isRegister);
+
+        // 邮箱验证码未启用时：注册不需要验证码，登录只走密码
+        const needCode = appConfig.emailOtp && (isRegister || loginWay === "code");
+        const needPassword = isRegister || !appConfig.emailOtp || loginWay === "password";
+        document.getElementById("authCodeRow").classList.toggle("hidden", !needCode);
+        document.getElementById("authPassword").classList.toggle("hidden", !needPassword);
+
+        document.getElementById("authSubmit").textContent = isRegister ? "注册并登录" : "登录";
+        const toggle = document.getElementById("authWayToggle");
+        toggle.classList.toggle("hidden", isRegister || !appConfig.emailOtp);
+        toggle.textContent = loginWay === "code" ? "改用密码登录" : "改用验证码登录";
+        document.getElementById("authIdentifier").placeholder = "输入邮箱";
+        document.getElementById("authPassword").placeholder = isRegister
+          ? "设置密码（至少 6 位）"
+          : "密码";
+        document.getElementById("authNotice").textContent = appConfig.emailOtp
+          ? "收不到验证码时，请查看垃圾邮件文件夹。"
+          : "内测阶段凭邀请码注册。作品会保存到你的账号，换设备登录也在。";
+        setAuthError("");
+      }
+
+      async function sendAuthCode() {
+        const email = document.getElementById("authIdentifier").value.trim();
+        if (!email) return setAuthError("请先填写邮箱");
+        const body = { email, purpose: authMode === "register" ? "register" : "login" };
+        if (authMode === "register") {
+          const inviteCode = document.getElementById("authInvite").value.trim();
+          if (!inviteCode) return setAuthError("请先填写邀请码");
+          body.inviteCode = inviteCode;
         }
-        simulatedUser = {
-          name: kind === "微信" ? "微信用户" : authMode === "register" ? "新作者" : "新朋友",
-          kind,
-          uid: makeWorkId(),   // 稳定本地用户标识，供未来按账号分桶
-        };
-        persistSession();
+
+        authBusy(true);
+        setAuthError("");
+        try {
+          const data = await apiFetch("/api/auth/send-code", { method: "POST", body });
+          if (data.devCode) {
+            // 本地开发时后端直接回传验证码，省得配邮件服务。生产环境不会出现该字段。
+            document.getElementById("authCode").value = data.devCode;
+            setAuthError(`【开发模式】验证码已自动填入：${data.devCode}`);
+          } else {
+            setAuthError("验证码已发送，5 分钟内有效（收不到请查垃圾邮件）");
+          }
+        } catch (error) {
+          setAuthError(error.message);
+        } finally {
+          authBusy(false);
+        }
+      }
+
+      async function submitAuth() {
+        const email = document.getElementById("authIdentifier").value.trim();
+        const password = document.getElementById("authPassword").value;
+        const code = document.getElementById("authCode").value.trim();
+        if (!email) return setAuthError("请填写邮箱");
+
+        authBusy(true);
+        setAuthError("");
+        try {
+          let data;
+          if (authMode === "register") {
+            const inviteCode = document.getElementById("authInvite").value.trim();
+            if (!inviteCode) throw new Error("请填写邀请码");
+            if (appConfig.emailOtp && !code) throw new Error("请填写验证码");
+            if (password.length < 6) throw new Error("密码至少 6 位");
+            data = await apiFetch("/api/auth/register", {
+              method: "POST",
+              body: {
+                inviteCode,
+                email,
+                code,
+                password,
+                name: document.getElementById("authName").value.trim(),
+              },
+            });
+          } else {
+            const body = { email };
+            if (appConfig.emailOtp && loginWay === "code") {
+              if (!code) throw new Error("请填写验证码");
+              body.code = code;
+            } else {
+              if (!password) throw new Error("请填写密码");
+              body.password = password;
+            }
+            data = await apiFetch("/api/auth/login", { method: "POST", body });
+          }
+
+          applySession(data.token, data.user);
+          closeAppViews();
+          await afterSignIn();
+        } catch (error) {
+          setAuthError(error.message);
+        } finally {
+          authBusy(false);
+        }
+      }
+
+      async function afterSignIn() {
+        await maybeMigrateLocalWorks();
+        openProfile();
+      }
+
+      // 登录前存在本机的作品，询问是否上传到账号（只问一次）
+      async function maybeMigrateLocalWorks() {
+        const local = savedWorks();
+        if (!local.length) return;
+        if (localStorage.getItem(MIGRATED_KEY) === "1") return;
+
+        const ok = window.confirm(
+          `发现 ${local.length} 部本机作品，是否上传到你的账号？\n\n` +
+          `上传后换设备登录也能看到。选「取消」则保留在本机，不再询问。`
+        );
+        localStorage.setItem(MIGRATED_KEY, "1");
+        if (!ok) return;
+
+        let done = 0;
+        for (const work of local) {
+          try {
+            await apiFetch("/api/works", {
+              method: "POST",
+              auth: true,
+              body: {
+                title: work.title,
+                genre: work.genre || work.tag || "悬疑刑侦",
+                subgenre: work.tag || work.genre || "密室凶案",
+                hook: work.hook,
+                summary: work.summary,
+                content: (work.reader || []).join("\n\n"),
+                words: work.words || [],
+                vocab: work.vocab || {},
+              },
+            });
+            done += 1;
+          } catch (error) {
+            console.warn("[词境] 迁移失败:", error);
+          }
+        }
+        if (done) {
+          // 迁移成功的从本机移除，避免下次重复上传
+          local.slice(0, done).forEach((work) => {
+            const index = workCatalog.findIndex((item) => item.id === work.id);
+            if (index >= 0) workCatalog.splice(index, 1);
+          });
+          persistWorks();
+        }
+        window.alert(done === local.length ? `已上传 ${done} 部作品。` : `已上传 ${done} / ${local.length} 部，其余保留在本机。`);
+      }
+
+      async function signOut() {
+        try {
+          await apiFetch("/api/auth/logout", { method: "POST", auth: true });
+        } catch (error) {
+          /* 服务端失败也要清本地，否则用户会被卡在登录态 */
+        }
+        clearSession();
         renderProfile();
         refreshIcons();
       }
@@ -2540,22 +3006,31 @@
       });
 
       document.getElementById("continueAsGuest").addEventListener("click", closeAppViews);
-      document.querySelectorAll(".auth-method").forEach((button) => {
+      document.querySelectorAll(".auth-mode").forEach((button) => {
         button.addEventListener("click", () => {
-          setAuthMethod(button.dataset.authMethod);
-          authIdentifier.focus();
+          setAuthMode(button.dataset.authMode);
+          document.getElementById("authIdentifier").focus();
         });
       });
-      document.querySelectorAll(".auth-mode").forEach((button) => {
-        button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+      document.getElementById("authSubmit").addEventListener("click", submitAuth);
+      document.getElementById("authSendCode").addEventListener("click", sendAuthCode);
+      document.getElementById("authWayToggle").addEventListener("click", () => {
+        loginWay = loginWay === "password" ? "code" : "password";
+        syncAuthForm();
       });
-      document.getElementById("authSubmit").addEventListener("click", () => completeAuth(authMethod === "phone" ? "手机号" : "邮箱"));
-      document.getElementById("authWechat").addEventListener("click", () => completeAuth("微信"));
+      document.getElementById("signOutButton").addEventListener("click", () => {
+        if (window.confirm("确定退出登录？本机未上传的作品仍会保留。")) signOut();
+      });
       profileContent.addEventListener("click", (event) => {
-        // 删除必须最先判并 return，否则点击删除会先命中 .profile-work 打开详情
+        // 操作按钮必须先判并 return，否则点击它们会先命中 .profile-work 打开详情
         const deleteButton = event.target.closest("[data-work-delete]");
         if (deleteButton) {
           removeWorkById(deleteButton.dataset.workDelete);
+          return;
+        }
+        const publishButton = event.target.closest("[data-work-publish]");
+        if (publishButton) {
+          togglePublish(publishButton.dataset.workPublish);
           return;
         }
         const createButton = event.target.closest("[data-profile-create]");
@@ -2574,24 +3049,14 @@
         button.addEventListener("click", () => setProfileTab(button.dataset.profileTab));
       });
 
-      // 按 data-work-id 显式绑定，不再靠 DOM 位置 —— 位置绑定正是此前 3 张卡
-      // 「显示 A 却打开 B」的成因。显示什么标题，就打开那部作品。
-      document.querySelectorAll("#feed article").forEach((card) => {
-        const work = workById(card.dataset.workId);
-        if (!work) return;                       // id 写错时跳过该卡，不炸整页
-        card.classList.add("work-card");
-        card.tabIndex = 0;
-        card.setAttribute("role", "button");
-        card.setAttribute("aria-label", `打开作品：${work.title}`);
-        const open = () => openWorkDetail(work);
-        card.addEventListener("click", open);
-        card.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            open();
-          }
-        });
-      });
+      // 推荐流已改为动态渲染（见 loadFeed / renderFeedCard），
+      // 这里只负责启动：先恢复登录态，再拉推荐流。
+      (async () => {
+        await loadAppConfig();
+        syncAuthForm();
+        await restoreSession();
+        await loadFeed();
+      })();
 
       document.querySelectorAll(".detail-back").forEach((button) => {
         button.addEventListener("click", closeWorkDetail);
