@@ -942,21 +942,37 @@
       }
 
       .feed-tab {
-        height: 32px;
+        height: 34px;
         border-radius: 999px;
-        padding: 0 12px;
-        color: #666;
+        padding: 0 15px;
+        color: #5b6b85;
         font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        background: #eef3fb;
+        border: 1px solid transparent;
+        transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
       }
 
       .feed-tab:hover {
-        background: #eee;
+        background: #e0e9fa;
+        color: #2f5490;
+      }
+
+      .feed-tab:active {
+        transform: scale(0.97);
       }
 
       .active-feed-tab {
-        background: #222;
+        background: linear-gradient(135deg, #4a8bff 0%, #246bfd 100%);
         color: #fff;
         font-weight: 600;
+        box-shadow: 0 4px 12px rgba(36, 107, 253, 0.28);
+      }
+
+      .active-feed-tab:hover {
+        background: linear-gradient(135deg, #4a8bff 0%, #246bfd 100%);
+        color: #fff;
       }
 
       .select-chip {
@@ -2669,16 +2685,26 @@
         refreshIcons();
       }
 
-      // 切换筛选：scope 与 genre 二选一，activeButton 用来同步高亮
-      function applyFeedFilter({ scope, genre }, activeButton) {
-        feedScope = scope || "feed";
-        feedGenre = genre || "";
+      // 按当前筛选状态同步高亮，顶部分类与侧栏题材始终一致
+      function syncFeedTabStates() {
         document.querySelectorAll(".feed-tab").forEach((button) => {
-          button.classList.toggle("active-feed-tab", button === activeButton);
+          const scope = button.dataset.feedScope;
+          const genre = button.dataset.feedGenre;
+          const active = genre
+            ? Boolean(feedGenre) && genre === feedGenre
+            : !feedGenre && (scope || "feed") === feedScope;
+          button.classList.toggle("active-feed-tab", active);
         });
         document.querySelectorAll(".topic-pill").forEach((button) => {
-          button.classList.toggle("is-active-pill", button === activeButton);
+          button.classList.toggle("is-active-pill", Boolean(feedGenre) && button.dataset.feedGenre === feedGenre);
         });
+      }
+
+      // 切换筛选：scope 与 genre 二选一
+      function applyFeedFilter({ scope, genre }) {
+        feedScope = scope || "feed";
+        feedGenre = genre || "";
+        syncFeedTabStates();
         loadFeed();
       }
 
@@ -3399,9 +3425,9 @@
       document.querySelectorAll(".feed-tab").forEach((tab) => {
         tab.addEventListener("click", () => {
           if (tab.dataset.feedGenre) {
-            applyFeedFilter({ genre: tab.dataset.feedGenre }, tab);
+            applyFeedFilter({ genre: tab.dataset.feedGenre });
           } else {
-            applyFeedFilter({ scope: tab.dataset.feedScope || "feed" }, tab);
+            applyFeedFilter({ scope: tab.dataset.feedScope || "feed" });
           }
         });
       });
@@ -3411,10 +3437,9 @@
         pill.addEventListener("click", () => {
           const alreadyActive = pill.classList.contains("is-active-pill");
           if (alreadyActive) {
-            const firstTab = document.querySelector(".feed-tab");
-            applyFeedFilter({ scope: "feed" }, firstTab);
+            applyFeedFilter({ scope: "feed" });
           } else {
-            applyFeedFilter({ genre: pill.dataset.feedGenre }, pill);
+            applyFeedFilter({ genre: pill.dataset.feedGenre });
           }
         });
       });
