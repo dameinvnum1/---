@@ -216,11 +216,11 @@
             <div class="my-4 border-t border-black/5"></div>
             <p class="px-3 pb-2 text-xs font-medium text-neutral-400">探索题材</p>
             <div class="flex flex-wrap gap-2 px-3">
-              <button class="topic-pill">悬疑刑侦</button>
-              <button class="topic-pill">现代言情</button>
-              <button class="topic-pill">科幻西幻</button>
-              <button class="topic-pill">都市职场</button>
-              <button class="topic-pill">校园</button>
+              <button class="topic-pill" data-feed-genre="悬疑刑侦">悬疑刑侦</button>
+              <button class="topic-pill" data-feed-genre="现代言情">现代言情</button>
+              <button class="topic-pill" data-feed-genre="科幻西幻">科幻西幻</button>
+              <button class="topic-pill" data-feed-genre="古风言情">古风言情</button>
+              <button class="topic-pill" data-feed-genre="校园">校园</button>
             </div>
           </div>
         </aside>
@@ -229,13 +229,13 @@
           <div
             class="mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap scrollbar-none"
           >
-            <button class="feed-tab active-feed-tab">为你推荐</button>
-            <button class="feed-tab">新作</button>
-            <button class="feed-tab">悬疑刑侦</button>
-            <button class="feed-tab">都市职场</button>
-            <button class="feed-tab">校园</button>
-            <button class="feed-tab">科幻西幻</button>
-            <button class="feed-tab">古风</button>
+            <button class="feed-tab active-feed-tab" data-feed-scope="feed">推荐</button>
+            <button class="feed-tab" data-feed-scope="new">新作</button>
+            <button class="feed-tab" data-feed-genre="悬疑刑侦">悬疑刑侦</button>
+            <button class="feed-tab" data-feed-genre="现代言情">现代言情</button>
+            <button class="feed-tab" data-feed-genre="古风言情">古风言情</button>
+            <button class="feed-tab" data-feed-genre="科幻西幻">科幻西幻</button>
+            <button class="feed-tab" data-feed-genre="校园">校园</button>
           </div>
 
           <button
@@ -967,6 +967,11 @@
       .topic-pill:hover {
         background: #eaf1ff;
         color: #246bfd;
+      }
+
+      .topic-pill.is-active-pill {
+        background: #246bfd;
+        color: #fff;
       }
 
       .feed-tab {
@@ -2644,25 +2649,52 @@
         });
       }
 
+      // 推荐流当前的筛选条件
+      let feedScope = "feed";
+      let feedGenre = "";
+
       async function loadFeed() {
         const feed = document.getElementById("feed");
         if (!feed) return;
+        const params = new URLSearchParams({ scope: feedScope, limit: "24" });
+        if (feedGenre) params.set("genre", feedGenre);
+
         let works = [];
         try {
           // 带上登录态：服务端靠它返回 liked/favorited，否则卡片上的点赞状态永远是未点
-          const data = await apiFetch("/api/works?scope=feed", { auth: true });
+          const data = await apiFetch(`/api/works?${params.toString()}`, { auth: true });
           works = (data.works || []).map(apiWorkToLocal);
         } catch (error) {
           console.warn("[词境] 推荐流加载失败，回退到示例作品：", error);
         }
         cacheRemoteWorks(works);
 
-        // 真作品优先；冷启动（还没人发布）才用 demo 兜底
-        feed.innerHTML = works.length
-          ? works.map(renderFeedCard).join("")
-          : workCatalog.filter((work) => work.id.startsWith("demo-")).map(renderDemoFeedCard).join("");
+        if (works.length) {
+          feed.innerHTML = works.map(renderFeedCard).join("");
+        } else if (feedGenre || feedScope !== "feed") {
+          // 筛选为空时不回落 demo —— 那会显示与题材不符的作品，等于骗人
+          feed.innerHTML = `<p style="column-span: all" class="py-12 text-center text-sm text-neutral-400">${
+            feedGenre ? `「${escapeHtml(feedGenre)}」下还没有已发布的作品` : "还没有新作品"
+          }</p>`;
+        } else {
+          // 冷启动：还没有人发布，用示例作品兜底
+          feed.innerHTML = workCatalog.filter((work) => work.id.startsWith("demo-")).map(renderDemoFeedCard).join("");
+        }
         bindFeedCards();
         refreshIcons();
+      }
+
+      // 切换筛选：scope 与 genre 二选一，activeButton 用来同步高亮
+      function applyFeedFilter({ scope, genre }, activeButton) {
+        feedScope = scope || "feed";
+        feedGenre = genre || "";
+        document.querySelectorAll(".feed-tab").forEach((button) => {
+          button.classList.toggle("active-feed-tab", button === activeButton);
+        });
+        document.querySelectorAll(".topic-pill").forEach((button) => {
+          button.classList.toggle("is-active-pill", button === activeButton);
+        });
+        loadFeed();
       }
 
       function renderProfile() {
@@ -3277,8 +3309,24 @@
 
       document.querySelectorAll(".feed-tab").forEach((tab) => {
         tab.addEventListener("click", () => {
-          document.querySelectorAll(".feed-tab").forEach((item) => item.classList.remove("active-feed-tab"));
-          tab.classList.add("active-feed-tab");
+          if (tab.dataset.feedGenre) {
+            applyFeedFilter({ genre: tab.dataset.feedGenre }, tab);
+          } else {
+            applyFeedFilter({ scope: tab.dataset.feedScope || "feed" }, tab);
+          }
+        });
+      });
+
+      // 侧栏题材标签：点一次筛选，再点一次取消，回到「推荐」
+      document.querySelectorAll(".topic-pill").forEach((pill) => {
+        pill.addEventListener("click", () => {
+          const alreadyActive = pill.classList.contains("is-active-pill");
+          if (alreadyActive) {
+            const firstTab = document.querySelector(".feed-tab");
+            applyFeedFilter({ scope: "feed" }, firstTab);
+          } else {
+            applyFeedFilter({ genre: pill.dataset.feedGenre }, pill);
+          }
         });
       });
 

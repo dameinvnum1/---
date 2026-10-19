@@ -726,9 +726,16 @@ async function handleListWorks(request, env, url) {
            ORDER BY w.published_at DESC LIMIT ?`;
     params = [viewer, viewer, viewerId, limit];
   } else {
-    // feed / new 只返回公开作品
+    // feed / new 只返回公开作品。
+    // 推荐按互动量排（赞 + 收藏），新作按发布时间排 —— 否则两个 tab 结果一模一样。
+    const order =
+      scope === "new"
+        ? "ORDER BY w.published_at DESC"
+        : `ORDER BY ((SELECT COUNT(*) FROM likes WHERE work_id = w.id)
+                    + (SELECT COUNT(*) FROM favorites WHERE work_id = w.id)) DESC,
+                    w.published_at DESC`;
     sql = `${WORK_SELECT} WHERE w.visibility = 'public' ${genre ? "AND w.genre = ?" : ""}
-           ORDER BY w.published_at DESC LIMIT ?`;
+           ${order} LIMIT ?`;
     params = genre ? [viewer, viewer, genre, limit] : [viewer, viewer, limit];
   }
 
