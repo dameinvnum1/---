@@ -717,6 +717,13 @@ async function handleListWorks(request, env, url) {
     if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
     sql = `${WORK_SELECT} WHERE w.user_id = ? ORDER BY w.created_at DESC LIMIT ?`;
     params = [viewer, viewer, viewerId, limit];
+  } else if (scope === "following") {
+    // 我关注的人发布的公开作品
+    if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
+    sql = `${WORK_SELECT} WHERE w.visibility = 'public'
+           AND w.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?)
+           ORDER BY w.published_at DESC LIMIT ?`;
+    params = [viewer, viewer, viewerId, limit];
   } else if (scope === "favorites" || scope === "liked") {
     // 我收藏的 / 我赞过的：只列公开作品，避免把别人已转为私密的内容暴露出来
     if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
@@ -919,6 +926,80 @@ async function handlePostComment(request, env, workId, auth) {
   );
 }
 
+// ---------- 关注 / 粉丝 ----------
+
+async function handleToggleFollow(request, env, targetId, auth) {
+  if (targetId === auth.user.id) return json({ error: "不能关注自己" }, 400, request, env);
+  const target = await env.cijing_db.prepare("SELECT id FROM users WHERE id = ?").bind(targetId).first();
+  if (!target) return json({ error: "用户不存在" }, 404, request, env);
+
+  const body = await request.json().catch(() => ({}));
+  const on = body.on !== false;
+  if (on) {
+    await env.cijing_db
+      .prepare("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)")
+      .bind(auth.user.id, targetId, Date.now())
+      .run();
+  } else {
+    await env.cijing_db
+      .prepare("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?")
+      .bind(auth.user.id, targetId)
+      .run();
+  }
+
+  const count = await env.cijing_db
+    .prepare("SELECT COUNT(*) AS n FROM follows WHERE followee_id = ?")
+    .bind(targetId)
+    .first();
+  return json({ ok: true, on, followerCount: Number(count.n) || 0 }, 200, request, env);
+}
+
+// 公开作者页：只暴露笔名与统计，不含邮箱等隐私字段
+async function handleGetUser(request, env, userId) {
+  const auth = await currentUser(request, env);
+  const viewerId = auth ? auth.user.id : null;
+
+  const user = await env.cijing_db
+    .prepare("SELECT id, name, created_at FROM users WHERE id = ?")
+    .bind(userId)
+    .first();
+  if (!user) return json({ error: "用户不存在" }, 404, request, env);
+
+  const stats = await env.cijing_db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM works WHERE user_id = ? AND visibility = 'public') AS work_count,
+         (SELECT COUNT(*) FROM likes l JOIN works w ON w.id = l.work_id WHERE w.user_id = ?) AS likes_received,
+         (SELECT COUNT(*) FROM favorites f JOIN works w ON w.id = f.work_id WHERE w.user_id = ?) AS favorites_received,
+         (SELECT COUNT(*) FROM follows WHERE followee_id = ?) AS follower_count,
+         (SELECT COUNT(*) FROM follows WHERE follower_id = ?) AS following_count,
+         EXISTS(SELECT 1 FROM follows WHERE follower_id = ? AND followee_id = ?) AS is_following`
+    )
+    .bind(userId, userId, userId, userId, userId, viewerId || "", userId)
+    .first();
+
+  return json(
+    {
+      ok: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        createdAt: Number(user.created_at),
+        workCount: Number(stats?.work_count) || 0,
+        likesReceived: Number(stats?.likes_received) || 0,
+        favoritesReceived: Number(stats?.favorites_received) || 0,
+        followerCount: Number(stats?.follower_count) || 0,
+        followingCount: Number(stats?.following_count) || 0,
+        isFollowing: Boolean(stats?.is_following),
+      },
+      isMine: viewerId === userId,
+    },
+    200,
+    request,
+    env
+  );
+}
+
 async function handleDeleteComment(request, env, commentId, auth) {
   const row = await env.cijing_db
     .prepare("SELECT user_id, work_id FROM comments WHERE id = ?")
@@ -959,7 +1040,8 @@ export default {
         || path === "/api/auth/logout"
         || (path === "/api/works" && (url.searchParams.get("scope") === "mine" || method === "POST"))
         || (path.startsWith("/api/works/") && method !== "GET")
-        || (path.startsWith("/api/comments/") && method === "DELETE");
+        || (path.startsWith("/api/comments/") && method === "DELETE")
+        || (path.startsWith("/api/users/") && method !== "GET");
 
       const auth = await currentUser(request, env);
       if (needsAuth && !auth) return json({ error: "请先登录" }, 401, request, env);
@@ -970,9 +1052,11 @@ export default {
           .prepare(
             `SELECT
                (SELECT COUNT(*) FROM likes l JOIN works w ON w.id = l.work_id WHERE w.user_id = ?) AS likes_received,
-               (SELECT COUNT(*) FROM favorites f JOIN works w ON w.id = f.work_id WHERE w.user_id = ?) AS favorites_received`
+               (SELECT COUNT(*) FROM favorites f JOIN works w ON w.id = f.work_id WHERE w.user_id = ?) AS favorites_received,
+               (SELECT COUNT(*) FROM follows WHERE followee_id = ?) AS follower_count,
+               (SELECT COUNT(*) FROM follows WHERE follower_id = ?) AS following_count`
           )
-          .bind(auth.user.id, auth.user.id)
+          .bind(auth.user.id, auth.user.id, auth.user.id, auth.user.id)
           .first();
         return json(
           {
@@ -981,6 +1065,8 @@ export default {
               ...publicUser(auth.user),
               likesReceived: Number(stats?.likes_received) || 0,
               favoritesReceived: Number(stats?.favorites_received) || 0,
+              followerCount: Number(stats?.follower_count) || 0,
+              followingCount: Number(stats?.following_count) || 0,
             },
           },
           200,
@@ -1020,6 +1106,17 @@ export default {
       const commentMatch = path.match(/^\/api\/comments\/([A-Za-z0-9_-]+)$/);
       if (commentMatch && method === "DELETE") {
         return await handleDeleteComment(request, env, commentMatch[1], auth);
+      }
+
+      // 关注：写操作需要登录
+      const followMatch = path.match(/^\/api\/users\/([A-Za-z0-9_-]+)\/follow$/);
+      if (followMatch && method === "POST") {
+        return await handleToggleFollow(request, env, followMatch[1], auth);
+      }
+      // 作者公开页：任何人都能看
+      const userMatch = path.match(/^\/api\/users\/([A-Za-z0-9_-]+)$/);
+      if (userMatch && method === "GET") {
+        return await handleGetUser(request, env, userMatch[1]);
       }
 
       const workMatch = path.match(/^\/api\/works\/([A-Za-z0-9_-]+)$/);

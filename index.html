@@ -486,7 +486,10 @@
             </div>
             <p class="mb-3 text-xs tracking-[0.16em] text-[#c5dcff]">VOCABULARY FICTION</p>
             <h1 id="detailTitle" class="max-w-xl text-3xl font-bold leading-tight sm:text-4xl">雨夜的第七封信</h1>
-            <p id="detailByline" class="mt-3 text-sm text-white/80">木棉警报 · 发布于今天</p>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <p id="detailByline" class="text-sm text-white/80">木棉警报 · 发布于今天</p>
+              <button id="detailFollow" class="hidden h-7 rounded-full border border-white/50 px-3 text-xs font-semibold text-white/90 hover:bg-white/15">关注</button>
+            </div>
           </div>
         </section>
 
@@ -617,43 +620,7 @@
         </div>
       </header>
       <main class="mx-auto max-w-3xl px-4 pb-10 pt-5 sm:px-6">
-        <div class="mb-5 flex items-center gap-3 overflow-x-auto scrollbar-none">
-          <button class="follow-filter active-follow-filter">全部</button>
-          <button class="follow-filter">今天更新</button>
-          <button class="follow-filter">最近阅读</button>
-        </div>
-        <div class="space-y-3">
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-rain-letter">
-            <div class="flex gap-3">
-              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#193d6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=240&q=80')"></div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#d7ebee]"></span><span>木棉警报</span><span>更新了作品</span></div>
-                <h2 class="mt-2 text-base font-bold">雨夜的第七封信 · 第二章</h2>
-                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">她在雨声里读完第七封信，却发现收件人栏写着自己的名字。</p>
-              </div>
-            </div>
-          </article>
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-library">
-            <div class="flex gap-3">
-              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#4c6b58]" style="background-image:url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=240&q=80')"></div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f3d5da]"></span><span>晴天偏北</span><span>发布了新作</span></div>
-                <h2 class="mt-2 text-base font-bold">图书馆闭馆以后</h2>
-                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">闭馆铃响起时，她发现借书卡背面藏着一张写给自己的旧纸条。</p>
-              </div>
-            </div>
-          </article>
-          <article class="follow-work cursor-pointer border-b border-[#dce6f5] pb-4" data-work-id="demo-late-reason">
-            <div class="flex gap-3">
-              <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#2f4c55]" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&q=80')"></div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 rounded-full bg-[#f5d8c5]"></span><span>迟到的月亮</span><span>更新了作品</span></div>
-                <h2 class="mt-2 text-base font-bold">你迟到的理由 · 第一章</h2>
-                <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">项目发布会前十分钟，他带着一份足够 convincing 的理由站在门口。</p>
-              </div>
-            </div>
-          </article>
-        </div>
+        <div id="followingList" class="space-y-3"></div>
       </main>
     </section>
 
@@ -770,8 +737,8 @@
             </div>
             <div class="mt-5 flex items-center gap-8">
               <button class="text-left"><b id="profileStatsReceived" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
-              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
-              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
+              <button class="text-left"><b id="profileStatsFollowing" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
+              <button class="text-left"><b id="profileStatsFollowers" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
             </div>
             <div class="mt-5 flex gap-2">
               <button class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
@@ -2264,6 +2231,7 @@
         document.getElementById("commentInput").value = "";
         syncDetailActions(work);
         loadComments(work.id);
+        loadAuthorFollowState(work);
         workDetail.classList.remove("hidden");
         document.body.classList.add("modal-open");
         workDetail.scrollTop = 0;
@@ -2530,6 +2498,7 @@
           count: work.count || `${words.length} 个词 · 全文阅读`,
           byline: work.authorName ? `${work.authorName} · ${relativeTime(work.createdAt)}` : "",
           authorName: work.authorName || "",
+          authorId: work.authorId || "",   // 关注按钮靠它定位作者
           image: work.coverUrl ? apiBase() + work.coverUrl : imageForGenre(work.genre, work.id),
           hook: work.hook || "",
           summary: work.summary || "",
@@ -2713,6 +2682,114 @@
         loadFeed();
       }
 
+      // ---------- 关注 ----------
+
+      function syncFollowButton(user) {
+        const button = document.getElementById("detailFollow");
+        if (!button) return;
+        if (!user || user.isMine) {
+          button.classList.add("hidden");
+          return;
+        }
+        button.classList.remove("hidden");
+        button.textContent = user.isFollowing ? "已关注" : "关注";
+        button.classList.toggle("bg-white/20", Boolean(user.isFollowing));
+      }
+
+      // 打开作品详情时顺带拉作者的关注状态
+      async function loadAuthorFollowState(work) {
+        const button = document.getElementById("detailFollow");
+        if (!work || !work.remote || !work.authorId) {
+          button.classList.add("hidden");
+          return;
+        }
+        if (authUser && work.authorId === authUser.id) {
+          button.classList.add("hidden");
+          return;
+        }
+        try {
+          // 必须带登录态：服务端靠它算出 isFollowing，否则永远显示「未关注」
+          const data = await apiFetch(`/api/users/${encodeURIComponent(work.authorId)}`, { auth: true });
+          work.authorState = {
+            id: data.user.id,
+            isFollowing: Boolean(data.user.isFollowing),
+            isMine: Boolean(data.isMine),
+          };
+          syncFollowButton(work.authorState);
+        } catch (error) {
+          button.classList.add("hidden");
+        }
+      }
+
+      async function toggleFollowAuthor() {
+        const work = activeWork;
+        const state = work && work.authorState;
+        if (!state) return;
+        if (!authToken) { closeWorkDetail(); openProfile(); return; }
+        try {
+          const data = await apiFetch(`/api/users/${encodeURIComponent(state.id)}/follow`, {
+            method: "POST",
+            auth: true,
+            body: { on: !state.isFollowing },
+          });
+          state.isFollowing = data.on;
+          syncFollowButton(state);
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      function renderFollowingItem(work) {
+        return `<article class="follow-work flex cursor-pointer gap-3 border-b border-[#dce6f5] pb-4" data-work-id="${escapeHtml(work.id)}">
+          <div class="image-cover size-20 shrink-0 rounded-[7px] bg-[#193d6e]" style="background-image:url('${escapeHtml(work.image)}')"></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 text-xs text-neutral-400"><span class="size-5 shrink-0 rounded-full bg-[#d7ebee]"></span><span class="truncate">${escapeHtml(work.authorName || "词境作者")}</span><span class="shrink-0">发布了作品</span></div>
+            <h2 class="mt-2 truncate text-base font-bold">${escapeHtml(work.title)}</h2>
+            <p class="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500">${escapeHtml(work.hook || "")}</p>
+          </div>
+        </article>`;
+      }
+
+      async function loadFollowing() {
+        const list = document.getElementById("followingList");
+        if (!list) return;
+        if (!authToken) {
+          list.innerHTML = `<p class="py-12 text-center text-sm text-neutral-400">登录后可以看到你关注的人的更新</p>`;
+          return;
+        }
+        list.innerHTML = `<p class="py-12 text-center text-sm text-neutral-400">正在加载…</p>`;
+
+        let works = [];
+        try {
+          const data = await apiFetch("/api/works?scope=following", { auth: true });
+          works = (data.works || []).map(apiWorkToLocal);
+          cacheRemoteWorks(works);
+        } catch (error) {
+          list.innerHTML = `<p class="py-12 text-center text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+          return;
+        }
+
+        list.innerHTML = works.length
+          ? works.map(renderFollowingItem).join("")
+          : `<p class="py-12 text-center text-sm text-neutral-400">你关注的人还没有发布作品</p>`;
+
+        // 动态生成的节点要重新绑点击
+        list.querySelectorAll(".follow-work").forEach((item) => {
+          item.addEventListener("click", () => {
+            const work = workById(item.dataset.workId);
+            if (!work) return;
+            closeAppViews();
+            openWorkDetail(work);
+          });
+        });
+        refreshIcons();
+      }
+
+      function openFollowing() {
+        openAppView(followingView);
+        loadFollowing();
+      }
+
       function renderProfile() {
         const loggedIn = Boolean(authUser);
         profileGuest.classList.toggle("hidden", loggedIn);
@@ -2726,6 +2803,8 @@
         // 获赞与收藏 = 别人给我的作品点的赞 + 收藏
         document.getElementById("profileStatsReceived").textContent =
           (authUser.likesReceived || 0) + (authUser.favoritesReceived || 0);
+        document.getElementById("profileStatsFollowing").textContent = authUser.followingCount || 0;
+        document.getElementById("profileStatsFollowers").textContent = authUser.followerCount || 0;
       }
 
       async function openProfile() {
@@ -3085,7 +3164,7 @@
       document.getElementById("openProfileTop").addEventListener("click", openProfile);
       document.getElementById("navFollowingDesktop").addEventListener("click", (event) => {
         event.preventDefault();
-        openAppView(followingView);
+        openFollowing();
       });
       document.getElementById("navProfileDesktop").addEventListener("click", (event) => {
         event.preventDefault();
@@ -3096,7 +3175,7 @@
         closeAppViews();
       });
       document.getElementById("navDiscoverMobile").addEventListener("click", closeAppViews);
-      document.getElementById("navFollowingMobile").addEventListener("click", () => openAppView(followingView));
+      document.getElementById("navFollowingMobile").addEventListener("click", openFollowing);
       document.getElementById("navMessagesMobile").addEventListener("click", () => openAppView(messagesView));
       document.getElementById("navProfileMobile").addEventListener("click", openProfile);
       document.querySelectorAll(".app-back").forEach((button) => button.addEventListener("click", closeAppViews));
@@ -3108,13 +3187,6 @@
           openWorkDetail(work);
         });
       });
-      document.querySelectorAll(".follow-filter").forEach((button) => {
-        button.addEventListener("click", () => {
-          document.querySelectorAll(".follow-filter").forEach((item) => item.classList.remove("active-follow-filter"));
-          button.classList.add("active-follow-filter");
-        });
-      });
-
       document.getElementById("continueAsGuest").addEventListener("click", closeAppViews);
       document.querySelectorAll(".auth-mode").forEach((button) => {
         button.addEventListener("click", () => {
@@ -3309,6 +3381,7 @@
         document.getElementById("commentInput").scrollIntoView({ behavior: "smooth", block: "center" });
       });
       document.getElementById("postComment").addEventListener("click", postComment);
+      document.getElementById("detailFollow").addEventListener("click", toggleFollowAuthor);
       // 用捕获阶段，抢在卡片自身的「打开详情」监听器之前拦下点赞按钮
       document.getElementById("feed").addEventListener("click", (event) => {
         const button = event.target.closest("[data-card-like]");

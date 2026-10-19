@@ -93,3 +93,12 @@ CREATE TABLE IF NOT EXISTS comments (
   FOREIGN KEY (work_id) REFERENCES works(id)
 );
 CREATE INDEX IF NOT EXISTS idx_comments_work ON comments(work_id, created_at DESC);
+
+-- 关注关系：follower 关注 followee
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id TEXT NOT NULL,
+  followee_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (follower_id, followee_id)
+);
+CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id);
