@@ -254,27 +254,54 @@ function buildPrompt(input) {
   const words = input.words.join(", ");
   const tropes = input.tropes.join("、") || "自然推进";
   const setup = input.storySetup || "请围绕词单自由设计一个有明确冲突和收束的故事。";
-  return `你是“词境”的英语词汇复习小说编辑。请根据以下配置创作一篇中文短篇复习小说。
+  // 字数随词数伸缩：词多时给足空间，否则故事会被词挤变形。
+  // 上限 2600 是为了给 vocab JSON 留出 token 空间（max_tokens 是 8000）。
+  const minChars = Math.min(1200, 800 + 30 * input.words.length);
+  const maxChars = Math.min(2600, 1200 + 50 * input.words.length);
+  return `你是"词境"的中文短篇作者。请根据下面的配置写一篇第一人称短篇故事。
 
 小说大类：${input.genre}
 细分题材：${input.subgenre}
 核心剧情梗：${tropes}
 剧情设定：${setup}
-目标单词：${words}
+目标单词（必须全部出现在正文中）：
+${input.words.map((word) => `- ${word}`).join("\n")}
 
-硬性要求：
-1. 正文必须自然包含全部目标单词，每个单词至少出现 2 次，保持英文原形、小写拼写，不要拆写。
-2. 正文使用中文叙事，英文目标单词自然嵌入句子，不要把单词集中堆在一起。
-3. 生成约 800 至 1400 个中文字符，有开端、冲突、推进和结尾。
-4. 不要输出 Markdown，不要加粗标记，不要解释创作过程。
-5. 正文的段落之间用空行分隔，不要编号，不要在段首加标点。
-6. 只返回一个合法 JSON 对象，字段必须是：
+【词汇要求】
+1. 正文必须包含全部目标单词，一个都不能少，每个词至少出现 1 次，保持英文原形、小写拼写，不要拆写。
+2. 覆盖是硬性要求；在满足覆盖的前提下，每个词自然出现一次即可，不必反复堆砌，也不必为了用词去强行改变剧情。
+3. 正文约 ${minChars} 至 ${maxChars} 个中文字符。
+4. 返回前必须逐个核对目标词表，确认每个词都真的出现在正文里。有任何遗漏，就把它自然地补进合适的位置再返回，绝不能省略，也不要只在 vocab 里写而正文里没有。
+
+【文风：知乎体】
+A. 第一人称"我"，像在跟朋友讲自己刚经历的事：口语化、有情绪、带点吐槽感。不要写成第三人称叙述或总结报告。
+B. 开篇 100 字内必须抛出核心冲突或最离谱的真相。可以直接倒叙把高潮甩出来，也可以一句话点破全文最反常的地方。不要铺垫环境、背景或人物介绍。
+C. 节奏要快：冲突 -> 反转 -> 揭示 -> 再反转。每隔一两段留一个小悬念，结尾留一个让人想追问的钩子。
+D. 多写五感，不要只写结论。不要写"我很生气"，要写让人感觉到生气的细节：冷、发抖、味道、心跳、呼吸、声音。
+E. 对话和引语用直角引号「」，不要用英文双引号。
+F. 情绪拉满，但不要写成流水账或总结陈词。
+G. 冲突类型要贴合上面的细分题材：悬疑写案件与反转，言情写关系与背叛，古风写权谋与身份，科幻写规则与代价。不要把任何题材都写成都市打脸爽文。
+
+【格式要求】
+1. 不要输出 Markdown，不要加粗，不要解释创作过程。
+2. 正文段落之间用空行分隔，不要编号，不要在段首加标点。
+3. 只返回一个合法 JSON 对象，字段必须是：
 {"title":"标题","hook":"一句话简介","summary":"不超过120字的简介","content":"小说正文","vocab":[{"word":"原形小写","pos":"词性缩写","meaning":"中文语境释义","forms":["正文中出现的变形"]}]}
-7. vocab 必须为每一个目标单词返回一条记录，顺序与上面「目标单词」给出的顺序完全一致，不多不少。
-8. meaning 不超过 40 个中文字符：先写词典义，再用「这里指……」结合本篇正文的具体情节补充说明。不要复制粘贴正文原句。
-9. pos 使用 n. / v. / adj. / adv. / prep. 等缩写，多个词性用 / 连接，总长不超过 8 个字符。
-10. forms 只填正文中真实出现过的变形（把原形也写进去），最多 6 个；正文里没有变形就返回空数组。
+4. vocab 必须为每一个目标单词返回一条记录，顺序与上面「目标单词」给出的顺序完全一致，不多不少。
+5. meaning 不超过 40 个中文字符：先写词典义，再用「这里指……」结合本篇正文的具体情节补充说明。不要复制粘贴正文原句。
+6. pos 使用 n. / v. / adj. / adv. / prep. 等缩写，多个词性用 / 连接，总长不超过 8 个字符。
+7. forms 只填正文中真实出现过的变形（把原形也写进去），最多 6 个；正文里没有变形就返回空数组。
 `;
+}
+
+// 检查正文有没有漏词。允许常见变形（-s / -ed / -ing 等），
+// 宁可放宽也不要误判 —— 每次误判都要多调一次模型，是实打实的成本。
+function missingWords(content, words) {
+  const text = String(content || "");
+  return words.filter((word) => {
+    const escaped = String(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return !new RegExp(`\\b${escaped}[a-z]{0,3}\\b`, "i").test(text);
+  });
 }
 
 function normalizeVocab(rawVocab, words) {
@@ -485,57 +512,81 @@ async function handleGenerate(request, env, auth) {
 
   const baseUrl = (env.AI_BASE_URL || "https://api.deepseek.com").replace(/\/+$/, "");
   const model = env.AI_MODEL || "deepseek-chat";
+  const prompt = buildPrompt({
+    words,
+    genre,
+    subgenre,
+    tropes,
+    storySetup: cleanText(input.storySetup, 600),
+  });
 
-  let upstream;
-  try {
-    upstream = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.AI_API_KEY}` },
-      body: JSON.stringify({
-        model,
-        temperature: 0.8,
-        max_tokens: 8000,
-        messages: [
-          { role: "system", content: "你必须遵守用户给出的词汇覆盖规则，并且只返回合法 JSON。" },
-          {
-            role: "user",
-            content: buildPrompt({
-              words,
-              genre,
-              subgenre,
-              tropes,
-              storySetup: cleanText(input.storySetup, 600),
-            }),
-          },
-        ],
-      }),
-    });
-  } catch (error) {
-    return json({ error: "无法连接生成服务，请稍后重试" }, 502, request, env);
+  // 模型偶尔会漏词。漏了就重试，最多 3 次；用户只扣一次配额，
+  // 重试多花的调用成本由平台承担。正常情况（第一次就覆盖全）零额外开销。
+  const MAX_ATTEMPTS = 3;
+  let result = null;
+  let lastError = "";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS && !result; attempt += 1) {
+    let upstream;
+    try {
+      upstream = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.AI_API_KEY}` },
+        body: JSON.stringify({
+          model,
+          temperature: 0.7,
+          max_tokens: 8000,
+          messages: [
+            { role: "system", content: "你必须遵守用户给出的词汇覆盖规则，并且只返回合法 JSON。" },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+    } catch (error) {
+      return json({ error: "无法连接生成服务，请稍后重试" }, 502, request, env);
+    }
+
+    const upstreamBody = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) {
+      // 鉴权 / 余额 / 参数类错误，重试也不会变好，直接返回
+      return json(
+        { error: upstreamBody.error?.message || `AI 服务返回 ${upstream.status}` },
+        502,
+        request,
+        env
+      );
+    }
+    if (upstreamBody.choices?.[0]?.finish_reason === "length") {
+      // 被截断重试也会再截断，白花钱，直接返回可读原因
+      return json({ error: "生成内容过长被截断，请减少词量后重试" }, 502, request, env);
+    }
+
+    const message = upstreamBody.choices?.[0]?.message?.content;
+    let parsed;
+    try {
+      parsed = extractJson(message);
+    } catch (error) {
+      lastError = error.message || "模型返回内容无法解析";
+      continue;
+    }
+    if (!parsed.title || !parsed.content) {
+      lastError = "AI 返回内容缺少标题或正文";
+      continue;
+    }
+
+    const missing = missingWords(parsed.content, words);
+    if (missing.length) {
+      // 运维日志：出现频率高说明 prompt 需要继续调，别让它悄悄变成常态
+      console.warn(`[generate] 第 ${attempt}/${MAX_ATTEMPTS} 次漏词: ${missing.join(",")}，重试`);
+      lastError = `模型漏掉了这些词：${missing.join("、")}`;
+      continue;   // 核心重试条件
+    }
+
+    result = parsed;
   }
 
-  const upstreamBody = await upstream.json().catch(() => ({}));
-  if (!upstream.ok) {
-    return json(
-      { error: upstreamBody.error?.message || `AI 服务返回 ${upstream.status}` },
-      502,
-      request,
-      env
-    );
-  }
-  if (upstreamBody.choices?.[0]?.finish_reason === "length") {
-    return json({ error: "生成内容过长被截断，请减少词量后重试" }, 502, request, env);
-  }
-
-  const message = upstreamBody.choices?.[0]?.message?.content;
-  let result;
-  try {
-    result = extractJson(message);
-  } catch (error) {
-    return json({ error: error.message || "模型返回内容无法解析" }, 502, request, env);
-  }
-  if (!result.title || !result.content) {
-    return json({ error: "AI 返回内容缺少标题或正文" }, 502, request, env);
+  if (!result) {
+    return json({ error: lastError || "生成失败，请稍后重试" }, 502, request, env);
   }
 
   // 生成成功才落库并扣配额：失败不该消耗用户的额度
