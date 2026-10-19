@@ -1875,14 +1875,18 @@
           .replaceAll("'", "&#039;");
       }
 
-      function buildVocabMap(rawVocab, words) {
+      // 把 vocab 统一成「词 -> 释义」的对象。
+      // 库里现在有两种形状：生成的作品存数组 [{word,pos,meaning,forms}]，
+      // 迁移进来的作品存对象 { word: {...} }。不归一化的话，数组用字符串下标取值
+      // 永远是 undefined，点词只会看到「没有记录该词的释义」，变形词也会丢失高亮。
+      function toVocabMap(raw) {
+        if (!raw) return {};
+        if (!Array.isArray(raw)) return typeof raw === "object" ? raw : {};
         const map = {};
-        const entries = Array.isArray(rawVocab) ? rawVocab : [];
-        words.forEach((word, index) => {
-          const key = String(word).toLowerCase();
-          const entry = entries.find((item) => item && String(item.word || "").toLowerCase() === key)
-            || entries[index];                       // 顺位兜底：模型顺序错乱也能对上
-          if (!entry) return;
+        raw.forEach((entry) => {
+          if (!entry || typeof entry !== "object") return;
+          const key = String(entry.word || "").toLowerCase();
+          if (!key) return;
           map[key] = {
             word: key,
             pos: String(entry.pos || "").trim(),
@@ -2497,7 +2501,7 @@
           summary: work.summary || "",
           words,
           reader: work.reader || [],
-          vocab: work.vocab || {},
+          vocab: toVocabMap(work.vocab),
           visibility: work.visibility,
           publishedAt: work.publishedAt,
           mine: Boolean(work.mine),
