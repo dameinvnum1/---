@@ -2482,16 +2482,31 @@
 
       // ---------- 推荐流 ----------
 
-      const GENRE_IMAGES = {
-        "悬疑刑侦": "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1200&q=85",
-        "科幻西幻": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=85",
-        "古风言情": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=85",
-        "现代言情": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
-        "校园": "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=85",
+      // 每个题材一组 AI 生成的封面（见仓库 covers/ 目录），按作品 id 稳定挑一张。
+      // 同一部作品每次看到的封面不变，不同作品尽量不撞。
+      const GENRE_COVER_POOLS = {
+        "悬疑刑侦": ["covers/suspense-1.webp", "covers/suspense-2.webp", "covers/suspense-3.webp"],
+        "现代言情": ["covers/romance-1.webp", "covers/romance-2.webp"],
+        "古风言情": ["covers/ancient-1.webp", "covers/ancient-2.webp", "covers/ancient-3.webp"],
+        "科幻西幻": ["covers/scifi-1.webp", "covers/scifi-2.webp", "covers/scifi-3.webp"],
+        "校园": ["covers/campus-1.webp", "covers/campus-2.webp", "covers/campus-3.webp"],
       };
-      // 生成作品的封面不落盘（服务端只存业务字段），按题材在前端派生
-      function imageForGenre(genre) {
-        return GENRE_IMAGES[genre] || GENERATED_WORK_IMAGE;
+      // 自定义题材落到悬疑池，保证任何作品都有封面
+      const DEFAULT_COVER_POOL = GENRE_COVER_POOLS["悬疑刑侦"];
+
+      function hashString(value) {
+        let hash = 0;
+        const text = String(value || "");
+        for (let i = 0; i < text.length; i += 1) {
+          hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+        }
+        return hash;
+      }
+
+      // seed 传作品 id：同一部作品的封面永远稳定
+      function imageForGenre(genre, seed) {
+        const pool = GENRE_COVER_POOLS[genre] || DEFAULT_COVER_POOL;
+        return pool[hashString(seed || genre) % pool.length];
       }
 
       // 4 种版式由题材决定 —— 作品数据里没有字段能表达版式，只能在这里映射
@@ -2515,7 +2530,7 @@
           count: work.count || `${words.length} 个词 · 全文阅读`,
           byline: work.authorName ? `${work.authorName} · ${relativeTime(work.createdAt)}` : "",
           authorName: work.authorName || "",
-          image: imageForGenre(work.genre),
+          image: work.coverUrl ? apiBase() + work.coverUrl : imageForGenre(work.genre, work.id),
           hook: work.hook || "",
           summary: work.summary || "",
           words,
@@ -2584,7 +2599,8 @@
         const layout = layoutForGenre(work.genre || work.tag);
 
         if (layout === "quote-dark") {
-          return inner(`<div class="bg-[#26212b] p-4 text-white">
+          // 封面图做底 + 深色蒙版：既保留版式，又让每个题材都能看到自己的封面
+          return inner(`<div class="bg-[#26212b] bg-cover bg-center p-4 text-white" style="background-image:linear-gradient(180deg, rgba(14,11,20,.55), rgba(14,11,20,.86)),url('${escapeHtml(work.image)}');text-shadow:0 1px 3px rgba(0,0,0,.9)">
             <div class="mb-6 flex items-center justify-between"><span class="rounded bg-white/10 px-2 py-1 text-[11px] text-white/80">${tag}</span><span class="text-xs text-white/45">${count}</span></div>
             <p class="line-clamp-3 text-[22px] font-bold leading-[1.35]">${hook || title}</p>
             <p class="mt-5 text-sm font-semibold text-white/90">${title}</p>
@@ -2593,7 +2609,7 @@
         }
 
         if (layout === "serif") {
-          return inner(`<div class="bg-[#f9f0eb] p-4">
+          return inner(`<div class="bg-[#f9f0eb] bg-cover bg-center p-4" style="background-image:linear-gradient(180deg, rgba(249,240,235,.80), rgba(249,240,235,.93)),url('${escapeHtml(work.image)}')">
             <div class="mb-4 flex items-center justify-between"><span class="rounded bg-[#edd8cd] px-2 py-1 text-[11px] text-[#9c4d39]">${tag}</span><span class="text-xs text-[#b08a7c]">${count}</span></div>
             <h2 class="font-serif text-2xl font-bold leading-tight text-[#73392e]">${title}</h2>
             <p class="mt-3 line-clamp-3 text-sm leading-6 text-[#74483e]">${hook}</p>
@@ -2602,7 +2618,7 @@
         }
 
         if (layout === "quote-light") {
-          return inner(`<div class="p-4">
+          return inner(`<div class="bg-cover bg-center p-4" style="background-image:linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.94)),url('${escapeHtml(work.image)}')">
             <div class="mb-4 flex items-center justify-between"><span class="rounded bg-[#eff7f6] px-2 py-1 text-[11px] text-[#39736f]">${tag}</span><span class="text-xs text-neutral-400">${count}</span></div>
             <p class="line-clamp-3 text-[22px] font-bold leading-[1.35] text-[#173b38]">${hook || title}</p>
             <p class="mt-4 text-sm font-semibold text-[#173b38]">${title}</p>
