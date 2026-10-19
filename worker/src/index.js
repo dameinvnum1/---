@@ -333,6 +333,16 @@ function normalizeVocab(rawVocab, words) {
 
 // ---------- 作品序列化 ----------
 
+// 作品查询的公共部分：附带点赞/收藏/评论计数，以及当前用户是否点过/收藏过。
+// 前两个 ? 都是 viewerId；游客传空串，永远不会命中。
+const WORK_SELECT = `SELECT w.*, u.name AS author_name,
+  (SELECT COUNT(*) FROM likes WHERE work_id = w.id) AS like_count,
+  (SELECT COUNT(*) FROM favorites WHERE work_id = w.id) AS favorite_count,
+  (SELECT COUNT(*) FROM comments WHERE work_id = w.id AND status = 'visible') AS comment_count,
+  EXISTS(SELECT 1 FROM likes WHERE work_id = w.id AND user_id = ?) AS liked,
+  EXISTS(SELECT 1 FROM favorites WHERE work_id = w.id AND user_id = ?) AS favorited
+  FROM works w JOIN users u ON u.id = w.user_id`;
+
 function workToJson(row, viewerId) {
   return {
     id: row.id,
@@ -353,6 +363,11 @@ function workToJson(row, viewerId) {
     authorId: row.user_id,
     authorName: row.author_name || "",
     mine: viewerId ? row.user_id === viewerId : false,
+    likeCount: Number(row.like_count) || 0,
+    favoriteCount: Number(row.favorite_count) || 0,
+    commentCount: Number(row.comment_count) || 0,
+    liked: Boolean(row.liked),
+    favorited: Boolean(row.favorited),
   };
 }
 
@@ -622,8 +637,8 @@ async function handleGenerate(request, env, auth) {
     .run();
 
   const row = await env.cijing_db
-    .prepare("SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id WHERE w.id = ?")
-    .bind(workId)
+    .prepare(`${WORK_SELECT} WHERE w.id = ?`)
+    .bind(user.id, user.id, workId)
     .first();
 
   const fresh = await env.cijing_db
@@ -681,8 +696,8 @@ async function handleCreateWork(request, env, auth) {
     .run();
 
   const row = await env.cijing_db
-    .prepare("SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id WHERE w.id = ?")
-    .bind(workId)
+    .prepare(`${WORK_SELECT} WHERE w.id = ?`)
+    .bind(auth.user.id, auth.user.id, workId)
     .first();
   return json({ ok: true, work: workToJson(row, auth.user.id) }, 200, request, env);
 }
@@ -697,18 +712,24 @@ async function handleListWorks(request, env, url) {
   let sql;
   let params;
 
+  const viewer = viewerId || "";   // 游客传空串，EXISTS 永远不命中
   if (scope === "mine") {
     if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
-    sql = `SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id
-           WHERE w.user_id = ? ORDER BY w.created_at DESC LIMIT ?`;
-    params = [viewerId, limit];
+    sql = `${WORK_SELECT} WHERE w.user_id = ? ORDER BY w.created_at DESC LIMIT ?`;
+    params = [viewer, viewer, viewerId, limit];
+  } else if (scope === "favorites" || scope === "liked") {
+    // 我收藏的 / 我赞过的：只列公开作品，避免把别人已转为私密的内容暴露出来
+    if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
+    const table = scope === "favorites" ? "favorites" : "likes";
+    sql = `${WORK_SELECT} WHERE w.visibility = 'public'
+           AND w.id IN (SELECT work_id FROM ${table} WHERE user_id = ?)
+           ORDER BY w.published_at DESC LIMIT ?`;
+    params = [viewer, viewer, viewerId, limit];
   } else {
     // feed / new 只返回公开作品
-    const order = scope === "new" ? "w.published_at DESC" : "w.published_at DESC";
-    sql = `SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id
-           WHERE w.visibility = 'public' ${genre ? "AND w.genre = ?" : ""}
-           ORDER BY ${order} LIMIT ?`;
-    params = genre ? [genre, limit] : [limit];
+    sql = `${WORK_SELECT} WHERE w.visibility = 'public' ${genre ? "AND w.genre = ?" : ""}
+           ORDER BY w.published_at DESC LIMIT ?`;
+    params = genre ? [viewer, viewer, genre, limit] : [viewer, viewer, limit];
   }
 
   const { results } = await env.cijing_db.prepare(sql).bind(...params).all();
@@ -724,8 +745,8 @@ async function handleGetWork(request, env, workId) {
   const auth = await currentUser(request, env);
   const viewerId = auth ? auth.user.id : null;
   const row = await env.cijing_db
-    .prepare("SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id WHERE w.id = ?")
-    .bind(workId)
+    .prepare(`${WORK_SELECT} WHERE w.id = ?`)
+    .bind(viewerId || "", viewerId || "", workId)
     .first();
   if (!row) return json({ error: "作品不存在" }, 404, request, env);
   // 私密作品只有作者本人能读
@@ -751,8 +772,8 @@ async function handleUpdateWork(request, env, workId, auth) {
   }
 
   const fresh = await env.cijing_db
-    .prepare("SELECT w.*, u.name AS author_name FROM works w JOIN users u ON u.id = w.user_id WHERE w.id = ?")
-    .bind(workId)
+    .prepare(`${WORK_SELECT} WHERE w.id = ?`)
+    .bind(auth.user.id, auth.user.id, workId)
     .first();
   return json({ ok: true, work: workToJson(fresh, auth.user.id) }, 200, request, env);
 }
@@ -762,6 +783,143 @@ async function handleDeleteWork(request, env, workId, auth) {
   if (!row) return json({ error: "作品不存在" }, 404, request, env);
   if (row.user_id !== auth.user.id) return json({ error: "无权操作该作品" }, 403, request, env);
   await env.cijing_db.prepare("DELETE FROM works WHERE id = ?").bind(workId).run();
+  return json({ ok: true }, 200, request, env);
+}
+
+// ---------- 点赞 / 收藏 ----------
+
+// 确认作品存在且当前用户有权看到（私密作品只有作者本人可见）。
+// viewerId 传 null 表示游客。
+async function requireVisibleWork(request, env, workId, viewerId) {
+  const work = await env.cijing_db
+    .prepare("SELECT id, visibility, user_id FROM works WHERE id = ?")
+    .bind(workId)
+    .first();
+  if (!work) return { error: json({ error: "作品不存在" }, 404, request, env) };
+  if (work.visibility !== "public" && work.user_id !== viewerId) {
+    return { error: json({ error: "作品不存在" }, 404, request, env) };
+  }
+  return { work };
+}
+
+async function toggleMark(request, env, workId, auth, table) {
+  const visible = await requireVisibleWork(request, env, workId, auth.user.id);
+  if (visible.error) return visible.error;
+
+  const body = await request.json().catch(() => ({}));
+  const on = body.on !== false;   // 不传默认视为「点上」
+  if (on) {
+    await env.cijing_db
+      .prepare(`INSERT OR IGNORE INTO ${table} (user_id, work_id, created_at) VALUES (?, ?, ?)`)
+      .bind(auth.user.id, workId, Date.now())
+      .run();
+  } else {
+    await env.cijing_db
+      .prepare(`DELETE FROM ${table} WHERE user_id = ? AND work_id = ?`)
+      .bind(auth.user.id, workId)
+      .run();
+  }
+
+  const count = await env.cijing_db
+    .prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE work_id = ?`)
+    .bind(workId)
+    .first();
+  return json({ ok: true, on, count: Number(count.n) || 0 }, 200, request, env);
+}
+
+// table 只在内部常量里传，不来自用户输入
+async function handleToggleLike(request, env, workId, auth) {
+  return toggleMark(request, env, workId, auth, "likes");
+}
+
+async function handleToggleFavorite(request, env, workId, auth) {
+  return toggleMark(request, env, workId, auth, "favorites");
+}
+
+// ---------- 评论 ----------
+
+async function handleListComments(request, env, workId) {
+  const auth = await currentUser(request, env);
+  const viewerId = auth ? auth.user.id : null;
+
+  const visible = await requireVisibleWork(request, env, workId, viewerId);
+  if (visible.error) return visible.error;
+
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT c.id, c.content, c.created_at, c.user_id, u.name AS author_name
+       FROM comments c JOIN users u ON u.id = c.user_id
+       WHERE c.work_id = ? AND c.status = 'visible'
+       ORDER BY c.created_at DESC LIMIT 100`
+    )
+    .bind(workId)
+    .all();
+
+  return json(
+    {
+      ok: true,
+      comments: (results || []).map((row) => ({
+        id: row.id,
+        content: row.content,
+        createdAt: Number(row.created_at),
+        authorId: row.user_id,
+        authorName: row.author_name || "词境读者",
+        mine: viewerId ? row.user_id === viewerId : false,
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handlePostComment(request, env, workId, auth) {
+  const visible = await requireVisibleWork(request, env, workId, auth.user.id);
+  if (visible.error) return visible.error;
+
+  const body = await request.json().catch(() => ({}));
+  const content = cleanText(body.content, 500);
+  if (!content) return json({ error: "评论不能为空" }, 400, request, env);
+
+  const id = makeId("c");
+  const now = Date.now();
+  await env.cijing_db
+    .prepare("INSERT INTO comments (id, work_id, user_id, content, status, created_at) VALUES (?, ?, ?, ?, 'visible', ?)")
+    .bind(id, workId, auth.user.id, content, now)
+    .run();
+
+  const count = await env.cijing_db
+    .prepare("SELECT COUNT(*) AS n FROM comments WHERE work_id = ? AND status = 'visible'")
+    .bind(workId)
+    .first();
+
+  return json(
+    {
+      ok: true,
+      comment: {
+        id,
+        content,
+        createdAt: now,
+        authorId: auth.user.id,
+        authorName: auth.user.name,
+        mine: true,
+      },
+      commentCount: Number(count.n) || 0,
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleDeleteComment(request, env, commentId, auth) {
+  const row = await env.cijing_db
+    .prepare("SELECT user_id, work_id FROM comments WHERE id = ?")
+    .bind(commentId)
+    .first();
+  if (!row) return json({ error: "评论不存在" }, 404, request, env);
+  if (row.user_id !== auth.user.id) return json({ error: "只能删除自己的评论" }, 403, request, env);
+  await env.cijing_db.prepare("DELETE FROM comments WHERE id = ?").bind(commentId).run();
   return json({ ok: true }, 200, request, env);
 }
 
@@ -792,13 +950,35 @@ export default {
         || path === "/api/generate"
         || path === "/api/auth/logout"
         || (path === "/api/works" && (url.searchParams.get("scope") === "mine" || method === "POST"))
-        || (path.startsWith("/api/works/") && method !== "GET");
+        || (path.startsWith("/api/works/") && method !== "GET")
+        || (path.startsWith("/api/comments/") && method === "DELETE");
 
       const auth = await currentUser(request, env);
       if (needsAuth && !auth) return json({ error: "请先登录" }, 401, request, env);
 
       if (path === "/api/me" && method === "GET") {
-        return json({ ok: true, user: publicUser(auth.user) }, 200, request, env);
+        // 获赞与收藏是「别人给我的作品点的」，需要聚合查询
+        const stats = await env.cijing_db
+          .prepare(
+            `SELECT
+               (SELECT COUNT(*) FROM likes l JOIN works w ON w.id = l.work_id WHERE w.user_id = ?) AS likes_received,
+               (SELECT COUNT(*) FROM favorites f JOIN works w ON w.id = f.work_id WHERE w.user_id = ?) AS favorites_received`
+          )
+          .bind(auth.user.id, auth.user.id)
+          .first();
+        return json(
+          {
+            ok: true,
+            user: {
+              ...publicUser(auth.user),
+              likesReceived: Number(stats?.likes_received) || 0,
+              favoritesReceived: Number(stats?.favorites_received) || 0,
+            },
+          },
+          200,
+          request,
+          env
+        );
       }
       if (path === "/api/auth/logout" && method === "POST") {
         await env.cijing_db.prepare("DELETE FROM sessions WHERE token = ?").bind(auth.token).run();
@@ -812,6 +992,26 @@ export default {
       }
       if (path === "/api/works" && method === "POST") {
         return await handleCreateWork(request, env, auth);
+      }
+
+      // 互动与评论：放在 /api/works/:id 之前匹配，否则会被通用正则吃掉
+      const likeMatch = path.match(/^\/api\/works\/([A-Za-z0-9_-]+)\/like$/);
+      if (likeMatch && method === "POST") {
+        return await handleToggleLike(request, env, likeMatch[1], auth);
+      }
+      const favoriteMatch = path.match(/^\/api\/works\/([A-Za-z0-9_-]+)\/favorite$/);
+      if (favoriteMatch && method === "POST") {
+        return await handleToggleFavorite(request, env, favoriteMatch[1], auth);
+      }
+      const commentsMatch = path.match(/^\/api\/works\/([A-Za-z0-9_-]+)\/comments$/);
+      if (commentsMatch) {
+        const workId = commentsMatch[1];
+        if (method === "GET") return await handleListComments(request, env, workId);
+        if (method === "POST") return await handlePostComment(request, env, workId, auth);
+      }
+      const commentMatch = path.match(/^\/api\/comments\/([A-Za-z0-9_-]+)$/);
+      if (commentMatch && method === "DELETE") {
+        return await handleDeleteComment(request, env, commentMatch[1], auth);
       }
 
       const workMatch = path.match(/^\/api\/works\/([A-Za-z0-9_-]+)$/);

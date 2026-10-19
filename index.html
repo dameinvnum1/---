@@ -514,25 +514,9 @@
 
         <section class="py-7">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-bold">评论 <span id="commentCount" class="text-sm font-normal text-neutral-400">21</span></h2>
-            <button class="text-xs font-medium text-xhs">按热度</button>
+            <h2 class="text-base font-bold">评论 <span id="commentCount" class="text-sm font-normal text-neutral-400">0</span></h2>
           </div>
-          <div id="commentList" class="mt-4 space-y-5">
-            <article class="flex gap-3">
-              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#dcecff] text-xs font-bold text-[#3568b8]">未</span>
-              <div>
-                <div class="flex items-center gap-2"><span class="text-sm font-semibold">未命名卷宗</span><span class="text-xs text-neutral-400">18 分钟前</span></div>
-                <p class="mt-1 text-sm leading-6 text-neutral-600">第七封信的落点太妙了，读到最后一段才反应过来前面埋的 <b>concealed</b> 是提示。</p>
-              </div>
-            </article>
-            <article class="flex gap-3">
-              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#f9e5cf] text-xs font-bold text-[#9a6032]">迟</span>
-              <div>
-                <div class="flex items-center gap-2"><span class="text-sm font-semibold">迟到的月亮</span><span class="text-xs text-neutral-400">1 小时前</span></div>
-                <p class="mt-1 text-sm leading-6 text-neutral-600">剧情读起来很顺，词汇也不会打断节奏。希望有下一章。</p>
-              </div>
-            </article>
-          </div>
+          <div id="commentList" class="mt-4 space-y-5"></div>
           <div class="mt-6 flex gap-2 border-t border-[#dce6f5] pt-5">
             <input id="commentInput" class="h-11 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] bg-white px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="写下你的想法…" />
             <button id="postComment" class="h-11 rounded-[7px] bg-ink px-4 text-sm font-semibold text-white hover:bg-[#0c1830]">发布</button>
@@ -542,14 +526,17 @@
 
       <div class="fixed inset-x-0 bottom-0 z-30 border-t border-[#dce6f5] bg-white/95 px-4 py-3 backdrop-blur">
         <div class="mx-auto flex max-w-3xl items-center gap-2">
-          <button id="detailLike" class="detail-action grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="点赞">
-            <i data-lucide="heart" class="size-5"></i>
+          <button id="detailLike" class="detail-action flex size-11 flex-col items-center justify-center gap-0.5 rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="点赞">
+            <i data-lucide="heart" class="size-4"></i>
+            <span id="detailLikeCount" class="text-[10px] leading-none">0</span>
           </button>
-          <button id="detailComment" class="grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="评论">
-            <i data-lucide="message-circle" class="size-5"></i>
+          <button id="detailComment" class="flex size-11 flex-col items-center justify-center gap-0.5 rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="评论">
+            <i data-lucide="message-circle" class="size-4"></i>
+            <span id="detailCommentCount" class="text-[10px] leading-none">0</span>
           </button>
-          <button id="detailFavorite" class="detail-action grid size-11 place-items-center rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="收藏">
-            <i data-lucide="bookmark" class="size-5"></i>
+          <button id="detailFavorite" class="detail-action flex size-11 flex-col items-center justify-center gap-0.5 rounded-[7px] border border-[#dce6f5] text-neutral-600 hover:border-xhs hover:text-xhs" aria-label="收藏">
+            <i data-lucide="bookmark" class="size-4"></i>
+            <span id="detailFavoriteCount" class="text-[10px] leading-none">0</span>
           </button>
           <button id="openReaderBottom" class="ml-auto flex h-11 items-center gap-2 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#1857d6]">
             阅读正文 <i data-lucide="book-open" class="size-4"></i>
@@ -782,7 +769,7 @@
               </div>
             </div>
             <div class="mt-5 flex items-center gap-8">
-              <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
+              <button class="text-left"><b id="profileStatsReceived" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
               <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
               <button class="text-left"><b class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
             </div>
@@ -2269,6 +2256,9 @@
         detailWords.innerHTML = work.words
           .map((word) => `<span class="rounded-full border border-[#cfe0ff] bg-[#eef5ff] px-3 py-1.5 text-sm font-semibold text-[#285da9]">${escapeHtml(word)}</span>`)
           .join("");
+        document.getElementById("commentInput").value = "";
+        syncDetailActions(work);
+        loadComments(work.id);
         workDetail.classList.remove("hidden");
         document.body.classList.add("modal-open");
         workDetail.scrollTop = 0;
@@ -2353,10 +2343,12 @@
         return `${Math.floor(hours / 24)} 天前`;
       }
 
-      // 生成作品的 byline 不落盘（「刚刚生成」刷新后就过期），展示时按 createdAt 现场算
+      // 只有「我自己的作品」才显示成「我」，别人的作品显示作者名。
+      // 之前按 generated 判断，导致所有人看到的作者都是「我」。
       function workByline(work) {
-        if (work && work.generated) return `我 · ${relativeTime(work.createdAt)}`;
-        return (work && work.byline) || "";
+        if (!work) return "";
+        if (work.mine) return `我 · ${relativeTime(work.createdAt)}`;
+        return work.byline || work.authorName || "";
       }
 
       // DOM 结构对齐既有 favorites 那条 .profile-work，
@@ -2453,11 +2445,33 @@
           return;
         }
 
-        const tabContent = {
-          favorites: profileWorkCard(workById("demo-rain-letter"), "已收藏"),
-          likes: profileWorkCard(workById("demo-library"), "已赞过"),
-        };
-        profileContent.innerHTML = tabContent[tab] || "";
+        if (tab === "favorites" || tab === "likes") {
+          profileContent.innerHTML = loadingHtml("正在读取…");
+          refreshIcons();
+          let works = [];
+          try {
+            const data = await apiFetch(`/api/works?scope=${tab}`, { auth: true });
+            works = (data.works || []).map(apiWorkToLocal);
+            cacheRemoteWorks(works);
+          } catch (error) {
+            profileContent.innerHTML = `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+            return;
+          }
+          if (activeProfileTab !== tab) return;   // 用户已切走
+          if (!works.length) {
+            profileContent.innerHTML = `<p class="py-8 text-sm text-neutral-400">${tab === "favorites" ? "还没有收藏任何作品" : "还没有赞过任何作品"}</p>`;
+            refreshIcons();
+            return;
+          }
+          const label = tab === "favorites" ? "已收藏" : "已赞过";
+          profileContent.innerHTML = `<p class="mx-auto mb-3 w-full max-w-md text-xs text-neutral-400">共 ${works.length} 部</p><div class="flex flex-col gap-4">${works
+            .map((work) => `<div class="mx-auto w-full max-w-md">${profileWorkCard(work, label)}</div>`)
+            .join("")}</div>`;
+          refreshIcons();
+          return;
+        }
+
+        profileContent.innerHTML = "";
         refreshIcons();
       }
 
@@ -2505,6 +2519,11 @@
           visibility: work.visibility,
           publishedAt: work.publishedAt,
           mine: Boolean(work.mine),
+          likeCount: Number(work.likeCount) || 0,
+          favoriteCount: Number(work.favoriteCount) || 0,
+          commentCount: Number(work.commentCount) || 0,
+          liked: Boolean(work.liked),
+          favorited: Boolean(work.favorited),
         };
       }
 
@@ -2518,10 +2537,36 @@
       }
 
       function feedCardFoot(work, extraClass) {
-        return `<div class="mt-4 flex items-center justify-between ${extraClass || ""} text-xs">
-          <span class="flex items-center gap-1.5"><span class="size-5 rounded-full bg-[#d7ebee]"></span>${escapeHtml(work.authorName || "词境作者")}</span>
-          ${work.mine ? '<span class="rounded bg-[#eaf1ff] px-1.5 py-0.5 text-[10px] font-semibold text-xhs">我的</span>' : ""}
+        return `<div class="mt-4 flex items-center justify-between gap-2 ${extraClass || ""} text-xs">
+          <span class="flex min-w-0 items-center gap-1.5">
+            <span class="size-5 shrink-0 rounded-full bg-[#d7ebee]"></span>
+            <span class="truncate">${escapeHtml(work.authorName || "词境作者")}</span>
+            ${work.mine ? '<span class="shrink-0 rounded bg-[#eaf1ff] px-1.5 py-0.5 text-[10px] font-semibold text-xhs">我的</span>' : ""}
+          </span>
+          <span class="flex shrink-0 items-center gap-2.5">
+            <button class="flex items-center gap-1 ${work.liked ? "text-xhs" : ""}" data-card-like="${escapeHtml(work.id)}" aria-label="点赞"><i data-lucide="heart" class="size-3.5"></i>${work.likeCount || 0}</button>
+            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="size-3.5"></i>${work.commentCount || 0}</span>
+          </span>
         </div>`;
+      }
+
+      async function toggleCardLike(workId) {
+        const work = workById(workId);
+        if (!work) return;
+        if (!work.remote) return window.alert("示例作品不支持互动，发布你自己的作品就能用了。");
+        if (!authToken) { openProfile(); return; }
+        try {
+          const data = await apiFetch(`/api/works/${encodeURIComponent(workId)}/like`, {
+            method: "POST",
+            auth: true,
+            body: { on: !work.liked },
+          });
+          work.liked = data.on;
+          work.likeCount = data.count;
+          loadFeed();   // 重新渲染，保持卡片状态与计数一致
+        } catch (error) {
+          window.alert(error.message);
+        }
       }
 
       function renderFeedCard(work) {
@@ -2604,7 +2649,8 @@
         if (!feed) return;
         let works = [];
         try {
-          const data = await apiFetch("/api/works?scope=feed");
+          // 带上登录态：服务端靠它返回 liked/favorited，否则卡片上的点赞状态永远是未点
+          const data = await apiFetch("/api/works?scope=feed", { auth: true });
           works = (data.works || []).map(apiWorkToLocal);
         } catch (error) {
           console.warn("[词境] 推荐流加载失败，回退到示例作品：", error);
@@ -2629,9 +2675,21 @@
         document.getElementById("profileHandle").textContent = `词境号：${String(authUser.id).slice(0, 10)}`;
         document.getElementById("profileQuota").textContent =
           `还可创作 ${authUser.quotaLeft} 次（套餐共 ${authUser.quotaTotal} 次）`;
+        // 获赞与收藏 = 别人给我的作品点的赞 + 收藏
+        document.getElementById("profileStatsReceived").textContent =
+          (authUser.likesReceived || 0) + (authUser.favoritesReceived || 0);
       }
 
-      function openProfile() {
+      async function openProfile() {
+        // 每次打开都拉一次最新资料：获赞/收藏数会随别人互动变化
+        if (authToken) {
+          try {
+            const data = await apiFetch("/api/me", { auth: true });
+            authUser = data.user;
+          } catch (error) {
+            /* 拉取失败就用缓存继续渲染，不阻塞进入个人页 */
+          }
+        }
         renderProfile();
         openAppView(profileView);
         if (authUser) setProfileTab(activeProfileTab);
@@ -3088,28 +3146,133 @@
       });
       document.getElementById("wordCardBackdrop").addEventListener("click", closeWordCard);
       document.getElementById("wordCardClose").addEventListener("click", closeWordCard);
-      document.querySelectorAll(".detail-action").forEach((button) => {
-        button.addEventListener("click", () => button.classList.toggle("is-active-action"));
-      });
+      // ---------- 详情页互动（点赞 / 收藏 / 评论） ----------
+
+      function syncDetailActions(work) {
+        document.getElementById("detailLikeCount").textContent = work.likeCount || 0;
+        document.getElementById("detailFavoriteCount").textContent = work.favoriteCount || 0;
+        document.getElementById("detailCommentCount").textContent = work.commentCount || 0;
+        document.getElementById("commentCount").textContent = work.commentCount || 0;
+        const likeBtn = document.getElementById("detailLike");
+        const favBtn = document.getElementById("detailFavorite");
+        ["text-xhs", "border-xhs"].forEach((cls) => {
+          likeBtn.classList.toggle(cls, Boolean(work.liked));
+          favBtn.classList.toggle(cls, Boolean(work.favorited));
+        });
+      }
+
+      async function toggleWorkMark(kind) {
+        const work = activeWork;
+        if (!work) return;
+        if (!work.remote) return window.alert("示例作品不支持互动，发布你自己的作品就能用了。");
+        if (!authToken) { closeWorkDetail(); openProfile(); return; }
+        const on = kind === "like" ? !work.liked : !work.favorited;
+        try {
+          const data = await apiFetch(`/api/works/${encodeURIComponent(work.id)}/${kind}`, {
+            method: "POST",
+            auth: true,
+            body: { on },
+          });
+          if (kind === "like") { work.liked = data.on; work.likeCount = data.count; }
+          else { work.favorited = data.on; work.favoriteCount = data.count; }
+          syncDetailActions(work);
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      function renderComments(comments) {
+        const list = document.getElementById("commentList");
+        if (!comments.length) {
+          list.innerHTML = `<p class="text-sm text-neutral-400">还没有评论，来说两句。</p>`;
+          return;
+        }
+        list.innerHTML = comments
+          .map(
+            (c) => `
+          <article class="flex gap-3">
+            <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#dcecff] text-xs font-bold text-[#3568b8]">${escapeHtml(String(c.authorName || "词")[0])}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="truncate text-sm font-semibold">${escapeHtml(c.authorName)}</span>
+                <span class="shrink-0 text-xs text-neutral-400">${escapeHtml(relativeTime(c.createdAt))}</span>
+                ${c.mine ? `<button class="shrink-0 text-xs text-neutral-400 hover:text-red-500" data-comment-delete="${escapeHtml(c.id)}">删除</button>` : ""}
+              </div>
+              <p class="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-neutral-600">${escapeHtml(c.content)}</p>
+            </div>
+          </article>`
+          )
+          .join("");
+      }
+
+      async function loadComments(workId) {
+        const list = document.getElementById("commentList");
+        list.innerHTML = `<p class="text-sm text-neutral-400">正在加载评论…</p>`;
+        try {
+          // 带上登录态：服务端靠它判断哪条评论是「我的」，决定是否显示删除按钮
+          const data = await apiFetch(`/api/works/${encodeURIComponent(workId)}/comments`, { auth: true });
+          renderComments(data.comments || []);
+        } catch (error) {
+          list.innerHTML = `<p class="text-sm text-neutral-400">评论加载失败，请稍后重试。</p>`;
+        }
+      }
+
+      async function postComment() {
+        const input = document.getElementById("commentInput");
+        const content = input.value.trim();
+        if (!content) return input.focus();
+        const work = activeWork;
+        if (!work) return;
+        if (!work.remote) return window.alert("示例作品不支持评论。");
+        if (!authToken) { closeWorkDetail(); openProfile(); return; }
+        try {
+          const data = await apiFetch(`/api/works/${encodeURIComponent(work.id)}/comments`, {
+            method: "POST",
+            auth: true,
+            body: { content },
+          });
+          input.value = "";
+          work.commentCount = data.commentCount;
+          syncDetailActions(work);
+          await loadComments(work.id);
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      async function deleteComment(commentId) {
+        if (!window.confirm("删除这条评论？")) return;
+        try {
+          await apiFetch(`/api/comments/${encodeURIComponent(commentId)}`, { method: "DELETE", auth: true });
+          const work = activeWork;
+          if (!work) return;
+          work.commentCount = Math.max(0, (work.commentCount || 1) - 1);
+          syncDetailActions(work);
+          await loadComments(work.id);
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      document.getElementById("detailLike").addEventListener("click", () => toggleWorkMark("like"));
+      document.getElementById("detailFavorite").addEventListener("click", () => toggleWorkMark("favorite"));
       document.getElementById("detailComment").addEventListener("click", () => {
         document.getElementById("commentInput").focus();
         document.getElementById("commentInput").scrollIntoView({ behavior: "smooth", block: "center" });
       });
-      document.getElementById("postComment").addEventListener("click", () => {
-        const input = document.getElementById("commentInput");
-        const text = input.value.trim();
-        if (!text) {
-          input.focus();
-          return;
-        }
-        const comment = document.createElement("article");
-        comment.className = "flex gap-3";
-        comment.innerHTML = `<span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#dbe8ff] text-xs font-bold text-[#3568b8]">林</span><div><div class="flex items-center gap-2"><span class="text-sm font-semibold">林</span><span class="text-xs text-neutral-400">刚刚</span></div><p class="mt-1 text-sm leading-6 text-neutral-600"></p></div>`;
-        comment.querySelector("p").textContent = text;
-        document.getElementById("commentList").prepend(comment);
-        const count = document.getElementById("commentCount");
-        count.textContent = String(Number(count.textContent) + 1);
-        input.value = "";
+      document.getElementById("postComment").addEventListener("click", postComment);
+      // 用捕获阶段，抢在卡片自身的「打开详情」监听器之前拦下点赞按钮
+      document.getElementById("feed").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-card-like]");
+        if (!button) return;
+        event.stopPropagation();
+        event.preventDefault();
+        toggleCardLike(button.dataset.cardLike);
+      }, true);
+
+      document.getElementById("commentList").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-comment-delete]");
+        if (button) deleteComment(button.dataset.commentDelete);
       });
 
       document.querySelectorAll(".feed-tab").forEach((tab) => {

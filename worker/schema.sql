@@ -63,3 +63,33 @@ CREATE INDEX IF NOT EXISTS idx_works_feed  ON works(visibility, published_at DES
 CREATE INDEX IF NOT EXISTS idx_works_genre ON works(visibility, genre, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_works_user  ON works(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+-- 点赞：用户 × 作品 联合主键，天然防重复
+CREATE TABLE IF NOT EXISTS likes (
+  user_id TEXT NOT NULL,
+  work_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, work_id)
+);
+CREATE INDEX IF NOT EXISTS idx_likes_work ON likes(work_id);
+
+-- 收藏：同上
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id TEXT NOT NULL,
+  work_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, work_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_work ON favorites(work_id);
+
+-- 评论：status 预留给审核（visible | hidden）
+CREATE TABLE IF NOT EXISTS comments (
+  id TEXT PRIMARY KEY,
+  work_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'visible',
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (work_id) REFERENCES works(id)
+);
+CREATE INDEX IF NOT EXISTS idx_comments_work ON comments(work_id, created_at DESC);
