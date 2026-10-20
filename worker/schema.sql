@@ -102,3 +102,21 @@ CREATE TABLE IF NOT EXISTS follows (
   PRIMARY KEY (follower_id, followee_id)
 );
 CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id);
+
+-- 消息通知：点赞 / 收藏 / 评论 / 关注
+-- dedupe_key 保证「取消后重新点赞」不会刷出一堆重复消息
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,               -- 接收者
+  actor_id TEXT NOT NULL,              -- 触发者
+  type TEXT NOT NULL,                  -- like | favorite | comment | follow
+  work_id TEXT,
+  comment_id TEXT,
+  excerpt TEXT,                        -- 评论摘要
+  dedupe_key TEXT NOT NULL,
+  read_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(dedupe_key);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+

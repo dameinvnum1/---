@@ -816,17 +816,47 @@ async function requireVisibleWork(request, env, workId, viewerId) {
   return { work };
 }
 
-async function toggleMark(request, env, workId, auth, table) {
+// ---------- 消息通知 ----------
+
+// 同一个人对同一件事重复触发（取消点赞再点赞、重复评论同一作品）只保留一条，
+// 并重新置为未读；dedupe_key 由调用方给出，天然带上接收者语义。
+async function notify(env, { userId, actorId, type, workId, commentId, excerpt, dedupeKey }) {
+  if (!userId || !actorId || userId === actorId) return;   // 不给自己发消息
+  await env.cijing_db
+    .prepare(
+      `INSERT INTO notifications
+         (id, user_id, actor_id, type, work_id, comment_id, excerpt, dedupe_key, read_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+       ON CONFLICT(dedupe_key) DO UPDATE SET
+         read_at = NULL,
+         created_at = excluded.created_at,
+         excerpt = excluded.excerpt`
+    )
+    .bind(makeId("n"), userId, actorId, type, workId || null, commentId || null, excerpt || null, dedupeKey, Date.now())
+    .run();
+}
+
+async function toggleMark(request, env, workId, auth, table, type) {
   const visible = await requireVisibleWork(request, env, workId, auth.user.id);
   if (visible.error) return visible.error;
 
   const body = await request.json().catch(() => ({}));
   const on = body.on !== false;   // 不传默认视为「点上」
   if (on) {
-    await env.cijing_db
+    const inserted = await env.cijing_db
       .prepare(`INSERT OR IGNORE INTO ${table} (user_id, work_id, created_at) VALUES (?, ?, ?)`)
       .bind(auth.user.id, workId, Date.now())
       .run();
+    // 只有真正新增了记录才发消息，双击之类的重复请求不会反复置顶
+    if (Number(inserted.meta?.changes) > 0) {
+      await notify(env, {
+        userId: visible.work.user_id,
+        actorId: auth.user.id,
+        type,
+        workId,
+        dedupeKey: `${type}:${auth.user.id}:${workId}`,
+      });
+    }
   } else {
     await env.cijing_db
       .prepare(`DELETE FROM ${table} WHERE user_id = ? AND work_id = ?`)
@@ -843,11 +873,11 @@ async function toggleMark(request, env, workId, auth, table) {
 
 // table 只在内部常量里传，不来自用户输入
 async function handleToggleLike(request, env, workId, auth) {
-  return toggleMark(request, env, workId, auth, "likes");
+  return toggleMark(request, env, workId, auth, "likes", "like");
 }
 
 async function handleToggleFavorite(request, env, workId, auth) {
-  return toggleMark(request, env, workId, auth, "favorites");
+  return toggleMark(request, env, workId, auth, "favorites", "favorite");
 }
 
 // ---------- 评论 ----------
@@ -907,6 +937,16 @@ async function handlePostComment(request, env, workId, auth) {
     .bind(workId)
     .first();
 
+  await notify(env, {
+    userId: visible.work.user_id,
+    actorId: auth.user.id,
+    type: "comment",
+    workId,
+    commentId: id,
+    excerpt: content.slice(0, 80),
+    dedupeKey: `comment:${id}`,
+  });
+
   return json(
     {
       ok: true,
@@ -936,10 +976,18 @@ async function handleToggleFollow(request, env, targetId, auth) {
   const body = await request.json().catch(() => ({}));
   const on = body.on !== false;
   if (on) {
-    await env.cijing_db
+    const inserted = await env.cijing_db
       .prepare("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)")
       .bind(auth.user.id, targetId, Date.now())
       .run();
+    if (Number(inserted.meta?.changes) > 0) {
+      await notify(env, {
+        userId: targetId,
+        actorId: auth.user.id,
+        type: "follow",
+        dedupeKey: `follow:${auth.user.id}:${targetId}`,
+      });
+    }
   } else {
     await env.cijing_db
       .prepare("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?")
@@ -954,9 +1002,85 @@ async function handleToggleFollow(request, env, targetId, auth) {
   return json({ ok: true, on, followerCount: Number(count.n) || 0 }, 200, request, env);
 }
 
+// ---------- 通知 ----------
+
+async function handleListNotifications(request, env, url, auth) {
+  const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 50));
+
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT n.id, n.type, n.work_id, n.comment_id, n.excerpt, n.read_at, n.created_at,
+              u.id AS actor_id, u.name AS actor_name,
+              w.title AS work_title
+       FROM notifications n
+       JOIN users u ON u.id = n.actor_id
+       LEFT JOIN works w ON w.id = n.work_id
+       WHERE n.user_id = ?
+       ORDER BY n.created_at DESC
+       LIMIT ?`
+    )
+    .bind(auth.user.id, limit)
+    .all();
+
+  const unread = await env.cijing_db
+    .prepare("SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL")
+    .bind(auth.user.id)
+    .first();
+
+  return json(
+    {
+      ok: true,
+      unreadCount: Number(unread?.n) || 0,
+      notifications: (results || []).map((row) => ({
+        id: row.id,
+        type: row.type,
+        actorId: row.actor_id,
+        actorName: row.actor_name || "词境读者",
+        workId: row.work_id || "",
+        workTitle: row.work_title || "",
+        excerpt: row.excerpt || "",
+        read: row.read_at != null,
+        createdAt: Number(row.created_at),
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+// ids 缺省 → 全部已读；传 ids → 只标记这几条
+async function handleReadNotifications(request, env, auth) {
+  const body = await request.json().catch(() => ({}));
+  const ids = Array.isArray(body.ids)
+    ? body.ids.filter((id) => typeof id === "string" && id).slice(0, 200)
+    : null;
+  const now = Date.now();
+
+  if (ids && ids.length) {
+    const placeholders = ids.map(() => "?").join(",");
+    await env.cijing_db
+      .prepare(
+        `UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL AND id IN (${placeholders})`
+      )
+      .bind(now, auth.user.id, ...ids)
+      .run();
+  } else if (!ids) {
+    await env.cijing_db
+      .prepare("UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL")
+      .bind(now, auth.user.id)
+      .run();
+  }
+
+  const unread = await env.cijing_db
+    .prepare("SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL")
+    .bind(auth.user.id)
+    .first();
+  return json({ ok: true, unreadCount: Number(unread?.n) || 0 }, 200, request, env);
+}
+
 // 公开作者页：只暴露笔名与统计，不含邮箱等隐私字段
-async function handleGetUser(request, env, userId) {
-  const auth = await currentUser(request, env);
+async function handleGetUser(request, env, userId) {  const auth = await currentUser(request, env);
   const viewerId = auth ? auth.user.id : null;
 
   const user = await env.cijing_db
@@ -1038,6 +1162,7 @@ export default {
       const needsAuth = path === "/api/me"
         || path === "/api/generate"
         || path === "/api/auth/logout"
+        || path.startsWith("/api/notifications")
         || (path === "/api/works" && (url.searchParams.get("scope") === "mine" || method === "POST"))
         || (path.startsWith("/api/works/") && method !== "GET")
         || (path.startsWith("/api/comments/") && method === "DELETE")
@@ -1080,6 +1205,12 @@ export default {
       }
       if (path === "/api/generate" && method === "POST") {
         return await handleGenerate(request, env, auth);
+      }
+      if (path === "/api/notifications" && method === "GET") {
+        return await handleListNotifications(request, env, url, auth);
+      }
+      if (path === "/api/notifications/read" && method === "POST") {
+        return await handleReadNotifications(request, env, auth);
       }
       if (path === "/api/works" && method === "GET") {
         return await handleListWorks(request, env, url);

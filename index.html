@@ -163,7 +163,10 @@
               aria-label="通知"
             >
               <i data-lucide="bell" class="size-5"></i>
-              <span class="absolute right-2 top-2 size-2 rounded-full bg-xhs"></span>
+              <span
+                id="notifBadge"
+                class="absolute -right-0.5 -top-0.5 hidden min-w-[17px] rounded-full bg-xhs px-1 text-center text-[10px] font-bold leading-[17px] text-white"
+              ></span>
             </button>
             <button
               id="openComposerTop"
@@ -631,38 +634,17 @@
             <i data-lucide="arrow-left" class="size-5"></i>
           </button>
           <h1 class="ml-2 text-base font-bold">消息</h1>
-          <button class="ml-auto text-xs text-neutral-400">全部已读</button>
+          <button id="notifReadAll" class="ml-auto text-xs text-neutral-400 hover:text-xhs">全部已读</button>
         </div>
       </header>
       <main class="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
         <div class="grid grid-cols-4 border-b border-[#dce6f5] py-4 text-center text-xs text-neutral-500">
-          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="heart" class="size-5"></i></span>赞和收藏</button>
-          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#fff3df] text-[#b77426]"><i data-lucide="message-circle" class="size-5"></i></span>评论</button>
-          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#e8f4ef] text-[#367564]"><i data-lucide="user-plus" class="size-5"></i></span>新增关注</button>
-          <button class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eef0f8] text-[#596a91]"><i data-lucide="bell" class="size-5"></i></span>系统</button>
+          <button data-notif-filter="reaction" class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="heart" class="size-5"></i></span>赞和收藏</button>
+          <button data-notif-filter="comment" class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#fff3df] text-[#b77426]"><i data-lucide="message-circle" class="size-5"></i></span>评论</button>
+          <button data-notif-filter="follow" class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#e8f4ef] text-[#367564]"><i data-lucide="user-plus" class="size-5"></i></span>新增关注</button>
+          <button data-notif-filter="system" class="grid place-items-center gap-2"><span class="grid size-11 place-items-center rounded-full bg-[#eef0f8] text-[#596a91]"><i data-lucide="bell" class="size-5"></i></span>系统</button>
         </div>
-        <div class="divide-y divide-[#dce6f5]">
-          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-id="demo-rain-letter">
-            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#d7ebee] text-xs font-bold text-[#3a7773]">木</span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center gap-2"><b class="text-sm">木棉警报</b><span class="text-xs text-neutral-400">刚刚</span></span>
-              <span class="mt-1 block text-sm leading-6 text-neutral-500">收藏了你的作品《雨夜的第七封信》</span>
-            </span>
-            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#1c3e6e]" style="background-image:url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=120&q=80')"></span>
-          </button>
-          <button class="message-item flex w-full gap-3 py-4 text-left" data-work-id="demo-evidence">
-            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#e7d9f5] text-xs font-bold text-[#735e9f]">未</span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center gap-2"><b class="text-sm">未命名卷宗</b><span class="text-xs text-neutral-400">28 分钟前</span></span>
-              <span class="mt-1 block text-sm leading-6 text-neutral-500">评论了你的作品：结局真的没猜到。</span>
-            </span>
-            <span class="image-cover h-12 w-10 shrink-0 rounded-[5px] bg-[#2a2430]" style="background-image:url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=120&q=80')"></span>
-          </button>
-          <div class="flex gap-3 py-4">
-            <span class="grid size-10 shrink-0 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="sparkles" class="size-4"></i></span>
-            <span><span class="flex items-center gap-2"><b class="text-sm">词境助手</b><span class="text-xs text-neutral-400">今天</span></span><span class="mt-1 block text-sm leading-6 text-neutral-500">你的测试月卡还剩 42 次创作额度。</span></span>
-          </div>
-        </div>
+        <div id="notificationList" class="divide-y divide-[#dce6f5]"></div>
       </main>
     </section>
 
@@ -1625,6 +1607,7 @@
         authToken = "";
         authUser = null;
         persistToken();
+        setNotifBadge(0);
       }
 
       function applySession(token, user) {
@@ -1633,6 +1616,7 @@
         persistToken();
         renderProfile();
         refreshIcons();
+        loadNotifications();
       }
 
       // 启动时用本地 token 换回用户资料；token 失效则静默登出
@@ -2417,12 +2401,121 @@
         view.scrollTop = 0;
         notificationPanel.classList.add("hidden");
         document.body.classList.add("modal-open");
+        if (view === messagesView) loadNotifications();
         refreshIcons();
       }
 
       function closeAppViews() {
         appViews.forEach((item) => item.classList.add("hidden"));
         document.body.classList.remove("modal-open");
+      }
+
+      // ---------- 消息通知 ----------
+      let notifications = [];
+      let notifFilter = "all";
+      const NOTIF_FILTERS = {
+        reaction: ["like", "favorite"],
+        comment: ["comment"],
+        follow: ["follow"],
+        system: [],
+      };
+      const AVATAR_THEMES = [
+        "bg-[#dbe8ff] text-xhs",
+        "bg-[#e7d9f5] text-[#735e9f]",
+        "bg-[#d7ebee] text-[#3a7773]",
+        "bg-[#ffe6d6] text-[#a85f2b]",
+        "bg-[#e3efdd] text-[#4a7a3d]",
+      ];
+
+      function setNotifBadge(count) {
+        const badge = document.getElementById("notifBadge");
+        if (!badge) return;
+        const n = Number(count) || 0;
+        badge.textContent = n > 99 ? "99+" : String(n);
+        badge.classList.toggle("hidden", n <= 0);
+      }
+
+      function notifActionText(item) {
+        const title = item.workTitle ? `《${escapeHtml(item.workTitle)}》` : "";
+        if (item.type === "like") return `赞了你的作品${title}`;
+        if (item.type === "favorite") return `收藏了你的作品${title}`;
+        if (item.type === "comment") return `评论了你的作品${title}：${escapeHtml(item.excerpt || "")}`;
+        if (item.type === "follow") return "关注了你";
+        return escapeHtml(item.excerpt || "");
+      }
+
+      function renderNotifications() {
+        const list = document.getElementById("notificationList");
+        if (!list) return;
+
+        if (!authToken) {
+          list.innerHTML = `<div class="py-16 text-center text-sm text-neutral-400">登录后查看消息</div>`;
+          return;
+        }
+
+        const types = NOTIF_FILTERS[notifFilter];
+        const items = types ? notifications.filter((item) => types.includes(item.type)) : notifications;
+
+        if (!items.length) {
+          list.innerHTML = `<div class="py-16 text-center text-sm text-neutral-400">${
+            notifFilter === "all" ? "还没有新消息" : "这一类还没有消息"
+          }</div>`;
+          return;
+        }
+
+        list.innerHTML = items
+          .map((item) => {
+            const theme = AVATAR_THEMES[hashString(item.actorId || item.actorName) % AVATAR_THEMES.length];
+            const initial = escapeHtml((item.actorName || "词").slice(0, 1));
+            return `<button class="notif-item flex w-full items-start gap-3 py-4 text-left" data-notif-id="${escapeHtml(item.id)}">
+              <span class="grid size-10 shrink-0 place-items-center rounded-full ${theme} text-xs font-bold">${initial}</span>
+              <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2">
+                  <b class="truncate text-sm">${escapeHtml(item.actorName || "词境读者")}</b>
+                  <span class="shrink-0 text-xs text-neutral-400">${escapeHtml(relativeTime(item.createdAt))}</span>
+                  ${item.read ? "" : '<span class="ml-auto size-2 shrink-0 rounded-full bg-xhs"></span>'}
+                </span>
+                <span class="mt-1 block text-sm leading-6 text-neutral-500">${notifActionText(item)}</span>
+              </span>
+            </button>`;
+          })
+          .join("");
+      }
+
+      async function loadNotifications() {
+        if (!authToken) {
+          notifications = [];
+          setNotifBadge(0);
+          renderNotifications();
+          return;
+        }
+        try {
+          const data = await apiFetch("/api/notifications?limit=50", { auth: true });
+          notifications = data.notifications || [];
+          setNotifBadge(data.unreadCount || 0);
+          renderNotifications();
+        } catch (error) {
+          console.warn("[词境] 消息加载失败：", error);
+        }
+      }
+
+      // ids 缺省 = 全部已读
+      async function markNotificationsRead(ids) {
+        if (!authToken) return;
+        try {
+          const data = await apiFetch("/api/notifications/read", {
+            method: "POST",
+            auth: true,
+            body: ids ? { ids } : {},
+          });
+          setNotifBadge(data.unreadCount || 0);
+          notifications.forEach((item) => {
+            if (!ids || ids.includes(item.id)) item.read = true;
+          });
+          renderNotifications();
+        } catch (error) {
+          console.warn("[词境] 消息已读状态更新失败：", error);
+        }
       }
 
       // ---- 「我的作品」渲染 ----
@@ -3319,6 +3412,39 @@
       });
 
       notificationButton.addEventListener("click", () => openAppView(messagesView));
+
+      // ---- 消息：分类筛选 / 全部已读 / 点开某条 ----
+      document.querySelectorAll("[data-notif-filter]").forEach((button) => {
+        button.addEventListener("click", () => {
+          notifFilter = button.dataset.notifFilter;
+          renderNotifications();
+        });
+      });
+
+      document.getElementById("notifReadAll").addEventListener("click", () => {
+        if (!authToken) return;
+        markNotificationsRead();
+      });
+
+      document.getElementById("notificationList").addEventListener("click", async (event) => {
+        const button = event.target.closest(".notif-item");
+        if (!button) return;
+        const item = notifications.find((entry) => entry.id === button.dataset.notifId);
+        if (!item) return;
+
+        if (!item.read) markNotificationsRead([item.id]);
+        if (!item.workId) return;   // 关注类消息没有作品可跳
+
+        try {
+          const data = await apiFetch(`/api/works/${encodeURIComponent(item.workId)}`, { auth: true });
+          const work = apiWorkToLocal(data.work);
+          cacheRemoteWorks([work]);
+          closeAppViews();
+          openWorkDetail(work);
+        } catch (error) {
+          console.warn("[词境] 打开消息对应的作品失败：", error);
+        }
+      });
       document.getElementById("openProfileTop").addEventListener("click", openProfile);
       document.getElementById("navFollowingDesktop").addEventListener("click", (event) => {
         event.preventDefault();
@@ -3396,6 +3522,7 @@
         syncAuthForm();
         await restoreSession();
         await loadFeed();
+        loadNotifications();   // 有登录态时顺带拉未读数，点亮右上角角标
       })();
 
       document.querySelectorAll(".detail-back").forEach((button) => {
