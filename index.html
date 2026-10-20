@@ -449,6 +449,19 @@
         </aside>
       </main>
 
+      <footer
+        class="mx-auto max-w-[1480px] border-t border-black/5 px-4 pb-[calc(86px+env(safe-area-inset-bottom))] pt-6 text-xs text-neutral-400 lg:px-6 lg:pb-10"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span>词境 · 用今天背的单词，读一篇好故事</span>
+          <span class="flex flex-wrap items-center gap-4">
+            <a href="PRD.md" class="hover:text-xhs">产品文档</a>
+            <span>内容仅面向 18 岁以上读者</span>
+            <span>© 2026 词境</span>
+          </span>
+        </div>
+      </footer>
+
       <nav
         class="mobile-bottom-nav fixed inset-x-0 bottom-0 z-30 items-center border-t border-black/5 bg-white lg:hidden"
       >
@@ -2654,6 +2667,28 @@
       let feedScope = "feed";
       let feedGenre = "";
 
+      // 首页至少要铺满一屏半，作品太少时页面高度等于视口高度，滚轮完全没反应
+      const FEED_MIN_CARDS = 9;
+
+      // demo 的 tag 是子题材，映射到一级题材后才能在按题材筛选时补位
+      const DEMO_GENRE_OF = {
+        "密室凶案": "悬疑刑侦",
+        "都市职场": "现代言情",
+      };
+
+      function demoGenreOf(work) {
+        return DEMO_GENRE_OF[work.tag] || work.tag;
+      }
+
+      // 取还没有展示过的示例作品补足数量；指定题材时只补同题材的
+      function pickFeedFillers(shownIds, genre, count) {
+        if (count <= 0) return [];
+        return workCatalog
+          .filter((work) => work.id.startsWith("demo-") && !shownIds.has(work.id))
+          .filter((work) => !genre || demoGenreOf(work) === genre)
+          .slice(0, count);
+      }
+
       async function loadFeed() {
         const feed = document.getElementById("feed");
         if (!feed) return;
@@ -2670,16 +2705,20 @@
         }
         cacheRemoteWorks(works);
 
-        if (works.length) {
-          feed.innerHTML = works.map(renderFeedCard).join("");
-        } else if (feedGenre || feedScope !== "feed") {
-          // 筛选为空时不回落 demo —— 那会显示与题材不符的作品，等于骗人
+        const shownIds = new Set(works.map((work) => work.id));
+        const fillers =
+          feedScope === "feed"
+            ? pickFeedFillers(shownIds, feedGenre, FEED_MIN_CARDS - works.length)
+            : [];
+
+        if (works.length || fillers.length) {
+          // 真实作品在前，示例作品只用来补满版面
+          feed.innerHTML =
+            works.map(renderFeedCard).join("") + fillers.map(renderDemoFeedCard).join("");
+        } else {
           feed.innerHTML = `<p style="column-span: all" class="py-12 text-center text-sm text-neutral-400">${
             feedGenre ? `「${escapeHtml(feedGenre)}」下还没有已发布的作品` : "还没有新作品"
           }</p>`;
-        } else {
-          // 冷启动：还没有人发布，用示例作品兜底
-          feed.innerHTML = workCatalog.filter((work) => work.id.startsWith("demo-")).map(renderDemoFeedCard).join("");
         }
         bindFeedCards();
         refreshIcons();
