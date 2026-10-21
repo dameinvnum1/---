@@ -1029,6 +1029,15 @@ async function handleCreateWork(request, env, auth) {
   return json({ ok: true, work: workToJson(row, auth.user.id) }, 200, request, env);
 }
 
+// 推荐流计分参数：权重集中在这里，调排序只改这几个数
+const RANK = {
+  base: 1,          // 零互动作品的基础分，避免一发布就沉底
+  like: 1,
+  favorite: 3,      // 收藏 = 明确想回来读
+  comment: 4,       // 打字成本最高，也最能带动讨论
+  gravity: 1.4,     // 时间衰减指数：越大老作品掉得越快
+};
+
 async function handleListWorks(request, env, url) {
   const auth = await currentUser(request, env);
   const viewerId = auth ? auth.user.id : null;
@@ -1063,13 +1072,21 @@ async function handleListWorks(request, env, url) {
     params = [viewer, viewer, viewerId, limit];
   } else {
     // feed / new 只返回公开作品。
-    // 推荐按互动量排（赞 + 收藏），新作按发布时间排 —— 否则两个 tab 结果一模一样。
+    // 推荐：互动加权 / 时间衰减；新作：纯发布时间倒序。
+    // 作者给自己的点赞、收藏、评论不计分，避免自刷影响推荐位置。
     const order =
       scope === "new"
         ? "ORDER BY w.published_at DESC"
-        : `ORDER BY ((SELECT COUNT(*) FROM likes WHERE work_id = w.id)
-                    + (SELECT COUNT(*) FROM favorites WHERE work_id = w.id)) DESC,
-                    w.published_at DESC`;
+        : `ORDER BY (
+             (${RANK.base}
+              + ${RANK.like} * (SELECT COUNT(*) FROM likes WHERE work_id = w.id AND user_id != w.user_id)
+              + ${RANK.favorite} * (SELECT COUNT(*) FROM favorites WHERE work_id = w.id AND user_id != w.user_id)
+              + ${RANK.comment} * (SELECT COUNT(*) FROM comments
+                                   WHERE work_id = w.id AND status = 'visible' AND user_id != w.user_id)
+             )
+             / pow((MAX(0, ? - COALESCE(w.published_at, w.created_at)) / 3600000.0) + 2, ${RANK.gravity})
+           ) DESC,
+           w.published_at DESC`;
     const genreValues = genre ? GENRE_ALIASES[genre] || [genre] : [];
     const genreClause = genreValues.length
       ? `AND w.genre IN (${genreValues.map(() => "?").join(",")})`
@@ -1078,7 +1095,10 @@ async function handleListWorks(request, env, url) {
     const filterValues = subgenre ? [...genreValues, subgenre] : genreValues;
     sql = `${WORK_SELECT} WHERE w.visibility = 'public' ${genreClause} ${subgenreClause}
            ${order} LIMIT ?`;
-    params = [viewer, viewer, ...filterValues, limit];
+    params =
+      scope === "new"
+        ? [viewer, viewer, ...filterValues, limit]
+        : [viewer, viewer, ...filterValues, Date.now(), limit];
 
     // 细分题材不预设，直接统计该大类下创作者实际用过的值
     if (genreValues.length) {
