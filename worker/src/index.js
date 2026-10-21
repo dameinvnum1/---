@@ -1070,6 +1070,21 @@ async function handleListWorks(request, env, url) {
            AND w.id IN (SELECT work_id FROM ${table} WHERE user_id = ?)
            ORDER BY w.published_at DESC LIMIT ?`;
     params = [viewer, viewer, viewerId, limit];
+  } else if (scope === "author") {
+    // 某个作者的公开作品：公开作者页用，游客也能看
+    const authorId = cleanText(url.searchParams.get("author"), 40);
+    if (!authorId) return json({ ok: true, works: [], subgenres: [] }, 200, request, env);
+    sql = `${WORK_SELECT} WHERE w.visibility = 'public' AND w.user_id = ?
+           ORDER BY w.published_at DESC LIMIT ?`;
+    params = [viewer, viewer, authorId, limit];
+  } else if (scope === "received") {
+    // 我收到的赞 / 收藏：只列别人对我作品的互动，自赞不算
+    if (!viewerId) return json({ error: "请先登录" }, 401, request, env);
+    const table = url.searchParams.get("kind") === "favorites" ? "favorites" : "likes";
+    sql = `${WORK_SELECT} WHERE w.user_id = ?
+           AND EXISTS (SELECT 1 FROM ${table} t WHERE t.work_id = w.id AND t.user_id != w.user_id)
+           ORDER BY w.published_at DESC LIMIT ?`;
+    params = [viewer, viewer, viewerId, limit];
   } else {
     // feed / new 只返回公开作品。
     // 推荐：互动加权 / 时间衰减；新作：纯发布时间倒序。
@@ -1458,6 +1473,42 @@ async function handleReadNotifications(request, env, auth) {
   return json({ ok: true, unreadCount: Number(unread?.n) || 0 }, 200, request, env);
 }
 
+// 关注 / 粉丝人物列表。只暴露笔名与关注状态，不含邮箱。
+// direction = "following"：userId 关注的人；"followers"：关注 userId 的人。
+async function handleListFollows(request, env, userId, direction) {
+  const auth = await currentUser(request, env);
+  const viewerId = auth ? auth.user.id : null;
+  const owner = direction === "following" ? "follower_id" : "followee_id";
+  const other = direction === "following" ? "followee_id" : "follower_id";
+
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT u.id, u.name, u.created_at,
+              EXISTS(SELECT 1 FROM follows x WHERE x.follower_id = ? AND x.followee_id = u.id) AS is_following
+       FROM follows f JOIN users u ON u.id = f.${other}
+       WHERE f.${owner} = ?
+       ORDER BY f.created_at DESC
+       LIMIT 100`
+    )
+    .bind(viewerId || "", userId)
+    .all();
+
+  return json(
+    {
+      ok: true,
+      users: (results || []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        createdAt: Number(row.created_at) || 0,
+        isFollowing: Boolean(row.is_following),
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
 // 公开作者页：只暴露笔名与统计，不含邮箱等隐私字段
 async function handleGetUser(request, env, userId) {  const auth = await currentUser(request, env);
   const viewerId = auth ? auth.user.id : null;
@@ -1543,7 +1594,7 @@ export default {
         || path === "/api/auth/logout"
         || path.startsWith("/api/notifications")
         || path.startsWith("/api/styles")
-        || (path === "/api/works" && (url.searchParams.get("scope") === "mine" || method === "POST"))
+        || (path === "/api/works" && (["mine", "received"].includes(url.searchParams.get("scope")) || method === "POST"))
         || (path.startsWith("/api/works/") && method !== "GET")
         || (path.startsWith("/api/comments/") && method === "DELETE")
         || (path.startsWith("/api/users/") && method !== "GET");
@@ -1578,6 +1629,20 @@ export default {
           request,
           env
         );
+      }
+      if (path === "/api/me" && method === "PATCH") {
+        const body = await request.json().catch(() => ({}));
+        const name = cleanText(body.name, 24);
+        if (!name) return json({ error: "昵称不能为空" }, 400, request, env);
+        await env.cijing_db
+          .prepare("UPDATE users SET name = ? WHERE id = ?")
+          .bind(name, auth.user.id)
+          .run();
+        const fresh = await env.cijing_db
+          .prepare("SELECT * FROM users WHERE id = ?")
+          .bind(auth.user.id)
+          .first();
+        return json({ ok: true, user: publicUser(fresh) }, 200, request, env);
       }
       if (path === "/api/auth/logout" && method === "POST") {
         await env.cijing_db.prepare("DELETE FROM sessions WHERE token = ?").bind(auth.token).run();
@@ -1635,6 +1700,11 @@ export default {
       const followMatch = path.match(/^\/api\/users\/([A-Za-z0-9_-]+)\/follow$/);
       if (followMatch && method === "POST") {
         return await handleToggleFollow(request, env, followMatch[1], auth);
+      }
+      // 关注列表 / 粉丝列表：公开可读
+      const followsMatch = path.match(/^\/api\/users\/([A-Za-z0-9_-]+)\/(following|followers)$/);
+      if (followsMatch && method === "GET") {
+        return await handleListFollows(request, env, followsMatch[1], followsMatch[2]);
       }
       // 作者公开页：任何人都能看
       const userMatch = path.match(/^\/api\/users\/([A-Za-z0-9_-]+)$/);

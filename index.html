@@ -652,6 +652,88 @@
       </main>
     </section>
 
+    <section id="authorView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">作者主页</h1>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-16 pt-6 sm:px-6">
+        <div class="flex items-start gap-4">
+          <span id="authorAvatar" class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">词</span>
+          <div class="min-w-0 flex-1 pt-1">
+            <h2 id="authorName" class="truncate text-xl font-bold">—</h2>
+            <p id="authorMeta" class="mt-1 text-xs text-neutral-400">—</p>
+          </div>
+          <button id="authorFollow" class="hidden h-9 shrink-0 rounded-[7px] bg-xhs px-4 text-sm font-semibold text-white">关注</button>
+        </div>
+        <div class="mt-5 flex items-center gap-8">
+          <div class="text-left"><b id="authorWorkCount" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">作品</span></div>
+          <button id="authorOpenFollowing" class="text-left"><b id="authorFollowingCount" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
+          <button id="authorOpenFollowers" class="text-left"><b id="authorFollowerCount" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
+        </div>
+        <div id="authorWorks" class="mt-6"></div>
+      </main>
+    </section>
+
+    <section id="peopleView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 id="peopleTitle" class="ml-2 text-base font-bold">关注</h1>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+        <div id="peopleList" class="divide-y divide-[#dce6f5]"></div>
+      </main>
+    </section>
+
+    <section id="receivedView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
+      <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
+        <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
+          <button class="app-back grid size-10 place-items-center rounded-[7px] text-neutral-700 hover:bg-mist" aria-label="返回">
+            <i data-lucide="arrow-left" class="size-5"></i>
+          </button>
+          <h1 class="ml-2 text-base font-bold">获赞与收藏</h1>
+        </div>
+      </header>
+      <main class="mx-auto max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+        <div class="mx-auto grid max-w-md grid-cols-2 rounded-[7px] bg-mist p-1">
+          <button class="received-mode rounded-[5px] bg-white py-2 text-sm font-semibold text-ink shadow-sm" data-received-kind="likes">获赞</button>
+          <button class="received-mode rounded-[5px] py-2 text-sm text-neutral-500" data-received-kind="favorites">被收藏</button>
+        </div>
+        <div id="receivedList" class="mt-5"></div>
+      </main>
+    </section>
+
+    <div id="settingsPanel" class="fixed inset-0 z-[75] hidden bg-black/35 p-4 sm:p-6" role="dialog" aria-modal="true" aria-label="设置">
+      <div class="mx-auto mt-10 w-full max-w-md rounded-[8px] bg-white p-5 shadow-float">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold">设置</h2>
+          <button id="closeSettings" class="grid size-9 place-items-center rounded-[7px] text-neutral-500 hover:bg-mist" aria-label="关闭">
+            <i data-lucide="x" class="size-5"></i>
+          </button>
+        </div>
+        <dl class="mt-4 space-y-2 text-sm">
+          <div class="flex justify-between gap-4"><dt class="text-neutral-400">邮箱</dt><dd id="settingsEmail" class="truncate font-medium">—</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-neutral-400">词境号</dt><dd id="settingsHandle" class="truncate font-medium">—</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-neutral-400">注册时间</dt><dd id="settingsJoined" class="truncate font-medium">—</dd></div>
+        </dl>
+        <label class="mt-5 block text-sm font-semibold" for="settingsName">昵称</label>
+        <div class="mt-2 flex gap-2">
+          <input id="settingsName" maxlength="24" class="h-10 min-w-0 flex-1 rounded-[7px] border border-[#d6e1f0] px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="你的笔名" />
+          <button id="settingsSaveName" class="h-10 shrink-0 rounded-[7px] bg-xhs px-4 text-sm font-semibold text-white disabled:opacity-60">保存</button>
+        </div>
+        <p id="settingsError" class="mt-2 hidden text-xs text-red-600"></p>
+        <button id="settingsSignOut" class="mt-6 h-10 w-full rounded-[7px] bg-mist text-sm font-medium text-neutral-500 hover:text-xhs">退出登录</button>
+      </div>
+    </div>
+
     <section id="profileView" class="app-view fixed inset-0 z-[60] hidden overflow-y-auto bg-paper">
       <header class="sticky top-0 z-20 border-b border-[#dce6f5] bg-white/95 backdrop-blur">
         <div class="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
@@ -659,7 +741,7 @@
             <i data-lucide="arrow-left" class="size-5"></i>
           </button>
           <h1 class="ml-2 text-base font-bold">我</h1>
-          <button class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist" aria-label="设置">
+          <button id="settingsButton" class="ml-auto grid size-10 place-items-center rounded-[7px] text-neutral-600 hover:bg-mist" aria-label="设置">
             <i data-lucide="settings-2" class="size-5"></i>
           </button>
         </div>
@@ -714,7 +796,7 @@
         <section class="border-b border-[#dce6f5] bg-white px-4 pb-5 pt-6 sm:px-6">
           <div class="mx-auto max-w-3xl">
             <div class="flex items-start gap-4">
-              <span class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">林</span>
+              <span id="profileAvatar" class="grid size-[76px] shrink-0 place-items-center rounded-full border-4 border-white bg-[#dbe8ff] text-2xl font-bold text-xhs shadow-panel">词</span>
               <div class="min-w-0 flex-1 pt-1">
                 <div class="flex items-center gap-2"><h2 id="profileNickname" class="truncate text-xl font-bold">林</h2><span class="rounded-full bg-[#eaf1ff] px-2 py-0.5 text-[10px] font-semibold text-xhs">词境新作者</span></div>
                 <p id="profileHandle" class="mt-1 text-xs text-neutral-400">词境号：—</p>
@@ -722,13 +804,13 @@
               </div>
             </div>
             <div class="mt-5 flex items-center gap-8">
-              <button class="text-left"><b id="profileStatsReceived" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
-              <button class="text-left"><b id="profileStatsFollowing" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
-              <button class="text-left"><b id="profileStatsFollowers" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
+              <button id="openReceived" class="text-left"><b id="profileStatsReceived" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">获赞与收藏</span></button>
+              <button id="openFollowingList" class="text-left"><b id="profileStatsFollowing" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">关注</span></button>
+              <button id="openFollowersList" class="text-left"><b id="profileStatsFollowers" class="block text-base">0</b><span class="mt-0.5 block text-xs text-neutral-500">粉丝</span></button>
             </div>
             <div class="mt-5 flex gap-2">
-              <button class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
-              <button class="grid size-9 place-items-center rounded-[7px] bg-[#edf3ff] text-xhs" aria-label="分享主页"><i data-lucide="share-2" class="size-4"></i></button>
+              <button id="editProfileButton" class="h-9 flex-1 rounded-[7px] bg-[#edf3ff] text-sm font-semibold text-xhs">编辑资料</button>
+              <button id="shareProfileButton" class="grid size-9 place-items-center rounded-[7px] bg-[#edf3ff] text-xhs" aria-label="分享主页"><i data-lucide="share-2" class="size-4"></i></button>
               <button id="signOutButton" class="h-9 rounded-[7px] bg-mist px-3 text-sm font-medium text-neutral-500 hover:text-xhs">退出登录</button>
             </div>
           </div>
@@ -743,7 +825,7 @@
             <span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs"><i data-lucide="pen-line" class="size-5"></i></span>
             <h3 class="mt-4 text-base font-bold">还没有作品</h3>
             <p class="mt-2 text-sm text-neutral-500">上传今日词单，写出你的第一部词汇小说。</p>
-            <button id="openComposerFromProfile" class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>
+            <button id="openComposerFromProfile" data-profile-create class="mt-5 h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white">开始创作</button>
           </div>
         </section>
       </main>
@@ -1192,7 +1274,11 @@
       const followingView = document.getElementById("followingView");
       const messagesView = document.getElementById("messagesView");
       const profileView = document.getElementById("profileView");
-      const appViews = [followingView, messagesView, profileView];
+      const authorView = document.getElementById("authorView");
+      const peopleView = document.getElementById("peopleView");
+      const receivedView = document.getElementById("receivedView");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const appViews = [followingView, messagesView, profileView, authorView, peopleView, receivedView];
       const profileGuest = document.getElementById("profileGuest");
       const profileMember = document.getElementById("profileMember");
       const profileContent = document.getElementById("profileContent");
@@ -3275,7 +3361,8 @@
         profileMember.classList.toggle("hidden", !loggedIn);
         if (!loggedIn) return;
         document.getElementById("profileNickname").textContent = authUser.name;
-        document.getElementById("openProfileTop").textContent = authUser.name.slice(0, 1);
+        document.getElementById("profileAvatar").textContent = initialOf(authUser.name);
+        document.getElementById("openProfileTop").textContent = initialOf(authUser.name);
         document.getElementById("profileHandle").textContent = `词境号：${String(authUser.id).slice(0, 10)}`;
         document.getElementById("profileQuota").textContent =
           `还可创作 ${authUser.quotaLeft} 次（套餐共 ${authUser.quotaTotal} 次）`;
@@ -3284,6 +3371,317 @@
           (authUser.likesReceived || 0) + (authUser.favoritesReceived || 0);
         document.getElementById("profileStatsFollowing").textContent = authUser.followingCount || 0;
         document.getElementById("profileStatsFollowers").textContent = authUser.followerCount || 0;
+      }
+
+      // ---------- 作者主页 / 人物列表 / 收到的互动 / 设置 ----------
+
+      function initialOf(name) {
+        const text = String(name || "").trim();
+        return text ? text.slice(0, 1) : "词";
+      }
+
+      // 项目没有通用 toast，这里补一个最小实现：顶部浮条，2 秒后自删
+      function showToast(message) {
+        const el = document.createElement("div");
+        el.className = "fixed left-1/2 top-6 z-[90] -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-xs font-medium text-white shadow-float";
+        el.setAttribute("role", "status");
+        el.textContent = message;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 2200);
+      }
+
+      // 静态卡片里没有点击监听，交给这个统一绑定
+      function bindWorkCards(container) {
+        container.querySelectorAll("[data-work-id]").forEach((node) => {
+          node.addEventListener("click", (event) => {
+            event.preventDefault();
+            const work = workById(node.dataset.workId);
+            if (!work) return;
+            closeAppViews();
+            openWorkDetail(work);
+          });
+        });
+      }
+
+      let activeAuthorId = "";
+      let authorState = null;
+
+      async function openAuthor(userId) {
+        const id = String(userId || "").trim();
+        if (!id) return;
+        activeAuthorId = id;
+        authorState = null;
+        document.getElementById("authorName").textContent = "加载中…";
+        document.getElementById("authorAvatar").textContent = "词";
+        document.getElementById("authorMeta").textContent = "";
+        document.getElementById("authorWorkCount").textContent = "0";
+        document.getElementById("authorFollowingCount").textContent = "0";
+        document.getElementById("authorFollowerCount").textContent = "0";
+        document.getElementById("authorFollow").classList.add("hidden");
+        document.getElementById("authorWorks").innerHTML = loadingHtml("正在读取作品…");
+        openAppView(authorView);
+        refreshIcons();
+
+        try {
+          const data = await apiFetch(`/api/users/${encodeURIComponent(id)}`, { auth: Boolean(authToken) });
+          if (activeAuthorId !== id) return;   // 期间已经切到别的作者
+          authorState = { ...data.user, isMine: Boolean(data.isMine) };
+          renderAuthor();
+        } catch (error) {
+          document.getElementById("authorName").textContent = "作者不存在";
+          document.getElementById("authorWorks").innerHTML =
+            `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+          return;
+        }
+
+        await loadAuthorWorks(id);
+      }
+
+      function renderAuthor() {
+        const user = authorState;
+        if (!user) return;
+        document.getElementById("authorName").textContent = user.name;
+        document.getElementById("authorAvatar").textContent = initialOf(user.name);
+        const joined = user.createdAt ? new Date(user.createdAt) : null;
+        document.getElementById("authorMeta").textContent = joined
+          ? `加入于 ${joined.getFullYear()}-${String(joined.getMonth() + 1).padStart(2, "0")}`
+          : "";
+        document.getElementById("authorWorkCount").textContent = user.workCount || 0;
+        document.getElementById("authorFollowingCount").textContent = user.followingCount || 0;
+        document.getElementById("authorFollowerCount").textContent = user.followerCount || 0;
+
+        const button = document.getElementById("authorFollow");
+        if (user.isMine) {
+          button.classList.add("hidden");
+          return;
+        }
+        button.classList.remove("hidden");
+        button.textContent = user.isFollowing ? "已关注" : "关注";
+        button.classList.toggle("bg-mist", Boolean(user.isFollowing));
+        button.classList.toggle("text-neutral-500", Boolean(user.isFollowing));
+        button.classList.toggle("bg-xhs", !user.isFollowing);
+      }
+
+      async function loadAuthorWorks(id) {
+        const box = document.getElementById("authorWorks");
+        try {
+          const data = await apiFetch(`/api/works?scope=author&author=${encodeURIComponent(id)}`, { auth: Boolean(authToken) });
+          if (activeAuthorId !== id) return;
+          const works = (data.works || []).map(apiWorkToLocal);
+          cacheRemoteWorks(works);
+          if (!works.length) {
+            box.innerHTML = `<p class="py-8 text-center text-sm text-neutral-400">还没有公开作品</p>`;
+            refreshIcons();
+            return;
+          }
+          box.innerHTML = `<p class="mb-3 text-xs text-neutral-400">共 ${works.length} 部公开作品</p><div class="flex flex-col gap-4">${works
+            .map((work) => profileWorkCard(work, work.tag || "词汇小说"))
+            .join("")}</div>`;
+          bindWorkCards(box);
+          refreshIcons();
+        } catch (error) {
+          box.innerHTML = `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+        }
+      }
+
+      async function toggleAuthorFollow() {
+        if (!authorState) return;
+        if (!authToken) {
+          closeAppViews();
+          openProfile();
+          return;
+        }
+        try {
+          const data = await apiFetch(`/api/users/${encodeURIComponent(authorState.id)}/follow`, {
+            method: "POST",
+            auth: true,
+            body: { on: !authorState.isFollowing },
+          });
+          authorState.isFollowing = Boolean(data.on);
+          if (typeof data.followerCount === "number") authorState.followerCount = data.followerCount;
+          renderAuthor();
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      async function openPeople(userId, direction, title) {
+        if (!userId) return;
+        document.getElementById("peopleTitle").textContent = title;
+        const list = document.getElementById("peopleList");
+        list.innerHTML = loadingHtml("正在读取…");
+        openAppView(peopleView);
+        refreshIcons();
+
+        try {
+          const data = await apiFetch(`/api/users/${encodeURIComponent(userId)}/${direction}`, {
+            auth: Boolean(authToken),
+          });
+          const users = data.users || [];
+          if (!users.length) {
+            list.innerHTML = `<p class="py-12 text-center text-sm text-neutral-400">${direction === "following" ? "还没有关注任何人" : "还没有粉丝"}</p>`;
+            refreshIcons();
+            return;
+          }
+          list.innerHTML = users.map(renderPersonRow).join("");
+          bindPeopleRows(list);
+          refreshIcons();
+        } catch (error) {
+          list.innerHTML = `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+        }
+      }
+
+      function renderPersonRow(user) {
+        const isSelf = Boolean(authUser && authUser.id === user.id);
+        const followClass = user.isFollowing ? "bg-mist text-neutral-500" : "bg-xhs text-white";
+        return `<div class="flex items-center gap-3 py-3">
+          <button class="flex min-w-0 flex-1 items-center gap-3 text-left" data-person-id="${escapeHtml(user.id)}">
+            <span class="grid size-11 shrink-0 place-items-center rounded-full bg-[#dbe8ff] text-sm font-bold text-xhs">${escapeHtml(initialOf(user.name))}</span>
+            <span class="min-w-0 flex-1"><b class="block truncate text-sm">${escapeHtml(user.name)}</b><span class="mt-0.5 block text-xs text-neutral-400">词境号 ${escapeHtml(String(user.id).slice(0, 10))}</span></span>
+          </button>
+          ${isSelf ? "" : `<button class="h-8 shrink-0 rounded-[7px] px-3 text-xs font-semibold ${followClass}" data-person-follow="${escapeHtml(user.id)}">${user.isFollowing ? "已关注" : "关注"}</button>`}
+        </div>`;
+      }
+
+      function bindPeopleRows(container) {
+        container.querySelectorAll("[data-person-id]").forEach((node) => {
+          node.addEventListener("click", () => openAuthor(node.dataset.personId));
+        });
+        container.querySelectorAll("[data-person-follow]").forEach((node) => {
+          node.addEventListener("click", async () => {
+            if (!authToken) {
+              closeAppViews();
+              openProfile();
+              return;
+            }
+            const id = node.dataset.personFollow;
+            const next = node.textContent.trim() !== "已关注";
+            try {
+              const data = await apiFetch(`/api/users/${encodeURIComponent(id)}/follow`, {
+                method: "POST",
+                auth: true,
+                body: { on: next },
+              });
+              node.textContent = data.on ? "已关注" : "关注";
+              node.className = `h-8 shrink-0 rounded-[7px] px-3 text-xs font-semibold ${data.on ? "bg-mist text-neutral-500" : "bg-xhs text-white"}`;
+            } catch (error) {
+              window.alert(error.message);
+            }
+          });
+        });
+      }
+
+      let receivedKind = "likes";
+
+      function syncReceivedTabs() {
+        document.querySelectorAll(".received-mode").forEach((button) => {
+          const active = button.dataset.receivedKind === receivedKind;
+          button.classList.toggle("bg-white", active);
+          button.classList.toggle("text-ink", active);
+          button.classList.toggle("font-semibold", active);
+          button.classList.toggle("shadow-sm", active);
+          button.classList.toggle("text-neutral-500", !active);
+        });
+      }
+
+      async function openReceived(kind) {
+        const wanted = kind === "favorites" ? "favorites" : "likes";
+        receivedKind = wanted;
+        syncReceivedTabs();
+        const list = document.getElementById("receivedList");
+        list.innerHTML = loadingHtml("正在读取…");
+        openAppView(receivedView);
+        refreshIcons();
+
+        try {
+          const data = await apiFetch(`/api/works?scope=received&kind=${wanted}`, { auth: true });
+          if (receivedKind !== wanted) return;   // 期间切了 tab
+          const works = (data.works || []).map(apiWorkToLocal);
+          cacheRemoteWorks(works);
+          if (!works.length) {
+            list.innerHTML = `<p class="py-8 text-center text-sm text-neutral-400">${wanted === "likes" ? "还没有人赞过你的作品" : "还没有人收藏你的作品"}</p>`;
+            refreshIcons();
+            return;
+          }
+          list.innerHTML = `<p class="mb-3 text-xs text-neutral-400">共 ${works.length} 部</p><div class="flex flex-col gap-4">${works
+            .map((work) => profileWorkCard(work, wanted === "likes" ? "被赞" : "被收藏"))
+            .join("")}</div>`;
+          bindWorkCards(list);
+          refreshIcons();
+        } catch (error) {
+          list.innerHTML = `<p class="py-8 text-sm text-red-600">${escapeHtml(error.message)}</p>`;
+        }
+      }
+
+      function setSettingsError(message) {
+        const box = document.getElementById("settingsError");
+        box.textContent = message || "";
+        box.classList.toggle("hidden", !message);
+      }
+
+      function openSettings() {
+        if (!authUser) {
+          closeAppViews();
+          openProfile();
+          return;
+        }
+        document.getElementById("settingsEmail").textContent = authUser.email || "—";
+        document.getElementById("settingsHandle").textContent = String(authUser.id).slice(0, 10);
+        document.getElementById("settingsJoined").textContent = authUser.createdAt
+          ? new Date(authUser.createdAt).toLocaleDateString("zh-CN")
+          : "—";
+        document.getElementById("settingsName").value = authUser.name || "";
+        setSettingsError("");
+        settingsPanel.classList.remove("hidden");
+        refreshIcons();
+      }
+
+      function closeSettingsPanel() {
+        settingsPanel.classList.add("hidden");
+      }
+
+      async function saveSettingsName() {
+        const input = document.getElementById("settingsName");
+        const name = input.value.trim();
+        if (!name) {
+          setSettingsError("昵称不能为空");
+          return;
+        }
+        const button = document.getElementById("settingsSaveName");
+        button.disabled = true;
+        button.classList.add("opacity-60");
+        try {
+          const data = await apiFetch("/api/me", { method: "PATCH", auth: true, body: { name } });
+          authUser = { ...authUser, ...(data.user || {}), name: (data.user && data.user.name) || name };
+          renderProfile();
+          setSettingsError("");
+          showToast("昵称已更新");
+        } catch (error) {
+          setSettingsError(error.message || "保存失败");
+        } finally {
+          button.disabled = false;
+          button.classList.remove("opacity-60");
+        }
+      }
+
+      async function shareProfile() {
+        if (!authUser) {
+          closeAppViews();
+          openProfile();
+          return;
+        }
+        const url = `${location.origin}${location.pathname}?author=${encodeURIComponent(authUser.id)}`;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: `${authUser.name} 的词境主页`, url });
+            return;
+          }
+          await navigator.clipboard.writeText(url);
+          showToast("主页链接已复制");
+        } catch (error) {
+          if (error && error.name === "AbortError") return;   // 用户取消了系统分享
+          showToast("复制失败，请手动复制地址栏链接");
+        }
       }
 
       async function openProfile() {
@@ -3785,6 +4183,39 @@
       document.getElementById("signOutButton").addEventListener("click", () => {
         if (window.confirm("确定退出登录？本机未上传的作品仍会保留。")) signOut();
       });
+
+      // ---- 「我」页面：设置 / 分享 / 列表入口 ----
+      document.getElementById("settingsButton").addEventListener("click", openSettings);
+      document.getElementById("editProfileButton").addEventListener("click", openSettings);
+      document.getElementById("shareProfileButton").addEventListener("click", shareProfile);
+      document.getElementById("openReceived").addEventListener("click", () => openReceived("likes"));
+      document.getElementById("openFollowingList").addEventListener("click", () => {
+        if (authUser) openPeople(authUser.id, "following", "我关注的人");
+      });
+      document.getElementById("openFollowersList").addEventListener("click", () => {
+        if (authUser) openPeople(authUser.id, "followers", "关注我的人");
+      });
+      document.getElementById("authorFollow").addEventListener("click", toggleAuthorFollow);
+      document.getElementById("authorOpenFollowing").addEventListener("click", () => {
+        if (authorState) openPeople(authorState.id, "following", `${authorState.name} 关注的人`);
+      });
+      document.getElementById("authorOpenFollowers").addEventListener("click", () => {
+        if (authorState) openPeople(authorState.id, "followers", `${authorState.name} 的粉丝`);
+      });
+      document.querySelectorAll(".received-mode").forEach((button) => {
+        button.addEventListener("click", () => openReceived(button.dataset.receivedKind));
+      });
+      document.getElementById("closeSettings").addEventListener("click", closeSettingsPanel);
+      settingsPanel.addEventListener("click", (event) => {
+        if (event.target === settingsPanel) closeSettingsPanel();
+      });
+      document.getElementById("settingsSaveName").addEventListener("click", saveSettingsName);
+      document.getElementById("settingsSignOut").addEventListener("click", () => {
+        if (window.confirm("确定退出登录？本机未上传的作品仍会保留。")) {
+          closeSettingsPanel();
+          signOut();
+        }
+      });
       profileContent.addEventListener("click", (event) => {
         // 操作按钮必须先判并 return，否则点击它们会先命中 .profile-work 打开详情
         const deleteButton = event.target.closest("[data-work-delete]");
@@ -3821,6 +4252,10 @@
         await restoreSession();
         await loadFeed();
         loadNotifications();   // 有登录态时顺带拉未读数，点亮右上角角标
+
+        // 分享链接：?author=<id> 直接打开公开作者页（游客也能看）
+        const sharedAuthor = new URLSearchParams(location.search).get("author");
+        if (sharedAuthor) openAuthor(sharedAuthor);
       })();
 
       document.querySelectorAll(".detail-back").forEach((button) => {
@@ -4013,6 +4448,8 @@
           // 释义卡片层级最高：先关它，否则按 Esc 会直接关掉整个阅读器
           if (!document.getElementById("wordCardLayer").classList.contains("hidden")) {
             closeWordCard();
+          } else if (!settingsPanel.classList.contains("hidden")) {
+            closeSettingsPanel();
           } else if (appViews.some((view) => !view.classList.contains("hidden"))) {
             closeAppViews();
           } else if (!readerView.classList.contains("hidden")) {
