@@ -220,10 +220,9 @@
             <p class="px-3 pb-2 text-xs font-medium text-neutral-400">探索题材</p>
             <div class="flex flex-wrap gap-2 px-3">
               <button class="topic-pill" data-feed-genre="悬疑刑侦">悬疑刑侦</button>
-              <button class="topic-pill" data-feed-genre="现代言情">现代言情</button>
               <button class="topic-pill" data-feed-genre="科幻西幻">科幻西幻</button>
-              <button class="topic-pill" data-feed-genre="古风言情">古风言情</button>
-              <button class="topic-pill" data-feed-genre="校园">校园</button>
+              <button class="topic-pill" data-feed-genre="言情">言情</button>
+              <button class="topic-pill" data-feed-genre="耽美">耽美</button>
             </div>
           </div>
         </aside>
@@ -235,10 +234,9 @@
             <button class="feed-tab active-feed-tab" data-feed-scope="feed">推荐</button>
             <button class="feed-tab" data-feed-scope="new">新作</button>
             <button class="feed-tab" data-feed-genre="悬疑刑侦">悬疑刑侦</button>
-            <button class="feed-tab" data-feed-genre="现代言情">现代言情</button>
-            <button class="feed-tab" data-feed-genre="古风言情">古风言情</button>
             <button class="feed-tab" data-feed-genre="科幻西幻">科幻西幻</button>
-            <button class="feed-tab" data-feed-genre="校园">校园</button>
+            <button class="feed-tab" data-feed-genre="言情">言情</button>
+            <button class="feed-tab" data-feed-genre="耽美">耽美</button>
           </div>
 
           <button
@@ -2670,6 +2668,9 @@
         "悬疑刑侦": ["covers/suspense-1.webp", "covers/suspense-2.webp", "covers/suspense-3.webp"],
         "现代言情": ["covers/romance-1.webp", "covers/romance-2.webp"],
         "古风言情": ["covers/ancient-1.webp", "covers/ancient-2.webp", "covers/ancient-3.webp"],
+        // 言情是合并后的一级分类，现代与古风封面共用
+        "言情": ["covers/romance-1.webp", "covers/romance-2.webp", "covers/ancient-1.webp", "covers/ancient-2.webp", "covers/ancient-3.webp"],
+        "耽美": ["covers/romance-2.webp", "covers/ancient-2.webp", "covers/ancient-3.webp"],
         "科幻西幻": ["covers/scifi-1.webp", "covers/scifi-2.webp", "covers/scifi-3.webp"],
         "校园": ["covers/campus-1.webp", "covers/campus-2.webp", "covers/campus-3.webp"],
       };
@@ -2696,6 +2697,7 @@
         if (genre === "悬疑刑侦") return "quote-dark";
         if (genre === "古风言情") return "serif";
         if (genre === "现代言情") return "quote-light";
+        if (genre === "言情") return "quote-light";
         return "cover";   // 科幻西幻 / 校园 / 自定义题材 兜底
       }
 
@@ -2859,7 +2861,9 @@
       const DEMO_GENRE_OF = {
         "密室凶案": "悬疑刑侦",
         "社会派推理": "悬疑刑侦",
-        "都市职场": "现代言情",
+        "都市职场": "言情",
+        "现代言情": "言情",
+        "古风言情": "言情",
       };
 
       function demoGenreOf(work) {

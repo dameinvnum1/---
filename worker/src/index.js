@@ -350,6 +350,12 @@ const WORK_SELECT = `SELECT w.*, u.name AS author_name,
   EXISTS(SELECT 1 FROM favorites WHERE work_id = w.id AND user_id = ?) AS favorited
   FROM works w JOIN users u ON u.id = w.user_id`;
 
+// 首页分类与历史存储值不一定同名：言情合并了原来的现代言情 / 古风言情，
+// 老作品仍按旧值存库，所以按分类筛选时要把同义词一起查出来。
+const GENRE_ALIASES = {
+  言情: ["言情", "现代言情", "古风言情"],
+};
+
 function workToJson(row, viewerId) {
   return {
     id: row.id,
@@ -753,9 +759,13 @@ async function handleListWorks(request, env, url) {
         : `ORDER BY ((SELECT COUNT(*) FROM likes WHERE work_id = w.id)
                     + (SELECT COUNT(*) FROM favorites WHERE work_id = w.id)) DESC,
                     w.published_at DESC`;
-    sql = `${WORK_SELECT} WHERE w.visibility = 'public' ${genre ? "AND w.genre = ?" : ""}
+    const genreValues = genre ? GENRE_ALIASES[genre] || [genre] : [];
+    const genreClause = genreValues.length
+      ? `AND w.genre IN (${genreValues.map(() => "?").join(",")})`
+      : "";
+    sql = `${WORK_SELECT} WHERE w.visibility = 'public' ${genreClause}
            ${order} LIMIT ?`;
-    params = genre ? [viewer, viewer, genre, limit] : [viewer, viewer, limit];
+    params = genreValues.length ? [viewer, viewer, ...genreValues, limit] : [viewer, viewer, limit];
   }
 
   const { results } = await env.cijing_db.prepare(sql).bind(...params).all();
