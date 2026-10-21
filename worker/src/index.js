@@ -267,11 +267,11 @@ function buildPrompt(input) {
 目标单词（必须全部出现在正文中）：
 ${input.words.map((word) => `- ${word}`).join("\n")}
 
-【词汇要求（最高优先级，优先于文风与篇幅）】
-1. 每个目标词在正文中必须出现，且只出现 1 次。少一个不行，多一次也不行。
-2. 写之前先为每个词安排唯一的出场位置；写到后面再需要提到同一事物时，一律改用中文词或代词（它、那根手杖、那把乐器），不能再写那个英文词。
-3. 写完之后逐个统计每个目标词的英文原形：任何一个出现第 2 次，就把第 2 次那处换成中文表达或改写句子，直到每个词都恰好一次。
-4. 正文约 ${minChars} 至 ${maxChars} 个中文字符。篇幅不够时用中文叙事补足，不要靠重复目标词凑字数。
+【词汇要求（覆盖是硬性要求，其余以阅读体验优先）】
+1. 每个目标词都必须在正文中出现至少 1 次，一个都不能少，保持英文原形、小写拼写，不要拆写。
+2. 是否再次出现由剧情和通顺程度决定：自然需要时出现第二次完全可以，但不要为了"加深记忆"而堆砌同一个词，也不要为了回避重复把句子写别扭。
+3. 正文约 ${minChars} 至 ${maxChars} 个中文字符。
+4. 返回前必须逐个核对目标词表，确认每个词都真的出现在正文里。有任何遗漏，就把它自然地补进合适的位置再返回，绝不能省略，也不要只在 vocab 里写而正文里没有。
 
 【文风：知乎体】
 A. 第一人称"我"，像在跟朋友讲自己刚经历的事：口语化、有情绪、带点吐槽感。不要写成第三人称叙述或总结报告。
@@ -559,7 +559,7 @@ async function handleGenerate(request, env, auth) {
           temperature: 0.7,
           max_tokens: 8000,
           messages: [
-            { role: "system", content: "你必须遵守用户给出的词汇覆盖规则：每个目标词在正文中恰好出现一次，并且只返回合法 JSON。" },
+            { role: "system", content: "你必须遵守用户给出的词汇覆盖规则：每个目标词都必须出现在正文中，并且只返回合法 JSON。" },
             { role: "user", content: prompt },
           ],
         }),
@@ -596,42 +596,17 @@ async function handleGenerate(request, env, auth) {
       continue;
     }
 
-    const counts = countWordOccurrences(parsed.content, words);
-    const missing = counts.filter((item) => item.count === 0).map((item) => item.word);
-    const repeated = counts.filter((item) => item.count > 1);
+    // 只校验覆盖：词必须都出现，重复交给模型按阅读体验自然决定
+    const missing = missingWords(parsed.content, words);
 
     if (missing.length) {
       // 运维日志：出现频率高说明 prompt 需要继续调，别让它悄悄变成常态
       console.warn(`[generate] 第 ${attempt}/${MAX_ATTEMPTS} 次漏词: ${missing.join(",")}，重试`);
       lastError = `模型漏掉了这些词：${missing.join("、")}`;
       if (attempt < MAX_ATTEMPTS) {
-        prompt += `\n\n【上一版的问题，必须修正】\n漏掉了这些目标词：${missing.join("、")}。请把它们自然地补进正文，同时保持其他词只出现一次。`;
+        prompt += `\n\n【上一版的问题，必须修正】\n漏掉了这些目标词：${missing.join("、")}。请把它们自然地补进正文，尽量不要打乱已经通顺的段落。`;
       }
       continue;   // 核心重试条件
-    }
-
-    // 目标词只该出现一次。模型偶尔会把道具词反复回指，定向重试一次通常就能修好；
-    // 只给一次机会，避免和「漏词」抢占重试次数、把三次调用全烧光。
-    if (repeated.length && attempt === 1) {
-      console.warn(
-        `[generate] 第 ${attempt}/${MAX_ATTEMPTS} 次重复用词: ${repeated
-          .map((item) => `${item.word}×${item.count}`)
-          .join(",")}，重试`
-      );
-      lastError = `这些词重复出现了：${repeated.map((item) => item.word).join("、")}`;
-      prompt += `\n\n【上一版的问题，必须修正】\n这些目标词出现了不止一次：${repeated
-        .map((item) => `${item.word}（${item.count} 次）`)
-        .join("、")}。每个目标词在正文中只能出现一次；再次提到同一事物时，改用中文词或代词。`;
-      continue;
-    }
-
-    if (repeated.length) {
-      // 已经是最后一版，重复属于质量问题但不算失败，先让用户读到作品
-      console.warn(
-        `[generate] 第 ${attempt} 次仍有重复，已达到重试上限，直接采用: ${repeated
-          .map((item) => `${item.word}×${item.count}`)
-          .join(",")}`
-      );
     }
 
     result = parsed;
