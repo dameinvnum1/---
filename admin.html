@@ -352,6 +352,7 @@
           { key: "works", label: "作品", icon: "book-open" },
           { key: "comments", label: "评论", icon: "message-square" },
           { key: "invites", label: "邀请码", icon: "ticket" },
+          { key: "settings", label: "设置", icon: "sliders-horizontal" },
         ];
 
         function renderNav() {
@@ -387,6 +388,7 @@
           if (currentView === "works") return renderWorks();
           if (currentView === "comments") return renderComments();
           if (currentView === "invites") return renderInvites();
+          if (currentView === "settings") return renderSettings();
         }
 
         // ---------- 概览 ----------
@@ -844,6 +846,75 @@
           refreshIcons();
         }
 
+        // ---------- 设置（白名单） ----------
+        let settingsDraft = null;
+
+        async function renderSettings() {
+          setHeader("设置", "白名单决定谁能使用参考文风、谁能进入后台");
+          viewEl.innerHTML = loading("正在读取设置…");
+          let data;
+          try {
+            data = await api("/api/admin/settings");
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+          settingsDraft = {
+            styleWhitelist: data.styleWhitelist || [],
+            adminIds: data.adminIds || [],
+          };
+          paintSettings();
+        }
+
+        function whitelistChip(item, listKey) {
+          const label = item.name ? `${item.name}${item.email ? " · " + item.email : ""}` : item.entry;
+          return `<span class="inline-flex items-center gap-1.5 rounded-full bg-mist py-1 pl-1.5 pr-2 text-xs text-neutral-600">
+            ${item.name ? avatarHtml(item, "grid size-5 place-items-center rounded-full text-[10px] font-bold") : ""}
+            <span class="max-w-[240px] truncate">${escapeHtml(label)}</span>
+            ${item.name ? "" : `<span class="text-[10px] text-neutral-400">未找到账号</span>`}
+            <button type="button" class="text-neutral-400 hover:text-red-500" data-whitelist-remove="${listKey}" data-whitelist-entry="${escapeHtml(item.entry)}" aria-label="移除">×</button>
+          </span>`;
+        }
+
+        function whitelistCard(listKey, title, desc, warning) {
+          const items = (settingsDraft && settingsDraft[listKey]) || [];
+          return `<section class="rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
+            <div class="border-b border-[#f0f3f9] px-5 py-3">
+              <h2 class="text-sm font-bold">${title}</h2>
+              <p class="mt-1 text-[11px] leading-5 text-neutral-400">${desc}</p>
+            </div>
+            <div class="px-5 py-4">
+              <div class="flex flex-wrap gap-2">
+                ${items.length ? items.map((item) => whitelistChip(item, listKey)).join("") : `<p class="text-xs text-neutral-400">还没有任何人</p>`}
+              </div>
+              <div class="mt-3 flex gap-2">
+                <input id="whitelist-input-${listKey}" class="field" placeholder="输入邮箱或 user id" />
+                <button class="btn btn-ghost !h-9 shrink-0" data-whitelist-add="${listKey}">添加</button>
+              </div>
+              ${warning ? `<p class="mt-3 rounded-[7px] bg-[#fff8ed] px-3 py-2 text-[11px] leading-5 text-[#896321]">${warning}</p>` : ""}
+            </div>
+          </section>`;
+        }
+
+        function paintSettings() {
+          setHeader(
+            "设置",
+            "白名单决定谁能使用参考文风、谁能进入后台",
+            `<button id="settingsSave" class="btn btn-primary">保存更改</button>`
+          );
+          viewEl.innerHTML = `<div class="grid gap-4 lg:grid-cols-2">
+            ${whitelistCard("styleWhitelist", "参考文风白名单", "名单内的人可以在创作时使用「参考文风」功能。", "")}
+            ${whitelistCard(
+              "adminIds",
+              "管理后台白名单",
+              "名单内的人可以登录这个管理后台。",
+              "保存时至少要把自己留在列表里，否则请求会被拒绝。"
+            )}
+          </div>
+          <p class="mt-4 text-[11px] leading-5 text-neutral-400">支持填入邮箱或 user id，逗号式白名单由系统自动维护；保存后立即生效，无需重新部署。</p>`;
+          refreshIcons();
+        }
+
         // ---------- 弹窗 ----------
         function openModal(title, bodyHtml, footerHtml) {
           modalTitle.textContent = title;
@@ -967,6 +1038,50 @@
             if (pageBtn.dataset.page === "prev") state.page = Math.max(0, state.page - 1);
             else state.page += 1;
             renderView();
+            return;
+          }
+
+          // 白名单
+          const whitelistAdd = event.target.closest("[data-whitelist-add]");
+          if (whitelistAdd) {
+            const key = whitelistAdd.dataset.whitelistAdd;
+            const input = document.getElementById(`whitelist-input-${key}`);
+            const entry = String(input.value || "").trim().toLowerCase();
+            if (!entry) {
+              input.focus();
+              return;
+            }
+            if (!settingsDraft[key].some((item) => item.entry === entry)) {
+              settingsDraft[key].push({ entry, userId: "", name: "", email: "", avatar: "" });
+            }
+            input.value = "";
+            paintSettings();
+            document.getElementById(`whitelist-input-${key}`).focus();
+            return;
+          }
+          const whitelistRemove = event.target.closest("[data-whitelist-remove]");
+          if (whitelistRemove) {
+            const key = whitelistRemove.dataset.whitelistRemove;
+            settingsDraft[key] = settingsDraft[key].filter(
+              (item) => item.entry !== whitelistRemove.dataset.whitelistEntry
+            );
+            paintSettings();
+            return;
+          }
+          if (event.target.closest("#settingsSave")) {
+            try {
+              await api("/api/admin/settings", {
+                method: "PATCH",
+                body: {
+                  styleWhitelist: settingsDraft.styleWhitelist.map((item) => item.entry),
+                  adminIds: settingsDraft.adminIds.map((item) => item.entry),
+                },
+              });
+              toast("白名单已更新");
+              renderSettings();
+            } catch (error) {
+              toast(error.message);
+            }
             return;
           }
 
@@ -1172,6 +1287,11 @@
           if (event.target.id === "userSearch") document.getElementById("userSearchBtn").click();
           if (event.target.id === "workSearch") document.getElementById("workSearchBtn").click();
           if (event.target.id === "commentSearch") document.getElementById("commentSearchBtn").click();
+          if (event.target.id.indexOf("whitelist-input-") === 0) {
+            const key = event.target.id.replace("whitelist-input-", "");
+            const btn = document.querySelector(`[data-whitelist-add="${key}"]`);
+            if (btn) btn.click();
+          }
         });
 
         function signOut() {

@@ -139,3 +139,11 @@ CREATE TABLE IF NOT EXISTS style_profiles (
 );
 CREATE INDEX IF NOT EXISTS idx_style_profiles_user ON style_profiles(user_id, created_at DESC);
 
+-- 运行时配置：目前用于两个白名单（style_whitelist / admin_ids）。
+-- 有记录时以数据库为准，没有记录则回落到 wrangler.toml 的 [vars]。
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+

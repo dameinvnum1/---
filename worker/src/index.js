@@ -586,17 +586,33 @@ const STYLE_TEXT_LIMIT = 50000;              // PRD 10.1：最多分析前 5 万
 const STYLE_ANALYZE_WINDOW_MS = 60 * 60 * 1000;
 const STYLE_ANALYZE_MAX_PER_WINDOW = 10;     // 分析是独立的一次模型调用，必须自己兜住成本
 
-function styleWhitelist(env) {
-  return String(env.STYLE_WHITELIST || "")
+// 运行时配置：D1 优先，没有记录时回落到环境变量。
+// 白名单需要在管理后台在线编辑，所以不能只放在 wrangler.toml 的 [vars] 里。
+async function settingValue(env, key) {
+  const row = await env.cijing_db
+    .prepare("SELECT value FROM settings WHERE key = ?")
+    .bind(key)
+    .first();
+  return row ? String(row.value) : null;
+}
+
+async function settingList(env, key, fallback) {
+  const stored = await settingValue(env, key);
+  const raw = stored === null ? String(fallback || "") : stored;
+  return raw
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
 }
 
+async function styleWhitelist(env) {
+  return settingList(env, "style_whitelist", env.STYLE_WHITELIST);
+}
+
 // 白名单同时接受 user id 和邮箱，临时加人时不用先查库
-function styleEnabled(env, user) {
+async function styleEnabled(env, user) {
   if (!user) return false;
-  const list = styleWhitelist(env);
+  const list = await styleWhitelist(env);
   return list.includes(String(user.id).toLowerCase())
     || list.includes(String(user.email || "").toLowerCase());
 }
@@ -669,7 +685,7 @@ function styleToJson(row) {
 }
 
 async function handleCreateStyle(request, env, auth) {
-  if (!styleEnabled(env, auth.user)) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
+  if (!(await styleEnabled(env, auth.user))) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
 
   const body = await request.json().catch(() => ({}));
   const rights = cleanText(body.rights, 20);
@@ -763,7 +779,7 @@ async function handleCreateStyle(request, env, auth) {
 }
 
 async function handleListStyles(request, env, auth) {
-  if (!styleEnabled(env, auth.user)) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
+  if (!(await styleEnabled(env, auth.user))) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
   const rows = await env.cijing_db
     .prepare("SELECT * FROM style_profiles WHERE user_id = ? ORDER BY created_at DESC LIMIT 50")
     .bind(auth.user.id)
@@ -772,7 +788,7 @@ async function handleListStyles(request, env, auth) {
 }
 
 async function handleDeleteStyle(request, env, styleId, auth) {
-  if (!styleEnabled(env, auth.user)) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
+  if (!(await styleEnabled(env, auth.user))) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
   const row = await env.cijing_db
     .prepare("SELECT user_id, rights FROM style_profiles WHERE id = ?")
     .bind(styleId)
@@ -820,7 +836,7 @@ async function handleGenerate(request, env, auth) {
   let style = null;
   const styleId = cleanText(input.styleId, 40);
   if (styleId) {
-    if (!styleEnabled(env, user)) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
+    if (!(await styleEnabled(env, user))) return json({ error: "参考文风功能暂未开放" }, 403, request, env);
     const styleRow = await env.cijing_db
       .prepare("SELECT * FROM style_profiles WHERE id = ?")
       .bind(styleId)
@@ -1650,17 +1666,14 @@ async function handleDeleteComment(request, env, commentId, auth) {
 
 // ---------- 管理后台 ----------
 
-function adminIds(env) {
-  return String(env.ADMIN_IDS || "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
+async function adminIds(env) {
+  return settingList(env, "admin_ids", env.ADMIN_IDS);
 }
 
 // 和 styleEnabled 同一套规则：同时接受 user id 与邮箱
-function isAdmin(env, user) {
+async function isAdmin(env, user) {
   if (!user) return false;
-  const list = adminIds(env);
+  const list = await adminIds(env);
   return list.includes(String(user.id).toLowerCase())
     || list.includes(String(user.email || "").toLowerCase());
 }
@@ -1684,6 +1697,79 @@ function adminUserJson(row) {
     workCount: Number(row.work_count) || 0,
     commentCount: Number(row.comment_count) || 0,
   };
+}
+
+async function handleAdminGetSettings(request, env) {
+  const [styleList, adminList] = await Promise.all([styleWhitelist(env), adminIds(env)]);
+  const entries = [...new Set([...styleList, ...adminList])];
+
+  let accounts = [];
+  if (entries.length) {
+    const marks = entries.map(() => "?").join(",");
+    const { results } = await env.cijing_db
+      .prepare(
+        `SELECT id, email, name, avatar FROM users
+         WHERE lower(id) IN (${marks}) OR lower(email) IN (${marks})`
+      )
+      .bind(...entries, ...entries)
+      .all();
+    accounts = results || [];
+  }
+
+  // 每条白名单都尽量翻译成具体账号，后台才好确认加的是谁
+  const resolve = (list) =>
+    list.map((entry) => {
+      const user = accounts.find(
+        (row) => String(row.id).toLowerCase() === entry || String(row.email).toLowerCase() === entry
+      );
+      return {
+        entry,
+        userId: user ? user.id : "",
+        name: user ? user.name : "",
+        email: user ? user.email : "",
+        avatar: user ? user.avatar || "" : "",
+      };
+    });
+
+  return json(
+    { ok: true, styleWhitelist: resolve(styleList), adminIds: resolve(adminList) },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminSaveSettings(request, env, auth) {
+  const body = await request.json().catch(() => ({}));
+  const normalize = (value) => {
+    if (!Array.isArray(value)) return null;
+    const list = value.map((item) => String(item || "").trim().toLowerCase()).filter(Boolean);
+    return [...new Set(list)].slice(0, 50);
+  };
+  const styleList = normalize(body.styleWhitelist);
+  const adminList = normalize(body.adminIds);
+  if (!styleList || !adminList) return json({ error: "白名单格式不正确" }, 400, request, env);
+  if ([...styleList, ...adminList].some((item) => item.length > 100)) {
+    return json({ error: "白名单条目过长" }, 400, request, env);
+  }
+
+  // 防止把自己锁在后台外面：新的管理员列表必须仍然包含自己
+  const selfId = String(auth.user.id).toLowerCase();
+  const selfEmail = String(auth.user.email || "").toLowerCase();
+  if (!adminList.includes(selfId) && !adminList.includes(selfEmail)) {
+    return json({ error: "不能把自己移出管理员列表" }, 400, request, env);
+  }
+
+  const now = Date.now();
+  const upsert = (key, list) =>
+    env.cijing_db
+      .prepare(
+        `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+      )
+      .bind(key, list.join(","), now);
+  await env.cijing_db.batch([upsert("style_whitelist", styleList), upsert("admin_ids", adminList)]);
+  return json({ ok: true }, 200, request, env);
 }
 
 async function handleAdminStats(request, env) {
@@ -2232,7 +2318,7 @@ export default {
       if (needsAuth && !auth) return json({ error: "请先登录" }, 401, request, env);
 
       // 管理接口统一在这里拦一次，避免某个 handler 漏判
-      if (path.startsWith("/api/admin") && !isAdmin(env, auth.user)) {
+      if (path.startsWith("/api/admin") && !(await isAdmin(env, auth.user))) {
         return json({ error: "当前账号没有管理权限" }, 403, request, env);
       }
 
@@ -2253,6 +2339,12 @@ export default {
         );
       }
       if (path === "/api/admin/stats" && method === "GET") return await handleAdminStats(request, env);
+      if (path === "/api/admin/settings" && method === "GET") {
+        return await handleAdminGetSettings(request, env);
+      }
+      if (path === "/api/admin/settings" && method === "PATCH") {
+        return await handleAdminSaveSettings(request, env, auth);
+      }
       if (path === "/api/admin/users" && method === "GET") return await handleAdminListUsers(request, env, url);
       const adminResetMatch = path.match(/^\/api\/admin\/users\/([A-Za-z0-9_-]+)\/reset-password$/);
       if (adminResetMatch && method === "POST") {
