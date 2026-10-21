@@ -11,6 +11,8 @@ ALLOWED_ORIGIN = "*"
 EMAIL_OTP_ENABLED = "false"
 # 参考文风功能的白名单，逗号分隔 user id 或邮箱。留空表示不开放给任何人。
 STYLE_WHITELIST = "u_2c8b4d0283a8292b3852dc4e"
+# 管理后台白名单，逗号分隔 user id 或邮箱。留空表示没人能进后台。
+ADMIN_IDS = "u_2c8b4d0283a8292b3852dc4e"
 
 [[d1_databases]]
 binding = "cijing_db"

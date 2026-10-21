@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>词境 · 管理台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              xhs: "#246BFD",
+              ink: "#14213A",
+              paper: "#F5F7FC",
+              mist: "#EAF0FA",
+            },
+            boxShadow: {
+              panel: "0 2px 12px rgba(0,0,0,.055)",
+              float: "0 12px 36px rgba(0,0,0,.12)",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./ai-config.js"></script>
+    <style>
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 14px;
+        color: #5b6577;
+        transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+      }
+      .nav-item:hover { background: #eaf0fa; }
+      .nav-item.is-active {
+        background: #eaf1ff;
+        color: #246bfd;
+        font-weight: 600;
+        box-shadow: inset 2px 0 0 #246bfd;
+      }
+      .data-table { width: 100%; border-collapse: collapse; }
+      .data-table th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: #98a1b3;
+        padding: 10px 12px;
+        white-space: nowrap;
+      }
+      .data-table td {
+        padding: 12px;
+        font-size: 13px;
+        color: #2b3346;
+        border-top: 1px solid #f0f3f9;
+        vertical-align: middle;
+      }
+      .data-table tbody tr:hover { background: #fafcff; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 14px;
+        height: 36px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .btn-primary { background: #246bfd; color: #fff; }
+      .btn-primary:hover { background: #1857d6; }
+      .btn-ghost { background: #eaf0fa; color: #246bfd; }
+      .btn-ghost:hover { background: #dde8fb; }
+      .btn-danger { color: #c0392b; }
+      .btn-danger:hover { background: #fdecea; }
+      .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+      .field {
+        height: 38px;
+        width: 100%;
+        border-radius: 7px;
+        border: 1px solid #d6e1f0;
+        padding: 0 10px;
+        font-size: 13px;
+        outline: none;
+        background: #fff;
+      }
+      .field:focus { border-color: #246bfd; }
+      .scrollbar-none::-webkit-scrollbar { display: none; }
+      .scrollbar-none { scrollbar-width: none; }
+    </style>
+  </head>
+  <body class="bg-paper text-ink">
+    <!-- 门禁：未登录或没有管理权限 -->
+    <div id="gate" class="hidden min-h-screen place-items-center px-6">
+      <div class="w-full max-w-sm rounded-[10px] border border-[#dce6f5] bg-white p-7 text-center shadow-panel">
+        <span class="mx-auto grid size-12 place-items-center rounded-full bg-[#eaf1ff] text-xhs">
+          <i data-lucide="shield-lock" class="size-6"></i>
+        </span>
+        <h1 id="gateTitle" class="mt-4 text-lg font-bold">需要管理员权限</h1>
+        <p id="gateText" class="mt-2 text-sm leading-6 text-neutral-500">请先用管理员账号登录词境，再回到这里。</p>
+        <a href="./index.html" class="btn btn-primary mt-6 w-full justify-center">去主站登录</a>
+      </div>
+    </div>
+
+    <div id="app" class="hidden min-h-screen lg:flex">
+      <!-- 侧栏 -->
+      <aside class="hidden w-[220px] shrink-0 flex-col border-r border-[#dce6f5] bg-white lg:flex">
+        <div class="px-5 py-6">
+          <p class="text-base font-bold tracking-tight">词境 · 管理台</p>
+          <p class="mt-1 text-xs text-neutral-400">内容与账号运营</p>
+        </div>
+        <nav id="sideNav" class="flex-1 space-y-1 px-3"></nav>
+        <div class="border-t border-[#f0f3f9] p-3">
+          <div class="flex items-center gap-2 rounded-[8px] px-2 py-2">
+            <span id="sideAvatar" class="grid size-8 shrink-0 place-items-center rounded-full bg-[#dbe8ff] text-xs font-bold text-xhs">词</span>
+            <div class="min-w-0 flex-1">
+              <p id="sideName" class="truncate text-xs font-semibold">—</p>
+              <p class="text-[11px] text-neutral-400">管理员</p>
+            </div>
+          </div>
+          <button id="signOut" class="mt-1 w-full rounded-[7px] px-2 py-2 text-left text-xs text-neutral-500 hover:bg-mist hover:text-xhs">退出登录</button>
+        </div>
+      </aside>
+
+      <!-- 内容区 -->
+      <div class="min-w-0 flex-1">
+        <div class="lg:hidden">
+          <div class="flex items-center justify-between border-b border-[#dce6f5] bg-white px-4 py-3">
+            <p class="text-sm font-bold">词境 · 管理台</p>
+            <button id="signOutMobile" class="text-xs text-neutral-500">退出</button>
+          </div>
+          <nav id="topNav" class="scrollbar-none flex gap-1 overflow-x-auto border-b border-[#dce6f5] bg-white px-2 py-2"></nav>
+        </div>
+
+        <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+          <header class="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+            <div>
+              <h1 id="pageTitle" class="text-xl font-bold">概览</h1>
+              <p id="pageSubtitle" class="mt-1 text-xs text-neutral-400"></p>
+            </div>
+            <div id="pageActions" class="flex w-full flex-wrap items-center gap-2 sm:w-auto"></div>
+          </header>
+          <div id="view"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- 通用弹窗 -->
+    <div id="modal" class="fixed inset-0 z-50 hidden bg-black/35 p-4 sm:p-6">
+      <div class="mx-auto mt-10 w-full max-w-lg rounded-[10px] bg-white shadow-float">
+        <div class="flex items-center justify-between border-b border-[#f0f3f9] px-5 py-4">
+          <h2 id="modalTitle" class="text-base font-bold">—</h2>
+          <button id="modalClose" class="grid size-8 place-items-center rounded-[7px] text-neutral-400 hover:bg-mist">
+            <i data-lucide="x" class="size-4"></i>
+          </button>
+        </div>
+        <div id="modalBody" class="max-h-[70vh] overflow-y-auto px-5 py-4"></div>
+        <div id="modalFooter" class="flex justify-end gap-2 border-t border-[#f0f3f9] px-5 py-3"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="pointer-events-none fixed left-1/2 top-6 z-[60] hidden -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-xs font-medium text-white shadow-float"></div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        // ---------- 基础 ----------
+        const STORAGE_KEY = "cijing.session.v1";
+        const AVATAR_PRESETS = [
+          { key: "a1", glyph: "🌙", bg: "#dbe8ff", fg: "#246BFD" },
+          { key: "a2", glyph: "⭐", bg: "#fff0d6", fg: "#a8762a" },
+          { key: "a3", glyph: "🪐", bg: "#e7d9f5", fg: "#735e9f" },
+          { key: "a4", glyph: "🐈", bg: "#d7ebee", fg: "#3a7773" },
+          { key: "a5", glyph: "🌿", bg: "#e3efdd", fg: "#4a7a3d" },
+          { key: "a6", glyph: "🍊", bg: "#ffe6d6", fg: "#a85f2b" },
+          { key: "a7", glyph: "🎧", bg: "#e7e9f7", fg: "#596a91" },
+          { key: "a8", glyph: "🐟", bg: "#d9f0f7", fg: "#2f7286" },
+          { key: "a9", glyph: "☂️", bg: "#e4e7f5", fg: "#5b6296" },
+          { key: "a10", glyph: "🔥", bg: "#ffe3de", fg: "#a94a35" },
+          { key: "a11", glyph: "🫧", bg: "#e2f4f8", fg: "#3a7f93" },
+          { key: "a12", glyph: "🪶", bg: "#f0e8dc", fg: "#8a6a45" },
+        ];
+
+        const viewEl = document.getElementById("view");
+        const pageTitle = document.getElementById("pageTitle");
+        const pageSubtitle = document.getElementById("pageSubtitle");
+        const pageActions = document.getElementById("pageActions");
+        const modal = document.getElementById("modal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalBody = document.getElementById("modalBody");
+        const modalFooter = document.getElementById("modalFooter");
+        const toastEl = document.getElementById("toast");
+
+        let token = "";
+        let adminUser = null;
+        let currentView = "overview";
+        const listState = {
+          users: { q: "", page: 0 },
+          works: { q: "", visibility: "", page: 0 },
+          comments: { q: "", status: "", page: 0 },
+          invites: { page: 0 },
+        };
+        const PAGE_SIZE = 20;
+
+        function apiBase() {
+          return String(window.CIJING_API_BASE || "").trim().replace(/\/+$/, "");
+        }
+
+        function loadToken() {
+          try {
+            const raw = window.localStorage.getItem(STORAGE_KEY);
+            if (!raw) return "";
+            const parsed = JSON.parse(raw);
+            return parsed && parsed.token ? String(parsed.token) : "";
+          } catch (error) {
+            return "";
+          }
+        }
+
+        function clearToken() {
+          try {
+            window.localStorage.removeItem(STORAGE_KEY);
+          } catch (error) {
+            /* 忽略 */
+          }
+        }
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function toast(message) {
+          toastEl.textContent = message;
+          toastEl.classList.remove("hidden");
+          window.clearTimeout(toast._timer);
+          toast._timer = window.setTimeout(() => toastEl.classList.add("hidden"), 2200);
+        }
+
+        function formatDate(ts) {
+          if (!ts) return "—";
+          const d = new Date(Number(ts));
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function formatDay(dateStr) {
+          const parts = String(dateStr || "").split("-");
+          return parts.length === 3 ? `${parts[1]}-${parts[2]}` : dateStr;
+        }
+
+        function avatarVisual(user) {
+          const preset = AVATAR_PRESETS.find((item) => item.key === (user && user.avatar));
+          if (preset) return { glyph: preset.glyph, bg: preset.bg, fg: preset.fg };
+          const name = String((user && user.name) || "").trim();
+          return { glyph: name ? name.slice(0, 1) : "词", bg: "#dbe8ff", fg: "#246BFD" };
+        }
+
+        function avatarHtml(user, cls) {
+          const v = avatarVisual(user);
+          return `<span class="${cls}" style="background:${v.bg};color:${v.fg}">${escapeHtml(v.glyph)}</span>`;
+        }
+
+        async function api(path, options = {}) {
+          const base = apiBase();
+          if (!base) throw new Error("接口地址未配置");
+          const method = options.method || "GET";
+          const headers = { "Content-Type": "application/json" };
+          if (token) headers.Authorization = `Bearer ${token}`;
+          let response;
+          try {
+            response = await fetch(base + path, {
+              method,
+              headers,
+              body: options.body === undefined ? undefined : JSON.stringify(options.body),
+            });
+          } catch (error) {
+            throw new Error("无法连接服务器，请检查网络后重试");
+          }
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 401) {
+            clearToken();
+            token = "";
+            showGate("login");
+            throw new Error(data.error || "登录已失效");
+          }
+          if (!response.ok) throw new Error(data.error || `请求失败（${response.status}）`);
+          return data;
+        }
+
+        function refreshIcons() {
+          if (window.lucide) window.lucide.createIcons();
+        }
+
+        // ---------- 门禁 ----------
+        function showGate(mode) {
+          document.getElementById("app").classList.add("hidden");
+          const gate = document.getElementById("gate");
+          gate.classList.remove("hidden");
+          gate.classList.add("grid");
+          if (mode === "forbidden") {
+            document.getElementById("gateTitle").textContent = "没有管理权限";
+            document.getElementById("gateText").textContent =
+              "当前账号不在管理员白名单里。如需开通，请联系站点维护者。";
+          } else {
+            document.getElementById("gateTitle").textContent = "需要先登录";
+            document.getElementById("gateText").textContent = "请先用管理员账号登录词境，再回到这里。";
+          }
+        }
+
+        function showApp() {
+          document.getElementById("gate").classList.add("hidden");
+          document.getElementById("app").classList.remove("hidden");
+          document.getElementById("app").classList.add("flex");
+          document.getElementById("sideName").textContent = adminUser.name || "管理员";
+          const v = avatarVisual(adminUser);
+          const sideAvatar = document.getElementById("sideAvatar");
+          sideAvatar.textContent = v.glyph;
+          sideAvatar.style.background = v.bg;
+          sideAvatar.style.color = v.fg;
+          renderNav();
+          refreshIcons();
+        }
+
+        // ---------- 导航 ----------
+        const NAV = [
+          { key: "overview", label: "概览", icon: "layout-dashboard" },
+          { key: "users", label: "用户", icon: "users" },
+          { key: "works", label: "作品", icon: "book-open" },
+          { key: "comments", label: "评论", icon: "message-square" },
+          { key: "invites", label: "邀请码", icon: "ticket" },
+        ];
+
+        function renderNav() {
+          const side = document.getElementById("sideNav");
+          const top = document.getElementById("topNav");
+          side.innerHTML = NAV.map(
+            (item) =>
+              `<button class="nav-item ${item.key === currentView ? "is-active" : ""}" data-nav="${item.key}"><i data-lucide="${item.icon}" class="size-4"></i>${item.label}</button>`
+          ).join("");
+          top.innerHTML = NAV.map(
+            (item) =>
+              `<button class="nav-item ${item.key === currentView ? "is-active" : ""}" data-nav="${item.key}">${item.label}</button>`
+          ).join("");
+        }
+
+        function setHeader(title, subtitle, actionsHtml) {
+          pageTitle.textContent = title;
+          pageSubtitle.textContent = subtitle || "";
+          pageActions.innerHTML = actionsHtml || "";
+          refreshIcons();
+        }
+
+        function switchView(key) {
+          currentView = key;
+          renderNav();
+          renderView();
+          refreshIcons();
+        }
+
+        function renderView() {
+          if (currentView === "overview") return renderOverview();
+          if (currentView === "users") return renderUsers();
+          if (currentView === "works") return renderWorks();
+          if (currentView === "comments") return renderComments();
+          if (currentView === "invites") return renderInvites();
+        }
+
+        // ---------- 概览 ----------
+        async function renderOverview() {
+          setHeader("概览", "词境当前的运营数据");
+          viewEl.innerHTML = loading("正在读取数据…");
+          let data;
+          try {
+            data = await api("/api/admin/stats");
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const c = data.counts;
+          const tiles = [
+            { label: "用户", value: c.users, icon: "users" },
+            { label: "作品", value: c.works, sub: `${c.worksPublic} 篇公开`, icon: "book-open" },
+            { label: "评论", value: c.comments, sub: `${c.commentsVisible} 条可见`, icon: "message-square" },
+            { label: "互动", value: c.likes + c.favorites, sub: `赞 ${c.likes} · 藏 ${c.favorites}`, icon: "heart" },
+          ];
+
+          const dailyRows = (data.daily.users || []).map((item, index) => {
+            const works = (data.daily.works || [])[index] || { count: 0 };
+            return `<tr><td class="text-neutral-500">${escapeHtml(formatDay(item.date))}</td><td>${item.count}</td><td>${works.count}</td></tr>`;
+          }).join("");
+
+          viewEl.innerHTML = `
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              ${tiles
+                .map(
+                  (tile) => `
+                <div class="rounded-[10px] border border-[#dce6f5] bg-white p-4 shadow-panel">
+                  <div class="flex items-center justify-between text-neutral-400">
+                    <span class="text-xs">${tile.label}</span>
+                    <i data-lucide="${tile.icon}" class="size-4"></i>
+                  </div>
+                  <p class="mt-3 text-2xl font-bold tracking-tight">${tile.value}</p>
+                  <p class="mt-1 text-[11px] text-neutral-400">${tile.sub || ""}</p>
+                </div>`
+                )
+                .join("")}
+            </div>
+
+            <div class="mt-4 grid gap-4 lg:grid-cols-2">
+              <section class="rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
+                <div class="flex items-center justify-between border-b border-[#f0f3f9] px-5 py-3">
+                  <h2 class="text-sm font-bold">最近 7 天</h2>
+                  <span class="text-[11px] text-neutral-400">新增用户 / 新增作品</span>
+                </div>
+                <div class="px-3 pb-3">
+                  <table class="data-table">
+                    <thead><tr><th>日期</th><th>用户</th><th>作品</th></tr></thead>
+                    <tbody>${dailyRows || `<tr><td colspan="3" class="text-neutral-400">暂无数据</td></tr>`}</tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
+                <div class="border-b border-[#f0f3f9] px-5 py-3"><h2 class="text-sm font-bold">最近注册</h2></div>
+                <div class="px-3 pb-3">
+                  <table class="data-table">
+                    <thead><tr><th>用户</th><th>套餐</th><th>时间</th></tr></thead>
+                    <tbody>
+                      ${
+                        (data.recentUsers || [])
+                          .map(
+                            (user) => `<tr>
+                              <td><div class="flex items-center gap-2">${avatarHtml(user, "grid size-7 place-items-center rounded-full text-[11px] font-bold")}<span class="truncate">${escapeHtml(user.name)}</span></div></td>
+                              <td>${planChip(user.plan)}</td>
+                              <td class="text-neutral-400">${escapeHtml(formatDate(user.createdAt))}</td>
+                            </tr>`
+                          )
+                          .join("") || `<tr><td colspan="3" class="text-neutral-400">暂无用户</td></tr>`
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <section class="mt-4 rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
+              <div class="border-b border-[#f0f3f9] px-5 py-3"><h2 class="text-sm font-bold">最近发布</h2></div>
+              <div class="px-3 pb-3">
+                <table class="data-table">
+                  <thead><tr><th>标题</th><th>作者</th><th>状态</th><th>时间</th></tr></thead>
+                  <tbody>
+                    ${
+                      (data.recentWorks || [])
+                        .map(
+                          (work) => `<tr>
+                            <td class="max-w-[280px] truncate">${escapeHtml(work.title)}</td>
+                            <td class="text-neutral-500">${escapeHtml(work.authorName)}</td>
+                            <td>${visibilityChip(work.visibility)}</td>
+                            <td class="text-neutral-400">${escapeHtml(formatDate(work.createdAt))}</td>
+                          </tr>`
+                        )
+                        .join("") || `<tr><td colspan="4" class="text-neutral-400">暂无作品</td></tr>`
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>`;
+          refreshIcons();
+        }
+
+        // ---------- 通用片段 ----------
+        function loading(text) {
+          return `<div class="rounded-[10px] border border-[#dce6f5] bg-white px-5 py-16 text-center text-sm text-neutral-400 shadow-panel">${escapeHtml(text || "加载中…")}</div>`;
+        }
+
+        function errorBlock(message) {
+          return `<div class="rounded-[10px] border border-[#f3d4cf] bg-[#fdf3f1] px-5 py-10 text-center text-sm text-[#a94a35]">${escapeHtml(message || "加载失败")}</div>`;
+        }
+
+        function emptyBlock(text) {
+          return `<div class="px-5 py-12 text-center text-sm text-neutral-400">${escapeHtml(text)}</div>`;
+        }
+
+        function planChip(plan) {
+          return plan === "pro"
+            ? `<span class="chip bg-[#eaf1ff] text-xhs">Pro</span>`
+            : `<span class="chip bg-mist text-neutral-500">Trial</span>`;
+        }
+
+        function visibilityChip(visibility) {
+          return visibility === "public"
+            ? `<span class="chip bg-[#e7f4ec] text-[#32795a]">公开</span>`
+            : `<span class="chip bg-mist text-neutral-500">私密</span>`;
+        }
+
+        function statusChip(status) {
+          return status === "visible"
+            ? `<span class="chip bg-[#e7f4ec] text-[#32795a]">可见</span>`
+            : `<span class="chip bg-[#fdecea] text-[#a94a35]">已隐藏</span>`;
+        }
+
+        function pager(total, page) {
+          const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+          const prevDisabled = page <= 0;
+          const nextDisabled = page >= pages - 1;
+          return `<div class="flex items-center justify-between border-t border-[#f0f3f9] px-4 py-3 text-xs text-neutral-400">
+            <span>共 ${total} 条 · 第 ${page + 1} / ${pages} 页</span>
+            <span class="flex gap-1">
+              <button class="btn btn-ghost !h-8 !px-3" data-page="prev" ${prevDisabled ? "disabled" : ""}>上一页</button>
+              <button class="btn btn-ghost !h-8 !px-3" data-page="next" ${nextDisabled ? "disabled" : ""}>下一页</button>
+            </span>
+          </div>`;
+        }
+
+        function userActions(user) {
+          return `<button class="btn btn-ghost !h-7 !px-2 !text-xs" data-user-edit="${escapeHtml(user.id)}">编辑</button>
+            <button class="btn btn-ghost !h-7 !px-2 !text-xs" data-user-password="${escapeHtml(user.id)}" data-user-email="${escapeHtml(user.email)}">改密</button>
+            <button class="btn btn-danger !h-7 !px-2 !text-xs" data-user-delete="${escapeHtml(user.id)}" data-user-email="${escapeHtml(user.email)}">删除</button>`;
+        }
+
+        function workActions(work) {
+          return `<button class="btn btn-ghost !h-7 !px-2 !text-xs" data-work-view="${escapeHtml(work.id)}">查看</button>
+            <button class="btn btn-ghost !h-7 !px-2 !text-xs" data-work-toggle="${escapeHtml(work.id)}" data-work-visibility="${escapeHtml(work.visibility)}">${work.visibility === "public" ? "转私密" : "公开"}</button>
+            <button class="btn btn-danger !h-7 !px-2 !text-xs" data-work-delete="${escapeHtml(work.id)}">删除</button>`;
+        }
+
+        function commentActions(comment) {
+          return `<button class="btn btn-ghost !h-7 !px-2 !text-xs" data-comment-toggle="${escapeHtml(comment.id)}" data-comment-status="${escapeHtml(comment.status)}">${comment.status === "visible" ? "隐藏" : "恢复"}</button>
+            <button class="btn btn-danger !h-7 !px-2 !text-xs" data-comment-delete="${escapeHtml(comment.id)}">删除</button>`;
+        }
+
+        function inviteActions(invite) {
+          return `<button class="btn btn-ghost !h-7 !px-2 !text-xs" data-invite-disable="${escapeHtml(invite.code)}" ${invite.state === "expired" ? "disabled" : ""}>停用</button>
+            <button class="btn btn-danger !h-7 !px-2 !text-xs" data-invite-delete="${escapeHtml(invite.code)}">删除</button>`;
+        }
+
+        // ---------- 用户 ----------
+        async function renderUsers() {
+          const state = listState.users;
+          setHeader(
+            "用户",
+            "账号、套餐与额度",
+            `<input id="userSearch" class="field w-full sm:!w-56" placeholder="搜索昵称或邮箱" value="${escapeHtml(state.q)}" />
+             <button id="userSearchBtn" class="btn btn-ghost !h-9">搜索</button>`
+          );
+          viewEl.innerHTML = loading("正在读取用户…");
+
+          const params = new URLSearchParams({ limit: PAGE_SIZE, offset: state.page * PAGE_SIZE });
+          if (state.q) params.set("q", state.q);
+          let data;
+          try {
+            data = await api(`/api/admin/users?${params.toString()}`);
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const rows = (data.items || [])
+            .map(
+              (user) => `<tr>
+                <td>
+                  <div class="flex items-center gap-2">
+                    ${avatarHtml(user, "grid size-8 place-items-center rounded-full text-xs font-bold")}
+                    <div class="min-w-0">
+                      <p class="truncate font-semibold">${escapeHtml(user.name)}</p>
+                      <p class="text-[11px] text-neutral-400">${escapeHtml(user.id)}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-neutral-500">${escapeHtml(user.email)}</td>
+                <td>${planChip(user.plan)}</td>
+                <td>${user.quotaUsed} / ${user.quotaTotal}</td>
+                <td>${user.workCount}</td>
+                <td class="text-neutral-400">${escapeHtml(formatDate(user.createdAt))}</td>
+                <td><div class="flex flex-wrap gap-1">${userActions(user)}</div></td>
+              </tr>`
+            )
+            .join("");
+
+          const cards = (data.items || [])
+            .map(
+              (user) => `<div class="rounded-[10px] border border-[#dce6f5] bg-white p-3 shadow-panel">
+                <div class="flex items-center gap-2">
+                  ${avatarHtml(user, "grid size-9 place-items-center rounded-full text-xs font-bold")}
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold">${escapeHtml(user.name)}</p>
+                    <p class="truncate text-[11px] text-neutral-400">${escapeHtml(user.email)}</p>
+                  </div>
+                  ${planChip(user.plan)}
+                </div>
+                <p class="mt-2 text-[11px] text-neutral-400">额度 ${user.quotaUsed}/${user.quotaTotal} · 作品 ${user.workCount} · ${escapeHtml(formatDate(user.createdAt))}</p>
+                <div class="mt-2 flex flex-wrap gap-1">${userActions(user)}</div>
+              </div>`
+            )
+            .join("");
+
+          viewEl.innerHTML = `
+            <div class="space-y-2 md:hidden">${cards || emptyBlock("没有匹配的用户")}${pager(data.total || 0, state.page)}</div>
+            <div class="hidden overflow-hidden rounded-[10px] border border-[#dce6f5] bg-white shadow-panel md:block">
+              <div class="overflow-x-auto">
+                <table class="data-table">
+                  <thead><tr><th>用户</th><th>邮箱</th><th>套餐</th><th>额度</th><th>作品</th><th>注册</th><th>操作</th></tr></thead>
+                  <tbody>${rows || `<tr><td colspan="7">${emptyBlock("没有匹配的用户")}</td></tr>`}</tbody>
+                </table>
+              </div>
+              ${pager(data.total || 0, state.page)}
+            </div>`;
+          refreshIcons();
+        }
+
+        // ---------- 作品 ----------
+        async function renderWorks() {
+          const state = listState.works;
+          setHeader(
+            "作品",
+            "内容审核与上下架",
+            `<input id="workSearch" class="field w-full sm:!w-56" placeholder="搜索标题" value="${escapeHtml(state.q)}" />
+             <select id="workVisibility" class="field w-full sm:!w-28">
+               <option value="">全部状态</option>
+               <option value="public" ${state.visibility === "public" ? "selected" : ""}>公开</option>
+               <option value="private" ${state.visibility === "private" ? "selected" : ""}>私密</option>
+             </select>
+             <button id="workSearchBtn" class="btn btn-ghost !h-9">筛选</button>`
+          );
+          viewEl.innerHTML = loading("正在读取作品…");
+
+          const params = new URLSearchParams({ limit: PAGE_SIZE, offset: state.page * PAGE_SIZE });
+          if (state.q) params.set("q", state.q);
+          if (state.visibility) params.set("visibility", state.visibility);
+          let data;
+          try {
+            data = await api(`/api/admin/works?${params.toString()}`);
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const rows = (data.items || [])
+            .map(
+              (work) => `<tr>
+                <td class="max-w-[260px]"><p class="truncate font-semibold">${escapeHtml(work.title)}</p><p class="text-[11px] text-neutral-400">${escapeHtml(work.tag || "")}</p></td>
+                <td class="text-neutral-500">${escapeHtml(work.authorName)}</td>
+                <td>${visibilityChip(work.visibility)}</td>
+                <td class="whitespace-nowrap text-neutral-500">${work.likeCount} / ${work.favoriteCount} / ${work.commentCount}</td>
+                <td class="whitespace-nowrap text-neutral-400">${escapeHtml(formatDate(work.createdAt))}</td>
+                <td>
+                  <div class="flex flex-wrap gap-1">${workActions(work)}</div>
+                </td>
+              </tr>`
+            )
+            .join("");
+
+          const cards = (data.items || [])
+            .map(
+              (work) => `<div class="rounded-[10px] border border-[#dce6f5] bg-white p-3 shadow-panel">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold">${escapeHtml(work.title)}</p>
+                    <p class="mt-0.5 text-[11px] text-neutral-400">${escapeHtml(work.authorName)} · ${escapeHtml(work.tag || "")}</p>
+                  </div>
+                  ${visibilityChip(work.visibility)}
+                </div>
+                <p class="mt-2 text-[11px] text-neutral-400">赞 ${work.likeCount} · 藏 ${work.favoriteCount} · 评 ${work.commentCount} · ${escapeHtml(formatDate(work.createdAt))}</p>
+                <div class="mt-2 flex flex-wrap gap-1">${workActions(work)}</div>
+              </div>`
+            )
+            .join("");
+
+          viewEl.innerHTML = `
+            <div class="space-y-2 md:hidden">${cards || emptyBlock("没有匹配的作品")}${pager(data.total || 0, state.page)}</div>
+            <div class="hidden overflow-hidden rounded-[10px] border border-[#dce6f5] bg-white shadow-panel md:block">
+              <div class="overflow-x-auto">
+                <table class="data-table">
+                  <thead><tr><th>标题</th><th>作者</th><th>状态</th><th>赞 / 藏 / 评</th><th>创建</th><th>操作</th></tr></thead>
+                  <tbody>${rows || `<tr><td colspan="6">${emptyBlock("没有匹配的作品")}</td></tr>`}</tbody>
+                </table>
+              </div>
+              ${pager(data.total || 0, state.page)}
+            </div>`;
+          refreshIcons();
+        }
+
+        // ---------- 评论 ----------
+        async function renderComments() {
+          const state = listState.comments;
+          setHeader(
+            "评论",
+            "隐藏或删除不当评论",
+            `<input id="commentSearch" class="field w-full sm:!w-56" placeholder="搜索评论内容" value="${escapeHtml(state.q)}" />
+             <select id="commentStatus" class="field w-full sm:!w-28">
+               <option value="">全部状态</option>
+               <option value="visible" ${state.status === "visible" ? "selected" : ""}>可见</option>
+               <option value="hidden" ${state.status === "hidden" ? "selected" : ""}>已隐藏</option>
+             </select>
+             <button id="commentSearchBtn" class="btn btn-ghost !h-9">筛选</button>`
+          );
+          viewEl.innerHTML = loading("正在读取评论…");
+
+          const params = new URLSearchParams({ limit: PAGE_SIZE, offset: state.page * PAGE_SIZE });
+          if (state.q) params.set("q", state.q);
+          if (state.status) params.set("status", state.status);
+          let data;
+          try {
+            data = await api(`/api/admin/comments?${params.toString()}`);
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const rows = (data.items || [])
+            .map(
+              (comment) => `<tr>
+                <td class="max-w-[320px]"><p class="line-clamp-2">${escapeHtml(comment.content)}</p>${comment.parentId ? `<p class="mt-1 text-[11px] text-neutral-400">楼中楼回复</p>` : ""}</td>
+                <td class="text-neutral-500">${escapeHtml(comment.authorName)}</td>
+                <td class="max-w-[180px] truncate text-neutral-500">${escapeHtml(comment.workTitle || "（作品已删）")}</td>
+                <td>${statusChip(comment.status)}</td>
+                <td class="whitespace-nowrap text-neutral-400">${escapeHtml(formatDate(comment.createdAt))}</td>
+                <td>
+                  <div class="flex flex-wrap gap-1">${commentActions(comment)}</div>
+                </td>
+              </tr>`
+            )
+            .join("");
+
+          const cards = (data.items || [])
+            .map(
+              (comment) => `<div class="rounded-[10px] border border-[#dce6f5] bg-white p-3 shadow-panel">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-sm leading-6 text-neutral-700">${escapeHtml(comment.content)}</p>
+                  ${statusChip(comment.status)}
+                </div>
+                <p class="mt-2 text-[11px] text-neutral-400">${escapeHtml(comment.authorName)} · ${escapeHtml(comment.workTitle || "（作品已删）")}${comment.parentId ? " · 楼中楼" : ""} · ${escapeHtml(formatDate(comment.createdAt))}</p>
+                <div class="mt-2 flex flex-wrap gap-1">${commentActions(comment)}</div>
+              </div>`
+            )
+            .join("");
+
+          viewEl.innerHTML = `
+            <div class="space-y-2 md:hidden">${cards || emptyBlock("没有匹配的评论")}${pager(data.total || 0, state.page)}</div>
+            <div class="hidden overflow-hidden rounded-[10px] border border-[#dce6f5] bg-white shadow-panel md:block">
+              <div class="overflow-x-auto">
+                <table class="data-table">
+                  <thead><tr><th>内容</th><th>作者</th><th>作品</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+                  <tbody>${rows || `<tr><td colspan="6">${emptyBlock("没有匹配的评论")}</td></tr>`}</tbody>
+                </table>
+              </div>
+              ${pager(data.total || 0, state.page)}
+            </div>`;
+          refreshIcons();
+        }
+
+        // ---------- 邀请码 ----------
+        async function renderInvites() {
+          const state = listState.invites;
+          setHeader(
+            "邀请码",
+            "发放注册名额",
+            `<button id="inviteCreate" class="btn btn-primary"><i data-lucide="plus" class="size-4"></i>生成邀请码</button>`
+          );
+          viewEl.innerHTML = loading("正在读取邀请码…");
+
+          const params = new URLSearchParams({ limit: PAGE_SIZE, offset: state.page * PAGE_SIZE });
+          let data;
+          try {
+            data = await api(`/api/admin/invites?${params.toString()}`);
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const stateLabel = (invite) => {
+            if (invite.state === "used_up") return `<span class="chip bg-mist text-neutral-500">已用完</span>`;
+            if (invite.state === "expired") return `<span class="chip bg-[#fdecea] text-[#a94a35]">已过期</span>`;
+            return `<span class="chip bg-[#e7f4ec] text-[#32795a]">可用</span>`;
+          };
+
+          const rows = (data.items || [])
+            .map(
+              (invite) => `<tr>
+                <td class="font-mono text-xs font-semibold">${escapeHtml(invite.code)}</td>
+                <td>${planChip(invite.plan)}</td>
+                <td>${invite.quota}</td>
+                <td>${invite.usedCount} / ${invite.maxUses}</td>
+                <td>${stateLabel(invite)}</td>
+                <td class="whitespace-nowrap text-neutral-400">${invite.expiresAt ? escapeHtml(formatDate(invite.expiresAt)) : "永不过期"}</td>
+                <td class="max-w-[160px] truncate text-neutral-500">${escapeHtml(invite.note || "—")}</td>
+                <td>
+                  <div class="flex flex-wrap gap-1">${inviteActions(invite)}</div>
+                </td>
+              </tr>`
+            )
+            .join("");
+
+          const cards = (data.items || [])
+            .map(
+              (invite) => `<div class="rounded-[10px] border border-[#dce6f5] bg-white p-3 shadow-panel">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-mono text-sm font-semibold">${escapeHtml(invite.code)}</span>
+                  ${stateLabel(invite)}
+                </div>
+                <p class="mt-2 text-[11px] text-neutral-400">${invite.plan === "pro" ? "Pro" : "Trial"} · 额度 ${invite.quota} · 已用 ${invite.usedCount}/${invite.maxUses} · ${invite.expiresAt ? escapeHtml(formatDate(invite.expiresAt)) : "永不过期"}</p>
+                ${invite.note ? `<p class="mt-1 text-[11px] text-neutral-400">${escapeHtml(invite.note)}</p>` : ""}
+                <div class="mt-2 flex flex-wrap gap-1">${inviteActions(invite)}</div>
+              </div>`
+            )
+            .join("");
+
+          viewEl.innerHTML = `
+            <div class="space-y-2 md:hidden">${cards || emptyBlock("还没有邀请码，点右上角生成")}${pager(data.total || 0, state.page)}</div>
+            <div class="hidden overflow-hidden rounded-[10px] border border-[#dce6f5] bg-white shadow-panel md:block">
+              <div class="overflow-x-auto">
+                <table class="data-table">
+                  <thead><tr><th>邀请码</th><th>套餐</th><th>额度</th><th>已用</th><th>状态</th><th>过期</th><th>备注</th><th>操作</th></tr></thead>
+                  <tbody>${rows || `<tr><td colspan="8">${emptyBlock("还没有邀请码，点右上角生成")}</td></tr>`}</tbody>
+                </table>
+              </div>
+              ${pager(data.total || 0, state.page)}
+            </div>`;
+          refreshIcons();
+        }
+
+        // ---------- 弹窗 ----------
+        function openModal(title, bodyHtml, footerHtml) {
+          modalTitle.textContent = title;
+          modalBody.innerHTML = bodyHtml;
+          modalFooter.innerHTML = footerHtml || "";
+          modal.classList.remove("hidden");
+          refreshIcons();
+        }
+
+        function closeModal() {
+          modal.classList.add("hidden");
+          modalBody.innerHTML = "";
+          modalFooter.innerHTML = "";
+        }
+
+        // ---------- 操作 ----------
+        async function openUserEdit(userId) {
+          let user;
+          try {
+            const data = await api(`/api/admin/users/${encodeURIComponent(userId)}`);
+            user = data.user;
+          } catch (error) {
+            toast(error.message);
+            return;
+          }
+          openModal(
+            "编辑用户",
+            `<div class="space-y-4">
+              <div><label class="mb-1 block text-xs font-semibold">昵称</label><input id="editName" class="field" maxlength="24" value="${escapeHtml(user.name)}" /></div>
+              <div><label class="mb-1 block text-xs font-semibold">邮箱</label><p class="rounded-[7px] bg-mist px-3 py-2 text-xs text-neutral-500">${escapeHtml(user.email)}</p></div>
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="mb-1 block text-xs font-semibold">套餐</label>
+                  <select id="editPlan" class="field">
+                    <option value="trial" ${user.plan === "trial" ? "selected" : ""}>Trial</option>
+                    <option value="pro" ${user.plan === "pro" ? "selected" : ""}>Pro</option>
+                  </select>
+                </div>
+                <div><label class="mb-1 block text-xs font-semibold">额度上限</label><input id="editQuotaTotal" type="number" min="0" max="100000" class="field" value="${user.quotaTotal}" /></div>
+              </div>
+              <div><label class="mb-1 block text-xs font-semibold">已用额度</label><input id="editQuotaUsed" type="number" min="0" max="100000" class="field" value="${user.quotaUsed}" /></div>
+            </div>`,
+            `<button class="btn btn-ghost" data-modal-cancel>取消</button><button class="btn btn-primary" data-user-save="${escapeHtml(userId)}">保存</button>`
+          );
+        }
+
+        function openUserPassword(userId, email) {
+          openModal(
+            "重置密码",
+            `<div class="space-y-3">
+              <p class="text-xs leading-5 text-neutral-500">为 <b>${escapeHtml(email)}</b> 设置新密码。保存后该用户所有已登录设备都会退出。</p>
+              <input id="newPassword" type="text" class="field" placeholder="新密码，至少 6 位" />
+            </div>`,
+            `<button class="btn btn-ghost" data-modal-cancel>取消</button><button class="btn btn-primary" data-password-save="${escapeHtml(userId)}">确认重置</button>`
+          );
+        }
+
+        async function openWorkView(workId) {
+          let data;
+          try {
+            data = await api(`/api/admin/works/${encodeURIComponent(workId)}`);
+          } catch (error) {
+            toast(error.message);
+            return;
+          }
+          const work = data.work;
+          openModal(
+            work.title || "作品",
+            `<div class="space-y-3">
+              <p class="text-xs text-neutral-400">${escapeHtml(work.authorName)} · ${escapeHtml(work.genre || "")} · ${work.words.length} 个目标词</p>
+              <p class="text-sm font-semibold leading-6">${escapeHtml(work.hook || "")}</p>
+              <p class="text-xs leading-6 text-neutral-500">${escapeHtml(work.summary || "")}</p>
+              <div class="max-h-[42vh] overflow-y-auto whitespace-pre-wrap rounded-[7px] bg-mist px-3 py-3 text-sm leading-7 text-neutral-700">${escapeHtml(work.content || "")}</div>
+            </div>`,
+            `<button class="btn btn-ghost" data-modal-cancel>关闭</button>`
+          );
+        }
+
+        function openInviteCreate() {
+          openModal(
+            "生成邀请码",
+            `<div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="mb-1 block text-xs font-semibold">数量</label><input id="inviteCount" type="number" min="1" max="20" value="1" class="field" /></div>
+                <div><label class="mb-1 block text-xs font-semibold">套餐</label>
+                  <select id="invitePlan" class="field">
+                    <option value="trial">Trial</option>
+                    <option value="pro">Pro</option>
+                  </select>
+                </div>
+                <div><label class="mb-1 block text-xs font-semibold">初始额度</label><input id="inviteQuota" type="number" min="0" value="5" class="field" /></div>
+                <div><label class="mb-1 block text-xs font-semibold">可用次数</label><input id="inviteMaxUses" type="number" min="1" value="1" class="field" /></div>
+              </div>
+              <div><label class="mb-1 block text-xs font-semibold">有效天数</label><input id="inviteDays" type="number" min="0" value="30" class="field" /><p class="mt-1 text-[11px] text-neutral-400">填 0 表示永不过期</p></div>
+              <div><label class="mb-1 block text-xs font-semibold">备注</label><input id="inviteNote" class="field" maxlength="60" placeholder="例如：内测群 A" /></div>
+            </div>`,
+            `<button class="btn btn-ghost" data-modal-cancel>取消</button><button class="btn btn-primary" data-invite-save>生成</button>`
+          );
+        }
+
+        // ---------- 事件 ----------
+        document.addEventListener("click", async (event) => {
+          const nav = event.target.closest("[data-nav]");
+          if (nav) {
+            switchView(nav.dataset.nav);
+            return;
+          }
+          if (event.target.closest("[data-modal-cancel]") || event.target.closest("#modalClose")) {
+            closeModal();
+            return;
+          }
+          if (event.target === modal) {
+            closeModal();
+            return;
+          }
+
+          const pageBtn = event.target.closest("[data-page]");
+          if (pageBtn) {
+            const key = currentView;
+            const state = listState[key];
+            if (!state) return;
+            if (pageBtn.dataset.page === "prev") state.page = Math.max(0, state.page - 1);
+            else state.page += 1;
+            renderView();
+            return;
+          }
+
+          // 用户
+          if (event.target.closest("#userSearchBtn")) {
+            listState.users.q = document.getElementById("userSearch").value.trim();
+            listState.users.page = 0;
+            renderUsers();
+            return;
+          }
+          const userEdit = event.target.closest("[data-user-edit]");
+          if (userEdit) {
+            openUserEdit(userEdit.dataset.userEdit);
+            return;
+          }
+          const userPassword = event.target.closest("[data-user-password]");
+          if (userPassword) {
+            openUserPassword(userPassword.dataset.userPassword, userPassword.dataset.userEmail || "");
+            return;
+          }
+          const userDelete = event.target.closest("[data-user-delete]");
+          if (userDelete) {
+            const email = userDelete.dataset.userEmail;
+            const typed = window.prompt(`删除用户会同时清掉 TA 的作品、评论与互动，且不可恢复。\n请输入邮箱确认：${email}`);
+            if (typed === null) return;
+            if (typed.trim() !== email) {
+              toast("邮箱不匹配，已取消");
+              return;
+            }
+            try {
+              await api(`/api/admin/users/${encodeURIComponent(userDelete.dataset.userDelete)}`, { method: "DELETE" });
+              toast("用户已删除");
+              renderUsers();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          if (event.target.closest("[data-user-save]")) {
+            const id = event.target.closest("[data-user-save]").dataset.userSave;
+            const body = {
+              name: document.getElementById("editName").value.trim(),
+              plan: document.getElementById("editPlan").value,
+              quotaTotal: Number(document.getElementById("editQuotaTotal").value),
+              quotaUsed: Number(document.getElementById("editQuotaUsed").value),
+            };
+            try {
+              await api(`/api/admin/users/${encodeURIComponent(id)}`, { method: "PATCH", body });
+              closeModal();
+              toast("已保存");
+              renderUsers();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          if (event.target.closest("[data-password-save]")) {
+            const id = event.target.closest("[data-password-save]").dataset.passwordSave;
+            const password = document.getElementById("newPassword").value;
+            try {
+              await api(`/api/admin/users/${encodeURIComponent(id)}/reset-password`, {
+                method: "POST",
+                body: { password },
+              });
+              closeModal();
+              toast("密码已重置，旧会话已失效");
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+
+          // 作品
+          if (event.target.closest("#workSearchBtn")) {
+            listState.works.q = document.getElementById("workSearch").value.trim();
+            listState.works.visibility = document.getElementById("workVisibility").value;
+            listState.works.page = 0;
+            renderWorks();
+            return;
+          }
+          const workView = event.target.closest("[data-work-view]");
+          if (workView) {
+            openWorkView(workView.dataset.workView);
+            return;
+          }
+          const workToggle = event.target.closest("[data-work-toggle]");
+          if (workToggle) {
+            const next = workToggle.dataset.workVisibility === "public" ? "private" : "public";
+            try {
+              await api(`/api/admin/works/${encodeURIComponent(workToggle.dataset.workToggle)}`, {
+                method: "PATCH",
+                body: { visibility: next },
+              });
+              toast(next === "public" ? "已公开" : "已转为私密");
+              renderWorks();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          const workDelete = event.target.closest("[data-work-delete]");
+          if (workDelete) {
+            if (!window.confirm("删除这篇作品？点赞、收藏、评论与相关通知都会一起删除，且不可恢复。")) return;
+            try {
+              await api(`/api/admin/works/${encodeURIComponent(workDelete.dataset.workDelete)}`, { method: "DELETE" });
+              toast("作品已删除");
+              renderWorks();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+
+          // 评论
+          if (event.target.closest("#commentSearchBtn")) {
+            listState.comments.q = document.getElementById("commentSearch").value.trim();
+            listState.comments.status = document.getElementById("commentStatus").value;
+            listState.comments.page = 0;
+            renderComments();
+            return;
+          }
+          const commentToggle = event.target.closest("[data-comment-toggle]");
+          if (commentToggle) {
+            const next = commentToggle.dataset.commentStatus === "visible" ? "hidden" : "visible";
+            try {
+              await api(`/api/admin/comments/${encodeURIComponent(commentToggle.dataset.commentToggle)}`, {
+                method: "PATCH",
+                body: { status: next },
+              });
+              toast(next === "hidden" ? "已隐藏" : "已恢复");
+              renderComments();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          const commentDelete = event.target.closest("[data-comment-delete]");
+          if (commentDelete) {
+            if (!window.confirm("删除这条评论？它下面的回复也会一起删除，且不可恢复。")) return;
+            try {
+              await api(`/api/admin/comments/${encodeURIComponent(commentDelete.dataset.commentDelete)}`, { method: "DELETE" });
+              toast("评论已删除");
+              renderComments();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+
+          // 邀请码
+          if (event.target.closest("#inviteCreate")) {
+            openInviteCreate();
+            return;
+          }
+          if (event.target.closest("[data-invite-save]")) {
+            const body = {
+              count: Number(document.getElementById("inviteCount").value),
+              plan: document.getElementById("invitePlan").value,
+              quota: Number(document.getElementById("inviteQuota").value),
+              maxUses: Number(document.getElementById("inviteMaxUses").value),
+              expiresInDays: Number(document.getElementById("inviteDays").value),
+              note: document.getElementById("inviteNote").value.trim(),
+            };
+            try {
+              const data = await api("/api/admin/invites", { method: "POST", body });
+              closeModal();
+              toast(`已生成 ${data.created.length} 个邀请码`);
+              renderInvites();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          const inviteDisable = event.target.closest("[data-invite-disable]");
+          if (inviteDisable) {
+            if (!window.confirm("停用这个邀请码？之后将无法再用于注册。")) return;
+            try {
+              await api(`/api/admin/invites/${encodeURIComponent(inviteDisable.dataset.inviteDisable)}`, { method: "PATCH" });
+              toast("已停用");
+              renderInvites();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+          const inviteDelete = event.target.closest("[data-invite-delete]");
+          if (inviteDelete) {
+            if (!window.confirm("删除这个邀请码？已注册的用户不受影响。")) return;
+            try {
+              await api(`/api/admin/invites/${encodeURIComponent(inviteDelete.dataset.inviteDelete)}`, { method: "DELETE" });
+              toast("已删除");
+              renderInvites();
+            } catch (error) {
+              toast(error.message);
+            }
+            return;
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
+          if (event.key !== "Enter") return;
+          if (event.target.id === "userSearch") document.getElementById("userSearchBtn").click();
+          if (event.target.id === "workSearch") document.getElementById("workSearchBtn").click();
+          if (event.target.id === "commentSearch") document.getElementById("commentSearchBtn").click();
+        });
+
+        function signOut() {
+          clearToken();
+          window.location.href = "./index.html";
+        }
+
+        document.getElementById("signOut").addEventListener("click", signOut);
+        document.getElementById("signOutMobile").addEventListener("click", signOut);
+        document.getElementById("modalClose").addEventListener("click", closeModal);
+
+        // ---------- 启动 ----------
+        (async function start() {
+          token = loadToken();
+          if (!token) {
+            showGate("login");
+            return;
+          }
+          try {
+            const data = await api("/api/admin/me");
+            adminUser = data.user;
+            showApp();
+            switchView("overview");
+          } catch (error) {
+            if (token) showGate("forbidden");
+          }
+        })();
+      })();
+    </script>
+  </body>
+</html>

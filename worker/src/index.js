@@ -126,7 +126,7 @@ async function currentUser(request, env) {
   }
 
   const user = await env.cijing_db
-    .prepare("SELECT id, email, name, plan, quota_total, quota_used, created_at FROM users WHERE id = ?")
+    .prepare("SELECT id, email, name, plan, avatar, quota_total, quota_used, created_at FROM users WHERE id = ?")
     .bind(session.user_id)
     .first();
   if (!user) return null;
@@ -546,7 +546,7 @@ async function handleRegister(request, env) {
 
   const token = await createSession(env, userId);
   const user = await env.cijing_db
-    .prepare("SELECT id, email, name, plan, quota_total, quota_used, created_at FROM users WHERE id = ?")
+    .prepare("SELECT id, email, name, plan, avatar, quota_total, quota_used, created_at FROM users WHERE id = ?")
     .bind(userId)
     .first();
   return json({ ok: true, token, user: publicUser(user) }, 200, request, env);
@@ -1648,6 +1648,552 @@ async function handleDeleteComment(request, env, commentId, auth) {
 }
 
 
+// ---------- 管理后台 ----------
+
+function adminIds(env) {
+  return String(env.ADMIN_IDS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+// 和 styleEnabled 同一套规则：同时接受 user id 与邮箱
+function isAdmin(env, user) {
+  if (!user) return false;
+  const list = adminIds(env);
+  return list.includes(String(user.id).toLowerCase())
+    || list.includes(String(user.email || "").toLowerCase());
+}
+
+function adminPaging(url, defaultLimit = 50) {
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || defaultLimit));
+  const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
+  return { limit, offset };
+}
+
+function adminUserJson(row) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    avatar: row.avatar || "",
+    plan: row.plan,
+    quotaTotal: Number(row.quota_total) || 0,
+    quotaUsed: Number(row.quota_used) || 0,
+    createdAt: Number(row.created_at) || 0,
+    workCount: Number(row.work_count) || 0,
+    commentCount: Number(row.comment_count) || 0,
+  };
+}
+
+async function handleAdminStats(request, env) {
+  const since = Date.now() - 6 * 24 * 60 * 60 * 1000;
+  const counts = await env.cijing_db
+    .prepare(
+      `SELECT
+        (SELECT COUNT(*) FROM users) AS users,
+        (SELECT COUNT(*) FROM works) AS works,
+        (SELECT COUNT(*) FROM works WHERE visibility = 'public') AS works_public,
+        (SELECT COUNT(*) FROM comments) AS comments,
+        (SELECT COUNT(*) FROM comments WHERE status = 'visible') AS comments_visible,
+        (SELECT COUNT(*) FROM likes) AS likes,
+        (SELECT COUNT(*) FROM favorites) AS favorites,
+        (SELECT COUNT(*) FROM follows) AS follows,
+        (SELECT COUNT(*) FROM style_profiles) AS styles,
+        (SELECT COUNT(*) FROM invite_codes WHERE used_count < max_uses
+           AND (expires_at IS NULL OR expires_at > ?)) AS invites_available`
+    )
+    .bind(Date.now())
+    .first();
+
+  const dailyUsers = await env.cijing_db
+    .prepare(
+      `SELECT date(created_at / 1000, 'unixepoch') AS d, COUNT(*) AS n
+       FROM users WHERE created_at >= ? GROUP BY d`
+    )
+    .bind(since)
+    .all();
+  const dailyWorks = await env.cijing_db
+    .prepare(
+      `SELECT date(created_at / 1000, 'unixepoch') AS d, COUNT(*) AS n
+       FROM works WHERE created_at >= ? GROUP BY d`
+    )
+    .bind(since)
+    .all();
+
+  // 补齐 7 天，缺的补 0
+  const days = [];
+  for (let i = 6; i >= 0; i -= 1) {
+    days.push(new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+  }
+  const toSeries = (rows) => {
+    const map = new Map((rows.results || []).map((row) => [row.d, Number(row.n) || 0]));
+    return days.map((d) => ({ date: d, count: map.get(d) || 0 }));
+  };
+
+  const recentUsers = await env.cijing_db
+    .prepare("SELECT id, email, name, avatar, plan, created_at FROM users ORDER BY created_at DESC LIMIT 5")
+    .all();
+  const recentWorks = await env.cijing_db
+    .prepare(
+      `SELECT w.id, w.title, w.visibility, w.created_at, u.name AS author_name
+       FROM works w JOIN users u ON u.id = w.user_id
+       ORDER BY w.created_at DESC LIMIT 5`
+    )
+    .all();
+
+  return json(
+    {
+      ok: true,
+      counts: {
+        users: Number(counts?.users) || 0,
+        works: Number(counts?.works) || 0,
+        worksPublic: Number(counts?.works_public) || 0,
+        comments: Number(counts?.comments) || 0,
+        commentsVisible: Number(counts?.comments_visible) || 0,
+        likes: Number(counts?.likes) || 0,
+        favorites: Number(counts?.favorites) || 0,
+        follows: Number(counts?.follows) || 0,
+        styles: Number(counts?.styles) || 0,
+        invitesAvailable: Number(counts?.invites_available) || 0,
+      },
+      daily: { users: toSeries(dailyUsers), works: toSeries(dailyWorks) },
+      recentUsers: (recentUsers.results || []).map((row) => ({
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        avatar: row.avatar || "",
+        plan: row.plan,
+        createdAt: Number(row.created_at) || 0,
+      })),
+      recentWorks: (recentWorks.results || []).map((row) => ({
+        id: row.id,
+        title: row.title,
+        visibility: row.visibility,
+        createdAt: Number(row.created_at) || 0,
+        authorName: row.author_name || "",
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminListUsers(request, env, url) {
+  const { limit, offset } = adminPaging(url);
+  const q = cleanText(url.searchParams.get("q"), 40);
+  const like = `%${q}%`;
+  const where = q ? "WHERE u.name LIKE ? OR u.email LIKE ?" : "";
+  const filterArgs = q ? [like, like] : [];
+
+  const totalRow = await env.cijing_db
+    .prepare(`SELECT COUNT(*) AS n FROM users u ${where}`)
+    .bind(...filterArgs)
+    .first();
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT u.id, u.email, u.name, u.avatar, u.plan, u.quota_total, u.quota_used, u.created_at,
+              (SELECT COUNT(*) FROM works w WHERE w.user_id = u.id) AS work_count,
+              (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id) AS comment_count
+       FROM users u ${where}
+       ORDER BY u.created_at DESC LIMIT ? OFFSET ?`
+    )
+    .bind(...filterArgs, limit, offset)
+    .all();
+
+  return json(
+    { ok: true, total: Number(totalRow?.n) || 0, items: (results || []).map(adminUserJson) },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminGetUser(request, env, userId) {
+  const row = await env.cijing_db
+    .prepare(
+      `SELECT u.id, u.email, u.name, u.avatar, u.plan, u.quota_total, u.quota_used, u.created_at,
+              (SELECT COUNT(*) FROM works w WHERE w.user_id = u.id) AS work_count,
+              (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id) AS comment_count
+       FROM users u WHERE u.id = ?`
+    )
+    .bind(userId)
+    .first();
+  if (!row) return json({ error: "用户不存在" }, 404, request, env);
+  return json({ ok: true, user: adminUserJson(row) }, 200, request, env);
+}
+
+async function handleAdminUpdateUser(request, env, userId) {
+  const row = await env.cijing_db.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
+  if (!row) return json({ error: "用户不存在" }, 404, request, env);
+
+  const body = await request.json().catch(() => ({}));
+  const plan = body.plan === undefined ? row.plan : cleanText(body.plan, 10);
+  if (!["trial", "pro"].includes(plan)) return json({ error: "套餐只能是 trial 或 pro" }, 400, request, env);
+
+  const name = body.name === undefined ? row.name : cleanText(body.name, 24);
+  if (!name) return json({ error: "昵称不能为空" }, 400, request, env);
+
+  const clamp = (value, fallback) => {
+    if (value === undefined) return Number(fallback) || 0;
+    const n = Number(value);
+    if (!Number.isFinite(n)) return NaN;
+    return Math.min(100000, Math.max(0, Math.floor(n)));
+  };
+  const quotaTotal = clamp(body.quotaTotal, row.quota_total);
+  const quotaUsed = clamp(body.quotaUsed, row.quota_used);
+  if (Number.isNaN(quotaTotal) || Number.isNaN(quotaUsed)) {
+    return json({ error: "额度必须是 0 到 100000 之间的整数" }, 400, request, env);
+  }
+
+  await env.cijing_db
+    .prepare("UPDATE users SET plan = ?, name = ?, quota_total = ?, quota_used = ? WHERE id = ?")
+    .bind(plan, name, quotaTotal, quotaUsed, userId)
+    .run();
+
+  const fresh = await env.cijing_db.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
+  return json({ ok: true, user: adminUserJson(fresh) }, 200, request, env);
+}
+
+async function handleAdminResetPassword(request, env, userId) {
+  const row = await env.cijing_db.prepare("SELECT id FROM users WHERE id = ?").bind(userId).first();
+  if (!row) return json({ error: "用户不存在" }, 404, request, env);
+
+  const body = await request.json().catch(() => ({}));
+  const password = String(body.password || "");
+  if (password.length < 6) return json({ error: "密码至少 6 位" }, 400, request, env);
+
+  const salt = randomHex(16);
+  const hash = await hashPassword(password, salt);
+  await env.cijing_db.batch([
+    env.cijing_db
+      .prepare("UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?")
+      .bind(hash, salt, userId),
+    // 改密码后踢掉所有旧会话，避免旧 token 继续可用
+    env.cijing_db.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId),
+  ]);
+  return json({ ok: true }, 200, request, env);
+}
+
+async function handleAdminDeleteUser(request, env, userId, auth) {
+  if (userId === auth.user.id) return json({ error: "不能删除自己的账号" }, 400, request, env);
+  const row = await env.cijing_db.prepare("SELECT id FROM users WHERE id = ?").bind(userId).first();
+  if (!row) return json({ error: "用户不存在" }, 404, request, env);
+
+  // 手工级联：schema 里没有 ON DELETE CASCADE，顺序不能乱
+  await env.cijing_db.batch([
+    env.cijing_db.prepare("DELETE FROM notifications WHERE user_id = ? OR actor_id = ?").bind(userId, userId),
+    env.cijing_db
+      .prepare("DELETE FROM comments WHERE user_id = ? OR work_id IN (SELECT id FROM works WHERE user_id = ?)")
+      .bind(userId, userId),
+    env.cijing_db
+      .prepare("DELETE FROM likes WHERE user_id = ? OR work_id IN (SELECT id FROM works WHERE user_id = ?)")
+      .bind(userId, userId),
+    env.cijing_db
+      .prepare("DELETE FROM favorites WHERE user_id = ? OR work_id IN (SELECT id FROM works WHERE user_id = ?)")
+      .bind(userId, userId),
+    env.cijing_db.prepare("DELETE FROM follows WHERE follower_id = ? OR followee_id = ?").bind(userId, userId),
+    env.cijing_db.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId),
+    env.cijing_db.prepare("DELETE FROM style_profiles WHERE user_id = ?").bind(userId),
+    env.cijing_db.prepare("DELETE FROM works WHERE user_id = ?").bind(userId),
+    env.cijing_db.prepare("DELETE FROM users WHERE id = ?").bind(userId),
+  ]);
+  return json({ ok: true }, 200, request, env);
+}
+
+async function handleAdminListWorks(request, env, url) {
+  const { limit, offset } = adminPaging(url);
+  const q = cleanText(url.searchParams.get("q"), 40);
+  const visibility = ["public", "private"].includes(url.searchParams.get("visibility"))
+    ? url.searchParams.get("visibility")
+    : "";
+
+  const clauses = [];
+  const args = [];
+  if (q) {
+    clauses.push("w.title LIKE ?");
+    args.push(`%${q}%`);
+  }
+  if (visibility) {
+    clauses.push("w.visibility = ?");
+    args.push(visibility);
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+
+  const totalRow = await env.cijing_db
+    .prepare(`SELECT COUNT(*) AS n FROM works w ${where}`)
+    .bind(...args)
+    .first();
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT w.id, w.title, w.genre, w.subgenre, w.visibility, w.created_at, w.published_at,
+              u.id AS author_id, u.name AS author_name, u.avatar AS author_avatar,
+              (SELECT COUNT(*) FROM likes WHERE work_id = w.id) AS like_count,
+              (SELECT COUNT(*) FROM favorites WHERE work_id = w.id) AS favorite_count,
+              (SELECT COUNT(*) FROM comments WHERE work_id = w.id AND status = 'visible') AS comment_count
+       FROM works w JOIN users u ON u.id = w.user_id
+       ${where}
+       ORDER BY w.created_at DESC LIMIT ? OFFSET ?`
+    )
+    .bind(...args, limit, offset)
+    .all();
+
+  return json(
+    {
+      ok: true,
+      total: Number(totalRow?.n) || 0,
+      items: (results || []).map((row) => ({
+        id: row.id,
+        title: row.title,
+        genre: row.genre,
+        subgenre: row.subgenre,
+        tag: row.subgenre || row.genre,
+        visibility: row.visibility,
+        createdAt: Number(row.created_at) || 0,
+        publishedAt: row.published_at ? Number(row.published_at) : null,
+        authorId: row.author_id,
+        authorName: row.author_name || "",
+        authorAvatar: row.author_avatar || "",
+        likeCount: Number(row.like_count) || 0,
+        favoriteCount: Number(row.favorite_count) || 0,
+        commentCount: Number(row.comment_count) || 0,
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminGetWork(request, env, workId) {
+  const row = await env.cijing_db
+    .prepare(
+      `SELECT w.*, u.name AS author_name
+       FROM works w JOIN users u ON u.id = w.user_id WHERE w.id = ?`
+    )
+    .bind(workId)
+    .first();
+  if (!row) return json({ error: "作品不存在" }, 404, request, env);
+  return json(
+    {
+      ok: true,
+      work: {
+        id: row.id,
+        title: row.title,
+        authorName: row.author_name || "",
+        authorId: row.user_id,
+        genre: row.genre,
+        subgenre: row.subgenre,
+        visibility: row.visibility,
+        createdAt: Number(row.created_at) || 0,
+        hook: row.hook || "",
+        summary: row.summary || "",
+        words: safeParse(row.words, []),
+        content: row.content || "",
+      },
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminUpdateWork(request, env, workId) {
+  const row = await env.cijing_db.prepare("SELECT id FROM works WHERE id = ?").bind(workId).first();
+  if (!row) return json({ error: "作品不存在" }, 404, request, env);
+
+  const body = await request.json().catch(() => ({}));
+  if (!["public", "private"].includes(body.visibility)) {
+    return json({ error: "可见性只能是 public 或 private" }, 400, request, env);
+  }
+  const publishedAt = body.visibility === "public" ? Date.now() : null;
+  await env.cijing_db
+    .prepare("UPDATE works SET visibility = ?, published_at = ? WHERE id = ?")
+    .bind(body.visibility, publishedAt, workId)
+    .run();
+  return json({ ok: true, visibility: body.visibility }, 200, request, env);
+}
+
+async function handleAdminDeleteWork(request, env, workId) {
+  const row = await env.cijing_db.prepare("SELECT id FROM works WHERE id = ?").bind(workId).first();
+  if (!row) return json({ error: "作品不存在" }, 404, request, env);
+
+  await env.cijing_db.batch([
+    env.cijing_db.prepare("DELETE FROM likes WHERE work_id = ?").bind(workId),
+    env.cijing_db.prepare("DELETE FROM favorites WHERE work_id = ?").bind(workId),
+    env.cijing_db.prepare("DELETE FROM comments WHERE work_id = ?").bind(workId),
+    env.cijing_db.prepare("DELETE FROM notifications WHERE work_id = ?").bind(workId),
+    env.cijing_db.prepare("DELETE FROM works WHERE id = ?").bind(workId),
+  ]);
+  return json({ ok: true }, 200, request, env);
+}
+
+async function handleAdminListComments(request, env, url) {
+  const { limit, offset } = adminPaging(url);
+  const q = cleanText(url.searchParams.get("q"), 40);
+  const status = ["visible", "hidden"].includes(url.searchParams.get("status"))
+    ? url.searchParams.get("status")
+    : "";
+
+  const clauses = [];
+  const args = [];
+  if (q) {
+    clauses.push("c.content LIKE ?");
+    args.push(`%${q}%`);
+  }
+  if (status) {
+    clauses.push("c.status = ?");
+    args.push(status);
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+
+  const totalRow = await env.cijing_db
+    .prepare(`SELECT COUNT(*) AS n FROM comments c ${where}`)
+    .bind(...args)
+    .first();
+  const { results } = await env.cijing_db
+    .prepare(
+      `SELECT c.id, c.content, c.status, c.created_at, c.parent_id, c.work_id,
+              u.name AS author_name, w.title AS work_title
+       FROM comments c
+       JOIN users u ON u.id = c.user_id
+       LEFT JOIN works w ON w.id = c.work_id
+       ${where}
+       ORDER BY c.created_at DESC LIMIT ? OFFSET ?`
+    )
+    .bind(...args, limit, offset)
+    .all();
+
+  return json(
+    {
+      ok: true,
+      total: Number(totalRow?.n) || 0,
+      items: (results || []).map((row) => ({
+        id: row.id,
+        content: row.content,
+        status: row.status,
+        createdAt: Number(row.created_at) || 0,
+        parentId: row.parent_id || "",
+        workId: row.work_id,
+        workTitle: row.work_title || "",
+        authorName: row.author_name || "",
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminUpdateComment(request, env, commentId) {
+  const row = await env.cijing_db
+    .prepare("SELECT id, work_id FROM comments WHERE id = ?")
+    .bind(commentId)
+    .first();
+  if (!row) return json({ error: "评论不存在" }, 404, request, env);
+
+  const body = await request.json().catch(() => ({}));
+  if (!["visible", "hidden"].includes(body.status)) {
+    return json({ error: "状态只能是 visible 或 hidden" }, 400, request, env);
+  }
+  await env.cijing_db.prepare("UPDATE comments SET status = ? WHERE id = ?").bind(body.status, commentId).run();
+  return json({ ok: true, status: body.status }, 200, request, env);
+}
+
+async function handleAdminDeleteComment(request, env, commentId) {
+  const row = await env.cijing_db
+    .prepare("SELECT id, work_id FROM comments WHERE id = ?")
+    .bind(commentId)
+    .first();
+  if (!row) return json({ error: "评论不存在" }, 404, request, env);
+
+  await env.cijing_db.batch([
+    env.cijing_db.prepare("DELETE FROM comments WHERE id = ? OR parent_id = ?").bind(commentId, commentId),
+    env.cijing_db.prepare("DELETE FROM notifications WHERE comment_id = ?").bind(commentId),
+  ]);
+  return json({ ok: true }, 200, request, env);
+}
+
+async function handleAdminListInvites(request, env, url) {
+  const { limit, offset } = adminPaging(url);
+  const totalRow = await env.cijing_db.prepare("SELECT COUNT(*) AS n FROM invite_codes").first();
+  const { results } = await env.cijing_db
+    .prepare("SELECT * FROM invite_codes ORDER BY created_at DESC LIMIT ? OFFSET ?")
+    .bind(limit, offset)
+    .all();
+  const now = Date.now();
+  return json(
+    {
+      ok: true,
+      total: Number(totalRow?.n) || 0,
+      items: (results || []).map((row) => ({
+        code: row.code,
+        plan: row.plan,
+        quota: Number(row.quota) || 0,
+        maxUses: Number(row.max_uses) || 0,
+        usedCount: Number(row.used_count) || 0,
+        note: row.note || "",
+        createdAt: Number(row.created_at) || 0,
+        expiresAt: row.expires_at ? Number(row.expires_at) : null,
+        state:
+          Number(row.used_count) >= Number(row.max_uses)
+            ? "used_up"
+            : row.expires_at && Number(row.expires_at) <= now
+              ? "expired"
+              : "active",
+      })),
+    },
+    200,
+    request,
+    env
+  );
+}
+
+async function handleAdminCreateInvites(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const count = Math.min(20, Math.max(1, Number(body.count) || 1));
+  const plan = body.plan === "pro" ? "pro" : "trial";
+  const quota = Math.min(100000, Math.max(0, Math.floor(Number(body.quota)) || 5));
+  const maxUses = Math.min(1000, Math.max(1, Math.floor(Number(body.maxUses)) || 1));
+  const note = cleanText(body.note, 60);
+  const days = Math.min(3650, Math.max(0, Math.floor(Number(body.expiresInDays)) || 0));
+  const expiresAt = days > 0 ? Date.now() + days * 24 * 60 * 60 * 1000 : null;
+
+  const created = [];
+  for (let i = 0; i < count; i += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = `CIJING-${randomHex(3).toUpperCase()}`;
+      const result = await env.cijing_db
+        .prepare(
+          `INSERT OR IGNORE INTO invite_codes
+             (code, plan, quota, max_uses, used_count, note, created_at, expires_at)
+           VALUES (?, ?, ?, ?, 0, ?, ?, ?)`
+        )
+        .bind(code, plan, quota, maxUses, note, Date.now(), expiresAt)
+        .run();
+      if (result.meta && result.meta.changes > 0) {
+        created.push({ code, plan, quota, maxUses, note, expiresAt });
+        break;
+      }
+    }
+  }
+  return json({ ok: true, created }, 200, request, env);
+}
+
+async function handleAdminUpdateInvite(request, env, code) {
+  const row = await env.cijing_db.prepare("SELECT code FROM invite_codes WHERE code = ?").bind(code).first();
+  if (!row) return json({ error: "邀请码不存在" }, 404, request, env);
+  // 目前只有「立即停用」一种操作：把过期时间设为现在
+  await env.cijing_db.prepare("UPDATE invite_codes SET expires_at = ? WHERE code = ?").bind(Date.now(), code).run();
+  return json({ ok: true }, 200, request, env);
+}
+
+async function handleAdminDeleteInvite(request, env, code) {
+  await env.cijing_db.prepare("DELETE FROM invite_codes WHERE code = ?").bind(code).run();
+  return json({ ok: true }, 200, request, env);
+}
+
 // ---------- 入口 ----------
 
 export default {
@@ -1676,6 +2222,7 @@ export default {
         || path === "/api/auth/logout"
         || path.startsWith("/api/notifications")
         || path.startsWith("/api/styles")
+        || path.startsWith("/api/admin")
         || (path === "/api/works" && (["mine", "received"].includes(url.searchParams.get("scope")) || method === "POST"))
         || (path.startsWith("/api/works/") && method !== "GET")
         || (path.startsWith("/api/comments/") && method === "DELETE")
@@ -1683,6 +2230,62 @@ export default {
 
       const auth = await currentUser(request, env);
       if (needsAuth && !auth) return json({ error: "请先登录" }, 401, request, env);
+
+      // 管理接口统一在这里拦一次，避免某个 handler 漏判
+      if (path.startsWith("/api/admin") && !isAdmin(env, auth.user)) {
+        return json({ error: "当前账号没有管理权限" }, 403, request, env);
+      }
+
+      if (path === "/api/admin/me" && method === "GET") {
+        return json(
+          {
+            ok: true,
+            user: {
+              id: auth.user.id,
+              name: auth.user.name,
+              email: auth.user.email,
+              avatar: auth.user.avatar || "",
+            },
+          },
+          200,
+          request,
+          env
+        );
+      }
+      if (path === "/api/admin/stats" && method === "GET") return await handleAdminStats(request, env);
+      if (path === "/api/admin/users" && method === "GET") return await handleAdminListUsers(request, env, url);
+      const adminResetMatch = path.match(/^\/api\/admin\/users\/([A-Za-z0-9_-]+)\/reset-password$/);
+      if (adminResetMatch && method === "POST") {
+        return await handleAdminResetPassword(request, env, adminResetMatch[1]);
+      }
+      const adminUserMatch = path.match(/^\/api\/admin\/users\/([A-Za-z0-9_-]+)$/);
+      if (adminUserMatch) {
+        if (method === "GET") return await handleAdminGetUser(request, env, adminUserMatch[1]);
+        if (method === "PATCH") return await handleAdminUpdateUser(request, env, adminUserMatch[1]);
+        if (method === "DELETE") return await handleAdminDeleteUser(request, env, adminUserMatch[1], auth);
+      }
+      if (path === "/api/admin/works" && method === "GET") return await handleAdminListWorks(request, env, url);
+      const adminWorkMatch = path.match(/^\/api\/admin\/works\/([A-Za-z0-9_-]+)$/);
+      if (adminWorkMatch) {
+        if (method === "GET") return await handleAdminGetWork(request, env, adminWorkMatch[1]);
+        if (method === "PATCH") return await handleAdminUpdateWork(request, env, adminWorkMatch[1]);
+        if (method === "DELETE") return await handleAdminDeleteWork(request, env, adminWorkMatch[1]);
+      }
+      if (path === "/api/admin/comments" && method === "GET") {
+        return await handleAdminListComments(request, env, url);
+      }
+      const adminCommentMatch = path.match(/^\/api\/admin\/comments\/([A-Za-z0-9_-]+)$/);
+      if (adminCommentMatch) {
+        if (method === "PATCH") return await handleAdminUpdateComment(request, env, adminCommentMatch[1]);
+        if (method === "DELETE") return await handleAdminDeleteComment(request, env, adminCommentMatch[1]);
+      }
+      if (path === "/api/admin/invites" && method === "GET") return await handleAdminListInvites(request, env, url);
+      if (path === "/api/admin/invites" && method === "POST") return await handleAdminCreateInvites(request, env);
+      const adminInviteMatch = path.match(/^\/api\/admin\/invites\/([A-Za-z0-9-]+)$/);
+      if (adminInviteMatch) {
+        if (method === "PATCH") return await handleAdminUpdateInvite(request, env, adminInviteMatch[1]);
+        if (method === "DELETE") return await handleAdminDeleteInvite(request, env, adminInviteMatch[1]);
+      }
 
       if (path === "/api/me" && method === "GET") {
         // 获赞与收藏是「别人给我的作品点的」，需要聚合查询
