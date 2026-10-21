@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   plan TEXT NOT NULL DEFAULT 'trial',  -- trial | pro（付费预留）
   quota_total INTEGER NOT NULL DEFAULT 5,
   quota_used INTEGER NOT NULL DEFAULT 0,
+  avatar TEXT,                         -- a1..a12，空 = 默认首字母头像（图案映射在前端）
   created_at INTEGER NOT NULL
 );
 
@@ -90,10 +91,12 @@ CREATE TABLE IF NOT EXISTS comments (
   user_id TEXT NOT NULL,
   content TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'visible',
+  parent_id TEXT,                      -- 只允许一层：回复指向顶层评论，回复本身不能再被回复
   created_at INTEGER NOT NULL,
   FOREIGN KEY (work_id) REFERENCES works(id)
 );
 CREATE INDEX IF NOT EXISTS idx_comments_work ON comments(work_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id);
 
 -- 关注关系：follower 关注 followee
 CREATE TABLE IF NOT EXISTS follows (

@@ -104,6 +104,9 @@ const OTP_TTL_MS = 5 * 60 * 1000;                  // 5 分钟
 const OTP_RESEND_MS = 60 * 1000;                   // 同邮箱 60 秒内不重发
 const OTP_MAX_ATTEMPTS = 5;
 
+// 内置头像的键名。图案与配色在前端，库里只存这个标识。
+const AVATAR_KEY = /^a([1-9]|1[0-2])$/;
+
 // ---------- 鉴权 ----------
 
 async function currentUser(request, env) {
@@ -146,6 +149,7 @@ function publicUser(user) {
     email: user.email,
     name: user.name,
     plan: user.plan,
+    avatar: user.avatar || "",
     quotaTotal: Number(user.quota_total),
     quotaUsed: Number(user.quota_used),
     quotaLeft: Math.max(0, Number(user.quota_total) - Number(user.quota_used)),
@@ -401,7 +405,7 @@ function normalizeVocab(rawVocab, words) {
 
 // 作品查询的公共部分：附带点赞/收藏/评论计数，以及当前用户是否点过/收藏过。
 // 前两个 ? 都是 viewerId；游客传空串，永远不会命中。
-const WORK_SELECT = `SELECT w.*, u.name AS author_name,
+const WORK_SELECT = `SELECT w.*, u.name AS author_name, u.avatar AS author_avatar,
   (SELECT COUNT(*) FROM likes WHERE work_id = w.id) AS like_count,
   (SELECT COUNT(*) FROM favorites WHERE work_id = w.id) AS favorite_count,
   (SELECT COUNT(*) FROM comments WHERE work_id = w.id AND status = 'visible') AS comment_count,
@@ -436,6 +440,7 @@ function workToJson(row, viewerId) {
     createdAt: Number(row.created_at),
     authorId: row.user_id,
     authorName: row.author_name || "",
+    authorAvatar: row.author_avatar || "",
     mine: viewerId ? row.user_id === viewerId : false,
     likeCount: Number(row.like_count) || 0,
     favoriteCount: Number(row.favorite_count) || 0,
@@ -1285,25 +1290,45 @@ async function handleListComments(request, env, workId) {
 
   const { results } = await env.cijing_db
     .prepare(
-      `SELECT c.id, c.content, c.created_at, c.user_id, u.name AS author_name
+      `SELECT c.id, c.content, c.created_at, c.user_id, c.parent_id,
+              u.name AS author_name, u.avatar AS author_avatar
        FROM comments c JOIN users u ON u.id = c.user_id
        WHERE c.work_id = ? AND c.status = 'visible'
-       ORDER BY c.created_at DESC LIMIT 100`
+       ORDER BY c.created_at ASC LIMIT 200`
     )
     .bind(workId)
     .all();
 
+  const toComment = (row) => ({
+    id: row.id,
+    content: row.content,
+    createdAt: Number(row.created_at),
+    authorId: row.user_id,
+    authorName: row.author_name || "词境读者",
+    authorAvatar: row.author_avatar || "",
+    mine: viewerId ? row.user_id === viewerId : false,
+  });
+
+  // 只做一层：顶层评论各自挂 replies。父评论已删的孤立回复直接丢弃。
+  const rows = results || [];
+  const byId = new Map();
+  const topLevel = [];
+  rows.forEach((row) => {
+    const item = Object.assign(toComment(row), { replies: [] });
+    byId.set(row.id, item);
+    if (!row.parent_id) topLevel.push(item);
+  });
+  rows.forEach((row) => {
+    if (!row.parent_id) return;
+    const parent = byId.get(row.parent_id);
+    if (parent && parent.id !== row.id) parent.replies.push(toComment(row));
+  });
+
   return json(
     {
       ok: true,
-      comments: (results || []).map((row) => ({
-        id: row.id,
-        content: row.content,
-        createdAt: Number(row.created_at),
-        authorId: row.user_id,
-        authorName: row.author_name || "词境读者",
-        mine: viewerId ? row.user_id === viewerId : false,
-      })),
+      // 顶层仍按最新在前，楼中楼按时间正序
+      comments: topLevel.reverse(),
     },
     200,
     request,
@@ -1319,11 +1344,29 @@ async function handlePostComment(request, env, workId, auth) {
   const content = cleanText(body.content, 500);
   if (!content) return json({ error: "评论不能为空" }, 400, request, env);
 
+  // 回复只允许挂在顶层评论上：回复本身不能再被回复
+  const parentId = cleanText(body.parentId, 40);
+  let parent = null;
+  if (parentId) {
+    parent = await env.cijing_db
+      .prepare("SELECT id, user_id, work_id, parent_id FROM comments WHERE id = ? AND status = 'visible'")
+      .bind(parentId)
+      .first();
+    if (!parent || parent.work_id !== workId) {
+      return json({ error: "要回复的评论不存在" }, 400, request, env);
+    }
+    if (parent.parent_id) {
+      return json({ error: "只能回复一层，不能再回复别人的回复" }, 400, request, env);
+    }
+  }
+
   const id = makeId("c");
   const now = Date.now();
   await env.cijing_db
-    .prepare("INSERT INTO comments (id, work_id, user_id, content, status, created_at) VALUES (?, ?, ?, ?, 'visible', ?)")
-    .bind(id, workId, auth.user.id, content, now)
+    .prepare(
+      "INSERT INTO comments (id, work_id, user_id, content, status, parent_id, created_at) VALUES (?, ?, ?, ?, 'visible', ?, ?)"
+    )
+    .bind(id, workId, auth.user.id, content, parentId || null, now)
     .run();
 
   const count = await env.cijing_db
@@ -1331,15 +1374,40 @@ async function handlePostComment(request, env, workId, auth) {
     .bind(workId)
     .first();
 
-  await notify(env, {
-    userId: visible.work.user_id,
-    actorId: auth.user.id,
-    type: "comment",
-    workId,
-    commentId: id,
-    excerpt: content.slice(0, 80),
-    dedupeKey: `comment:${id}`,
-  });
+  const excerpt = content.slice(0, 80);
+  if (parent) {
+    // 先通知被回复的人；作品作者如果就是同一个人，就不再重复发一条
+    await notify(env, {
+      userId: parent.user_id,
+      actorId: auth.user.id,
+      type: "reply",
+      workId,
+      commentId: id,
+      excerpt,
+      dedupeKey: `reply:${id}`,
+    });
+    if (visible.work.user_id !== parent.user_id) {
+      await notify(env, {
+        userId: visible.work.user_id,
+        actorId: auth.user.id,
+        type: "comment",
+        workId,
+        commentId: id,
+        excerpt,
+        dedupeKey: `comment:${id}`,
+      });
+    }
+  } else {
+    await notify(env, {
+      userId: visible.work.user_id,
+      actorId: auth.user.id,
+      type: "comment",
+      workId,
+      commentId: id,
+      excerpt,
+      dedupeKey: `comment:${id}`,
+    });
+  }
 
   return json(
     {
@@ -1350,6 +1418,8 @@ async function handlePostComment(request, env, workId, auth) {
         createdAt: now,
         authorId: auth.user.id,
         authorName: auth.user.name,
+        authorAvatar: auth.user.avatar || "",
+        parentId: parentId || "",
         mine: true,
       },
       commentCount: Number(count.n) || 0,
@@ -1483,7 +1553,7 @@ async function handleListFollows(request, env, userId, direction) {
 
   const { results } = await env.cijing_db
     .prepare(
-      `SELECT u.id, u.name, u.created_at,
+      `SELECT u.id, u.name, u.avatar, u.created_at,
               EXISTS(SELECT 1 FROM follows x WHERE x.follower_id = ? AND x.followee_id = u.id) AS is_following
        FROM follows f JOIN users u ON u.id = f.${other}
        WHERE f.${owner} = ?
@@ -1499,6 +1569,7 @@ async function handleListFollows(request, env, userId, direction) {
       users: (results || []).map((row) => ({
         id: row.id,
         name: row.name,
+        avatar: row.avatar || "",
         createdAt: Number(row.created_at) || 0,
         isFollowing: Boolean(row.is_following),
       })),
@@ -1514,7 +1585,7 @@ async function handleGetUser(request, env, userId) {  const auth = await current
   const viewerId = auth ? auth.user.id : null;
 
   const user = await env.cijing_db
-    .prepare("SELECT id, name, created_at FROM users WHERE id = ?")
+    .prepare("SELECT id, name, avatar, created_at FROM users WHERE id = ?")
     .bind(userId)
     .first();
   if (!user) return json({ error: "用户不存在" }, 404, request, env);
@@ -1538,6 +1609,7 @@ async function handleGetUser(request, env, userId) {  const auth = await current
       user: {
         id: user.id,
         name: user.name,
+        avatar: user.avatar || "",
         createdAt: Number(user.created_at),
         workCount: Number(stats?.work_count) || 0,
         likesReceived: Number(stats?.likes_received) || 0,
@@ -1561,8 +1633,18 @@ async function handleDeleteComment(request, env, commentId, auth) {
     .first();
   if (!row) return json({ error: "评论不存在" }, 404, request, env);
   if (row.user_id !== auth.user.id) return json({ error: "只能删除自己的评论" }, 403, request, env);
-  await env.cijing_db.prepare("DELETE FROM comments WHERE id = ?").bind(commentId).run();
-  return json({ ok: true }, 200, request, env);
+  // 删顶层评论时连带删掉楼中楼；删回复只影响它自己
+  await env.cijing_db
+    .prepare("DELETE FROM comments WHERE id = ? OR parent_id = ?")
+    .bind(commentId, commentId)
+    .run();
+
+  const count = await env.cijing_db
+    .prepare("SELECT COUNT(*) AS n FROM comments WHERE work_id = ? AND status = 'visible'")
+    .bind(row.work_id)
+    .first();
+
+  return json({ ok: true, commentCount: Number(count?.n) || 0 }, 200, request, env);
 }
 
 
@@ -1632,11 +1714,24 @@ export default {
       }
       if (path === "/api/me" && method === "PATCH") {
         const body = await request.json().catch(() => ({}));
-        const name = cleanText(body.name, 24);
+        const current = await env.cijing_db
+          .prepare("SELECT name, avatar FROM users WHERE id = ?")
+          .bind(auth.user.id)
+          .first();
+        const name = body.name === undefined ? current.name : cleanText(body.name, 24);
         if (!name) return json({ error: "昵称不能为空" }, 400, request, env);
+
+        // 头像只接受内置键名，空串表示恢复默认的首字母头像
+        let avatar = (current && current.avatar) || "";
+        if (body.avatar !== undefined) {
+          const raw = String(body.avatar || "").trim();
+          if (raw && !AVATAR_KEY.test(raw)) return json({ error: "头像不存在" }, 400, request, env);
+          avatar = raw;
+        }
+
         await env.cijing_db
-          .prepare("UPDATE users SET name = ? WHERE id = ?")
-          .bind(name, auth.user.id)
+          .prepare("UPDATE users SET name = ?, avatar = ? WHERE id = ?")
+          .bind(name, avatar || null, auth.user.id)
           .run();
         const fresh = await env.cijing_db
           .prepare("SELECT * FROM users WHERE id = ?")
