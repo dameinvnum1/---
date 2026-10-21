@@ -239,6 +239,12 @@
             <button class="feed-tab" data-feed-genre="耽美">耽美</button>
           </div>
 
+          <!-- 细化到某一类时，这里替代创作卡片，只占一行高度 -->
+          <div
+            id="subgenreBar"
+            class="scrollbar-none mb-4 hidden items-center gap-2 overflow-x-auto whitespace-nowrap"
+          ></div>
+
           <button
             id="openComposer"
             class="mb-5 flex w-full items-center gap-4 rounded-[8px] border border-black/5 bg-white p-3 text-left shadow-panel transition hover:border-xhs/30"
@@ -814,10 +820,9 @@
                 <label class="mb-2 block text-sm font-semibold">小说大类</label>
                 <div class="flex flex-wrap gap-2" data-group="genre">
                   <button class="select-chip selected-chip">悬疑刑侦</button>
-                  <button class="select-chip">现代言情</button>
-                  <button class="select-chip">古风言情</button>
                   <button class="select-chip">科幻西幻</button>
-                  <button class="select-chip">校园</button>
+                  <button class="select-chip">言情</button>
+                  <button class="select-chip">耽美</button>
                   <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
                 </div>
                 <div class="custom-entry mt-2 hidden">
@@ -827,17 +832,13 @@
               </div>
               <div>
                 <label class="mb-2 block text-sm font-semibold">细分题材</label>
-                <div class="flex flex-wrap gap-2" data-group="subgenre">
-                  <button class="select-chip selected-chip">密室凶案</button>
-                  <button class="select-chip">社会派推理</button>
-                  <button class="select-chip">灵异探案</button>
-                  <button class="select-chip">连环杀人</button>
-                  <button class="select-chip custom-trigger" data-custom-trigger>自定义</button>
-                </div>
-                <div class="custom-entry mt-2 hidden">
-                  <input class="custom-input" maxlength="20" placeholder="输入细分题材" />
-                  <button class="custom-add" data-custom-add>添加</button>
-                </div>
+                <input
+                  id="subgenreInput"
+                  maxlength="20"
+                  placeholder="例如：都市情感、密室凶案、星际战争"
+                  class="w-full rounded-[7px] border border-neutral-200 px-3 py-2.5 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs"
+                />
+                <p class="mt-1.5 text-xs text-neutral-400">由你决定，发布后会出现在对应大类下的细分类别里。</p>
               </div>
               <div>
                 <label class="mb-2 block text-sm font-semibold">核心剧情梗 <span class="font-normal text-neutral-400">1-3 个</span></label>
@@ -856,6 +857,35 @@
               <div>
                 <label for="storySetup" class="mb-2 block text-sm font-semibold">剧情设定 <span class="font-normal text-neutral-400">可选</span></label>
                 <textarea id="storySetup" rows="4" class="w-full resize-none rounded-[7px] border border-neutral-200 px-3 py-2.5 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="例如：暴雨夜，一名刑警在废弃疗养院收到失踪搭档的来信。"></textarea>
+              </div>
+              <div id="styleSection" class="hidden">
+                <label class="mb-2 block text-sm font-semibold">参考文风 <span class="font-normal text-neutral-400">可选</span></label>
+                <p class="mb-2 text-xs leading-5 text-neutral-400">上传一段你有权使用的文本，系统会抽取它的写法用于本次创作。原文分析后即丢弃，只保留文风摘要。</p>
+                <input id="styleFileInput" type="file" accept=".txt,text/plain" class="hidden" />
+                <div class="flex flex-wrap gap-2">
+                  <button id="stylePickFile" type="button" class="select-chip">选择 TXT 文件</button>
+                  <button id="stylePasteToggle" type="button" class="select-chip">改为粘贴文本</button>
+                </div>
+                <textarea id="styleText" rows="3" class="mt-2 hidden w-full resize-none rounded-[7px] border border-neutral-200 px-3 py-2.5 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" placeholder="粘贴参考文本，最多分析前 5 万字"></textarea>
+                <p id="styleFileName" class="mt-1.5 text-xs text-neutral-400"></p>
+                <div class="mt-3">
+                  <span class="mb-2 block text-xs font-semibold">参考文本的权利来源（必选）</span>
+                  <div class="flex flex-wrap gap-2" data-group="style-rights">
+                    <button type="button" class="select-chip" data-rights="own">我的原创</button>
+                    <button type="button" class="select-chip" data-rights="licensed">已获授权</button>
+                    <button type="button" class="select-chip" data-rights="public">公版作品</button>
+                  </div>
+                  <p class="mt-1.5 text-xs leading-5 text-neutral-400">只有「我的原创」与「公版作品」的作品可以公开发布。</p>
+                </div>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  <input id="styleName" maxlength="24" placeholder="给这张风格卡起个名字（可选）" class="h-10 flex-1 rounded-[7px] border border-neutral-200 px-3 text-sm outline-none placeholder:text-neutral-400 focus:border-xhs" />
+                  <button id="styleAnalyze" type="button" class="h-10 rounded-[7px] bg-xhs px-5 text-sm font-semibold text-white hover:bg-[#1857d6]">抽取文风</button>
+                </div>
+                <p id="styleError" class="mt-2 hidden text-xs leading-5 text-red-600"></p>
+                <div id="styleMine" class="mt-3 hidden">
+                  <span class="mb-2 block text-xs font-semibold">我的文风</span>
+                  <div id="styleMineList" class="flex flex-wrap items-start gap-2"></div>
+                </div>
               </div>
               <div class="flex items-center justify-between rounded-[8px] bg-mist p-3">
                 <span>
@@ -955,6 +985,30 @@
         color: #fff;
       }
 
+      /* 细分类别：比顶部大类更轻、更小，一行高度 */
+      .subgenre-pill {
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #f2f5fa;
+        color: #5b6b85;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: background 0.16s ease, color 0.16s ease;
+      }
+
+      .subgenre-pill:hover {
+        background: #e4ebf8;
+        color: #2f5490;
+      }
+
+      .subgenre-pill.is-active {
+        background: #246bfd;
+        color: #fff;
+        font-weight: 600;
+      }
+
       .select-chip {
         border: 1px solid #e5e5e5;
         border-radius: 999px;
@@ -976,7 +1030,8 @@
         font-weight: 600;
       }
 
-      .custom-entry {
+      /* 只在未隐藏时生效：否则 display:flex 会覆盖 Tailwind 的 hidden */
+      .custom-entry:not(.hidden) {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -1156,6 +1211,13 @@
       ];
       let demoWordSetIndex = 0;
       let words = [...DEMO_WORD_SETS[0]];
+
+      // 参考文风状态：activeStyle 为 null 表示走默认的知乎体
+      let activeStyle = null;
+      let styleText = "";            // 文件读入或粘贴的参考文本
+      let styleFileName = "";
+      let styleCards = [];
+      const STYLE_TEXT_LIMIT = 50000;   // 与后端一致：最多分析前 5 万字符
 
       // OCR 状态
       let ocrFile = null;
@@ -1641,7 +1703,10 @@
       function openComposer() {
         composer.classList.remove("hidden");
         document.body.classList.add("modal-open");
+        // 这个面板原本不重置任何状态，参考文风是后加的，必须显式清一遍
+        resetStyleState();
         setStep(0);
+        loadStyles();
       }
 
       function hideComposer() {
@@ -1974,13 +2039,129 @@
         return generatedWork;
       }
 
+      // ---- 参考文风 ----
+      // 这一整块只在后端白名单放行时显示：普通用户打开创建面板时，
+      // loadStyles() 会拿到 403，直接把 #styleSection 藏起来。
+
+      function styleSection() {
+        return document.getElementById("styleSection");
+      }
+
+      function setStyleError(message) {
+        const box = document.getElementById("styleError");
+        if (!box) return;
+        box.textContent = message || "";
+        box.classList.toggle("hidden", !message);
+      }
+
+      function renderStyleCards() {
+        const wrap = document.getElementById("styleMineList");
+        const panel = document.getElementById("styleMine");
+        if (!wrap || !panel) return;
+        if (!styleCards.length) {
+          panel.classList.add("hidden");
+          wrap.innerHTML = "";
+          return;
+        }
+        const cards = styleCards.map((style) => `
+          <span class="inline-flex items-center gap-1">
+            <button type="button" class="select-chip${activeStyle && activeStyle.id === style.id ? " selected-chip" : ""}" data-style-id="${escapeHtml(style.id)}">${escapeHtml(style.name)}</button>
+            <button type="button" class="text-xs text-neutral-400 hover:text-red-600" data-style-delete="${escapeHtml(style.id)}">删除</button>
+          </span>`).join("");
+        wrap.innerHTML = `
+          <span class="inline-flex items-center gap-1">
+            <button type="button" class="select-chip${activeStyle ? "" : " selected-chip"}" data-style-id="">默认知乎体</button>
+          </span>${cards}`;
+        panel.classList.remove("hidden");
+      }
+
+      async function loadStyles() {
+        if (!authToken) return;
+        try {
+          const data = await apiFetch("/api/styles", { auth: true });
+          styleCards = Array.isArray(data.styles) ? data.styles : [];
+          styleSection().classList.remove("hidden");
+          // 之前选中的卡如果已经被删掉，回到默认
+          if (activeStyle && !styleCards.some((item) => item.id === activeStyle.id)) activeStyle = null;
+          renderStyleCards();
+        } catch (error) {
+          styleSection().classList.add("hidden");
+        }
+      }
+
+      function currentRights() {
+        const chip = document.querySelector('[data-group="style-rights"] .selected-chip');
+        return chip ? chip.dataset.rights || "" : "";
+      }
+
+      async function analyzeStyle() {
+        const button = document.getElementById("styleAnalyze");
+        const text = (styleText || document.getElementById("styleText").value.trim()).slice(0, STYLE_TEXT_LIMIT);
+        if (!text) {
+          setStyleError("请先选择 TXT 文件，或粘贴一段参考文本");
+          return;
+        }
+        const rights = currentRights();
+        if (!rights) {
+          setStyleError("请先声明参考文本的权利来源");
+          return;
+        }
+        setStyleError("");
+        button.disabled = true;
+        button.classList.add("opacity-60");
+        button.textContent = "正在分析…";
+        try {
+          const data = await apiFetch("/api/styles", {
+            method: "POST",
+            auth: true,
+            body: {
+              text,
+              rights,
+              name: (document.getElementById("styleName").value || "").trim(),
+            },
+          });
+          if (!data.style) throw new Error("没有拿到风格卡");
+          styleCards = [data.style, ...styleCards.filter((item) => item.id !== data.style.id)];
+          activeStyle = data.style;
+          renderStyleCards();
+        } catch (error) {
+          setStyleError(error.message || "抽取失败，请重试");
+        } finally {
+          button.disabled = false;
+          button.classList.remove("opacity-60");
+          button.textContent = "抽取文风";
+        }
+      }
+
+      function resetStyleState() {
+        activeStyle = null;
+        styleText = "";
+        styleFileName = "";
+        const fileInput = document.getElementById("styleFileInput");
+        if (fileInput) fileInput.value = "";
+        const textBox = document.getElementById("styleText");
+        if (textBox) {
+          textBox.value = "";
+          textBox.classList.add("hidden");
+        }
+        const nameBox = document.getElementById("styleName");
+        if (nameBox) nameBox.value = "";
+        const fileLabel = document.getElementById("styleFileName");
+        if (fileLabel) fileLabel.textContent = "";
+        document.querySelectorAll('[data-group="style-rights"] .select-chip')
+          .forEach((chip) => chip.classList.remove("selected-chip"));
+        setStyleError("");
+        renderStyleCards();
+      }
+
       function generationPayload() {
         return {
           words: [...words],
           genre: selectedValues("genre")[0] || "悬疑刑侦",
-          subgenre: selectedValues("subgenre")[0] || "密室凶案",
+          subgenre: (document.getElementById("subgenreInput")?.value || "").trim(),
           tropes: selectedValues("trope").slice(0, 3),
           storySetup: document.getElementById("storySetup").value.trim(),
+          styleId: activeStyle ? activeStyle.id : "",
           visibility: isPublic ? "public" : "private",
         };
       }
@@ -2853,6 +3034,8 @@
       // 推荐流当前的筛选条件
       let feedScope = "feed";
       let feedGenre = "";
+      let feedSubgenre = "";
+      let feedSubgenres = [];   // 当前大类下真实出现过的细分题材
 
       // 首页至少要铺满一屏半，作品太少时页面高度等于视口高度，滚轮完全没反应
       const FEED_MIN_CARDS = 12;
@@ -2884,20 +3067,25 @@
         if (!feed) return;
         const params = new URLSearchParams({ scope: feedScope, limit: "24" });
         if (feedGenre) params.set("genre", feedGenre);
+        if (feedSubgenre) params.set("subgenre", feedSubgenre);
 
         let works = [];
         try {
           // 带上登录态：服务端靠它返回 liked/favorited，否则卡片上的点赞状态永远是未点
           const data = await apiFetch(`/api/works?${params.toString()}`, { auth: true });
           works = (data.works || []).map(apiWorkToLocal);
+          feedSubgenres = data.subgenres || [];
         } catch (error) {
           console.warn("[词境] 推荐流加载失败，回退到示例作品：", error);
+          feedSubgenres = [];
         }
         cacheRemoteWorks(works);
+        renderSubgenreBar();
 
         const shownIds = new Set(works.map((work) => work.id));
+        // 细分类别下不掺示例作品：示例没有对应的细分题材，掺进来等于骗人
         const fillers =
-          feedScope === "feed"
+          feedScope === "feed" && !feedSubgenre
             ? pickFeedFillers(shownIds, feedGenre, FEED_MIN_CARDS - works.length)
             : [];
 
@@ -2906,12 +3094,42 @@
           feed.innerHTML =
             works.map(renderFeedCard).join("") + fillers.map(renderDemoFeedCard).join("");
         } else {
+          const where = feedSubgenre || feedGenre;
           feed.innerHTML = `<p style="column-span: all" class="py-12 text-center text-sm text-neutral-400">${
-            feedGenre ? `「${escapeHtml(feedGenre)}」下还没有已发布的作品` : "还没有新作品"
+            where ? `「${escapeHtml(where)}」下还没有已发布的作品` : "还没有新作品"
           }</p>`;
         }
         bindFeedCards();
         refreshIcons();
+      }
+
+      // 大类下的一条细分题材，高度约等于创作卡片的一半
+      function renderSubgenreBar() {
+        const bar = document.getElementById("subgenreBar");
+        const createCard = document.getElementById("openComposer");
+        if (!bar) return;
+
+        // 只有「推荐」保留创作卡片，其他分类把这块空间让出来
+        const showCard = feedScope === "feed" && !feedGenre;
+        if (createCard) createCard.classList.toggle("hidden", !showCard);
+
+        const show = Boolean(feedGenre) && feedSubgenres.length > 0;
+        bar.classList.toggle("hidden", !show);
+        bar.classList.toggle("flex", show);
+        if (!show) {
+          bar.innerHTML = "";
+          return;
+        }
+
+        const chips = [{ label: "全部", value: "" }].concat(
+          feedSubgenres.map((item) => ({ label: item.name, value: item.name }))
+        );
+        bar.innerHTML = chips
+          .map(({ label, value }) => {
+            const active = feedSubgenre === value;
+            return `<button class="subgenre-pill${active ? " is-active" : ""}" data-subgenre="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
+          })
+          .join("");
       }
 
       // 按当前筛选状态同步高亮，顶部分类与侧栏题材始终一致
@@ -2930,10 +3148,16 @@
       }
 
       // 切换筛选：scope 与 genre 二选一
-      function applyFeedFilter({ scope, genre }) {
+      function applyFeedFilter({ scope, genre, subgenre }) {
+        const nextGenre = genre || "";
+        const genreChanged = nextGenre !== feedGenre;
         feedScope = scope || "feed";
-        feedGenre = genre || "";
+        feedGenre = nextGenre;
+        // 切换大类时清空细分；点细分时由调用方显式传入
+        feedSubgenre = subgenre === undefined ? "" : subgenre;
+        if (genreChanged) feedSubgenres = [];
         syncFeedTabStates();
+        renderSubgenreBar();
         loadFeed();
       }
 
@@ -3405,14 +3629,84 @@
         });
       });
 
-      privacyToggle.addEventListener("click", () => {
-        isPublic = !isPublic;
+      function setPublic(value) {
+        isPublic = value;
         privacyToggle.classList.toggle("bg-xhs", isPublic);
         privacyToggle.classList.toggle("bg-neutral-300", !isPublic);
         privacyToggle.querySelector("span").classList.toggle("right-1", isPublic);
         privacyToggle.querySelector("span").classList.toggle("left-1", !isPublic);
         privacyToggle.previousElementSibling.querySelector("span").textContent = isPublic ? "公开发布" : "私密保存";
         privacyToggle.previousElementSibling.querySelector("span + span").textContent = isPublic ? "发布后将进入审核与推荐流" : "仅自己可见";
+      }
+
+      privacyToggle.addEventListener("click", () => setPublic(!isPublic));
+
+      // ---- 参考文风：文件 / 粘贴 / 抽取 / 选卡 ----
+
+      document.getElementById("stylePickFile").addEventListener("click", () => {
+        document.getElementById("styleFileInput").click();
+      });
+
+      document.getElementById("styleFileInput").addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          styleText = String(reader.result || "");
+          styleFileName = file.name;
+          const clipped = styleText.length > STYLE_TEXT_LIMIT;
+          document.getElementById("styleFileName").textContent =
+            `${file.name} · ${styleText.length} 字符${clipped ? "（只分析前 5 万字）" : ""}`;
+          setStyleError("");
+        };
+        reader.onerror = () => setStyleError("文件读取失败，请换一个文件试试");
+        reader.readAsText(file);
+      });
+
+      document.getElementById("stylePasteToggle").addEventListener("click", () => {
+        const box = document.getElementById("styleText");
+        box.classList.toggle("hidden");
+        if (!box.classList.contains("hidden")) {
+          // 粘贴以输入为准，清掉之前选的文件的读数
+          styleText = "";
+          styleFileName = "";
+          document.getElementById("styleFileName").textContent = "";
+          box.focus();
+        }
+      });
+
+      document.getElementById("styleText").addEventListener("input", (event) => {
+        styleText = event.target.value;
+        if (styleText.length > STYLE_TEXT_LIMIT) {
+          document.getElementById("styleFileName").textContent =
+            `已输入 ${styleText.length} 字符，只分析前 5 万字`;
+        }
+      });
+
+      document.getElementById("styleAnalyze").addEventListener("click", analyzeStyle);
+
+      document.getElementById("styleMineList").addEventListener("click", async (event) => {
+        const deleteButton = event.target.closest("[data-style-delete]");
+        if (deleteButton) {
+          const id = deleteButton.dataset.styleDelete;
+          if (!window.confirm("删除这张风格卡？用它写过且权利不足的作品会被收回私密。")) return;
+          try {
+            await apiFetch(`/api/styles/${encodeURIComponent(id)}`, { method: "DELETE", auth: true });
+            styleCards = styleCards.filter((item) => item.id !== id);
+            if (activeStyle && activeStyle.id === id) activeStyle = null;
+            renderStyleCards();
+          } catch (error) {
+            window.alert(error.message || "删除失败");
+          }
+          return;
+        }
+        const chip = event.target.closest("[data-style-id]");
+        if (!chip) return;
+        const id = chip.dataset.styleId;
+        activeStyle = id ? styleCards.find((item) => item.id === id) || null : null;
+        // 「已获授权」的参考文本不能让作品公开，选了就先把开关按回私密
+        if (activeStyle && activeStyle.rights === "licensed") setPublic(false);
+        renderStyleCards();
       });
 
       notificationButton.addEventListener("click", () => openAppView(messagesView));
@@ -3693,6 +3987,13 @@
             applyFeedFilter({ scope: tab.dataset.feedScope || "feed" });
           }
         });
+      });
+
+      // 细分类别：在大类内二次筛选，再点「全部」回到该大类
+      document.getElementById("subgenreBar").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-subgenre]");
+        if (!button) return;
+        applyFeedFilter({ scope: "feed", genre: feedGenre, subgenre: button.dataset.subgenre });
       });
 
       // 侧栏题材标签：点一次筛选，再点一次取消，回到「推荐」

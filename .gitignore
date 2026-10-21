@@ -11,3 +11,6 @@ node_modules/
 
 # 浏览器测试用的临时 profile 目录
 .chrome-*/
+
+# 数据库导出/备份（含密码哈希与盐，不能提交）
+worker/backup-user-*.json

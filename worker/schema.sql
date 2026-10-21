@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS works (
   visibility TEXT NOT NULL DEFAULT 'private',
   published_at INTEGER,
   created_at INTEGER NOT NULL,
+  style_profile_id TEXT,               -- 参考文风卡；老库需手动 ALTER 补这一列
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -119,4 +120,19 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_dedupe ON notifications(dedupe_key);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+
+-- 风格卡：从用户提供的参考文本里抽取出来的文风特征。
+-- 原始文本分析完即丢弃，这里只存派生结果（含 3-5 句逐字短摘句作为锚点）。
+-- rights 记录用户声明的权利来源，决定用它的作品能不能公开。
+CREATE TABLE IF NOT EXISTS style_profiles (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  profile TEXT NOT NULL,               -- JSON：前面列出的各维度特征 + anchors
+  rights TEXT NOT NULL,                -- own | licensed | public
+  source_chars INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_style_profiles_user ON style_profiles(user_id, created_at DESC);
 
