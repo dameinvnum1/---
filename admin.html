@@ -218,6 +218,7 @@
           works: { q: "", visibility: "", page: 0 },
           comments: { q: "", status: "", page: 0 },
           invites: { page: 0 },
+          audit: { page: 0 },
         };
         const PAGE_SIZE = 20;
 
@@ -352,6 +353,7 @@
           { key: "works", label: "作品", icon: "book-open" },
           { key: "comments", label: "评论", icon: "message-square" },
           { key: "invites", label: "邀请码", icon: "ticket" },
+          { key: "audit", label: "审计", icon: "scroll-text" },
           { key: "settings", label: "设置", icon: "sliders-horizontal" },
         ];
 
@@ -388,6 +390,7 @@
           if (currentView === "works") return renderWorks();
           if (currentView === "comments") return renderComments();
           if (currentView === "invites") return renderInvites();
+          if (currentView === "audit") return renderAudit();
           if (currentView === "settings") return renderSettings();
         }
 
@@ -433,6 +436,10 @@
                 .join("")}
             </div>
 
+            <div class="mt-3 rounded-[10px] border border-[#dce6f5] bg-white px-4 py-3 text-xs text-neutral-500 shadow-panel">
+              近 7 天：生成 <b class="text-ink">${c.gen7d}</b> 次${c.genFailed7d ? `（失败 ${c.genFailed7d} 次）` : ""} · 消耗 <b class="text-ink">${Number(c.tokens7d).toLocaleString()}</b> tokens
+            </div>
+
             <div class="mt-4 grid gap-4 lg:grid-cols-2">
               <section class="rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
                 <div class="flex items-center justify-between border-b border-[#f0f3f9] px-5 py-3">
@@ -469,6 +476,29 @@
                 </div>
               </section>
             </div>
+
+            <section class="mt-4 rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
+              <div class="border-b border-[#f0f3f9] px-5 py-3"><h2 class="text-sm font-bold">最近操作</h2></div>
+              <div class="px-3 pb-3">
+                <table class="data-table">
+                  <thead><tr><th>操作</th><th>详情</th><th>管理员</th><th>时间</th></tr></thead>
+                  <tbody>
+                    ${
+                      (data.recentAudit || [])
+                        .map(
+                          (item) => `<tr>
+                            <td>${escapeHtml(actionLabel(item.action))}</td>
+                            <td class="max-w-[220px] truncate text-neutral-500">${escapeHtml(item.detail || item.target || "—")}</td>
+                            <td class="text-neutral-500">${escapeHtml(item.adminName || "—")}</td>
+                            <td class="text-neutral-400">${escapeHtml(formatDate(item.createdAt))}</td>
+                          </tr>`
+                        )
+                        .join("") || `<tr><td colspan="4" class="text-neutral-400">还没有操作记录</td></tr>`
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
             <section class="mt-4 rounded-[10px] border border-[#dce6f5] bg-white shadow-panel">
               <div class="border-b border-[#f0f3f9] px-5 py-3"><h2 class="text-sm font-bold">最近发布</h2></div>
@@ -839,6 +869,78 @@
                 <table class="data-table">
                   <thead><tr><th>邀请码</th><th>套餐</th><th>额度</th><th>已用</th><th>状态</th><th>过期</th><th>备注</th><th>操作</th></tr></thead>
                   <tbody>${rows || `<tr><td colspan="8">${emptyBlock("还没有邀请码，点右上角生成")}</td></tr>`}</tbody>
+                </table>
+              </div>
+              ${pager(data.total || 0, state.page)}
+            </div>`;
+          refreshIcons();
+        }
+
+        // ---------- 审计 ----------
+        const ACTION_LABELS = {
+          "user.update": "修改用户",
+          "user.reset_password": "重置密码",
+          "user.delete": "删除用户",
+          "work.visibility": "切换作品可见性",
+          "work.delete": "删除作品",
+          "comment.status": "切换评论状态",
+          "comment.delete": "删除评论",
+          "invite.create": "生成邀请码",
+          "invite.disable": "停用邀请码",
+          "invite.delete": "删除邀请码",
+          "settings.update": "更新白名单",
+        };
+
+        function actionLabel(action) {
+          return ACTION_LABELS[action] || action || "—";
+        }
+
+        async function renderAudit() {
+          const state = listState.audit;
+          setHeader("审计", "管理后台的写操作记录");
+          viewEl.innerHTML = loading("正在读取审计日志…");
+
+          const params = new URLSearchParams({ limit: PAGE_SIZE, offset: state.page * PAGE_SIZE });
+          let data;
+          try {
+            data = await api(`/api/admin/audit?${params.toString()}`);
+          } catch (error) {
+            viewEl.innerHTML = errorBlock(error.message);
+            return;
+          }
+
+          const rows = (data.items || [])
+            .map(
+              (item) => `<tr>
+                <td class="whitespace-nowrap">${escapeHtml(actionLabel(item.action))}</td>
+                <td class="max-w-[260px] truncate text-neutral-500">${escapeHtml(item.detail || "—")}</td>
+                <td class="max-w-[160px] truncate font-mono text-[11px] text-neutral-400">${escapeHtml(item.target || "—")}</td>
+                <td class="text-neutral-500">${escapeHtml(item.adminName || "—")}</td>
+                <td class="whitespace-nowrap text-neutral-400">${escapeHtml(formatDate(item.createdAt))}</td>
+              </tr>`
+            )
+            .join("");
+
+          const cards = (data.items || [])
+            .map(
+              (item) => `<div class="rounded-[10px] border border-[#dce6f5] bg-white p-3 shadow-panel">
+                <div class="flex items-center justify-between gap-2">
+                  <p class="text-sm font-semibold">${escapeHtml(actionLabel(item.action))}</p>
+                  <span class="shrink-0 text-[11px] text-neutral-400">${escapeHtml(formatDate(item.createdAt))}</span>
+                </div>
+                <p class="mt-1 truncate text-xs text-neutral-500">${escapeHtml(item.detail || "—")}</p>
+                <p class="mt-1 font-mono text-[11px] text-neutral-400">${escapeHtml(item.target || "")} · ${escapeHtml(item.adminName || "")}</p>
+              </div>`
+            )
+            .join("");
+
+          viewEl.innerHTML = `
+            <div class="space-y-2 md:hidden">${cards || emptyBlock("还没有操作记录")}${pager(data.total || 0, state.page)}</div>
+            <div class="hidden overflow-hidden rounded-[10px] border border-[#dce6f5] bg-white shadow-panel md:block">
+              <div class="overflow-x-auto">
+                <table class="data-table">
+                  <thead><tr><th>操作</th><th>详情</th><th>对象</th><th>管理员</th><th>时间</th></tr></thead>
+                  <tbody>${rows || `<tr><td colspan="5">${emptyBlock("还没有操作记录")}</td></tr>`}</tbody>
                 </table>
               </div>
               ${pager(data.total || 0, state.page)}

@@ -147,3 +147,38 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at INTEGER NOT NULL
 );
 
+-- 固定窗口限流：key 形如 "login:ip:窗口编号"
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON rate_limits(expires_at);
+
+-- 模型调用用量：算真实成本、排查滥用
+CREATE TABLE IF NOT EXISTS usage_logs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  work_id TEXT,
+  kind TEXT NOT NULL,            -- generate | style_analyze
+  model TEXT,
+  prompt_tokens INTEGER NOT NULL DEFAULT 0,
+  completion_tokens INTEGER NOT NULL DEFAULT 0,
+  attempts INTEGER NOT NULL DEFAULT 1,
+  ok INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_usage_user_time ON usage_logs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_time ON usage_logs(created_at DESC);
+
+-- 管理后台操作审计：谁在什么时候改了什么
+CREATE TABLE IF NOT EXISTS admin_audit (
+  id TEXT PRIMARY KEY,
+  admin_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target TEXT,
+  detail TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_time ON admin_audit(created_at DESC);
+
