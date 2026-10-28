@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>词境 - 词汇小说社区</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./vendor/tailwind.js"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -25,9 +25,14 @@
     </script>
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://unpkg.com" />
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./vendor/lucide.js"></script>
     <script src="./ai-config.js"></script>
     <style>
+      /* 兜底：即使样式框架没加载成功，hidden 也必须生效 ——
+         否则所有弹层会叠在页面上，整个界面点不动。 */
+      .hidden {
+        display: none;
+      }
       * {
         -webkit-tap-highlight-color: transparent;
       }

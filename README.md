@@ -35,7 +35,7 @@
 
 | 层 | 选型 |
 |---|---|
-| 前端 | 单文件 `index.html` / `admin.html`，原生 JS + Tailwind CDN + Lucide |
+| 前端 | 单文件 `index.html` / `admin.html`，原生 JS；Tailwind 与 Lucide 已内置在 `vendor/`，不依赖外部 CDN |
 | 后端 | Cloudflare Worker（单文件 `worker/src/index.js`），手写路由 |
 | 数据库 | Cloudflare D1（SQLite 方言），`worker/schema.sql` |
 | 模型 | DeepSeek `deepseek-chat`，服务端调用，key 只存在 Worker secret |
@@ -47,6 +47,7 @@
 index.html            读者端（单文件应用）
 admin.html            管理后台
 ai-config.js          前端读取的后端地址
+vendor/               内置的 Tailwind 与 Lucide（不走 CDN，国内网络也能加载）
 worker/
   src/index.js        全部后端逻辑：鉴权、生成、社区、管理接口
   schema.sql          表结构（手工执行：wrangler d1 execute）

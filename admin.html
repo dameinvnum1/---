@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>词境 · 管理台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./vendor/tailwind.js"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -23,9 +23,13 @@
         },
       };
     </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./vendor/lucide.js"></script>
     <script src="./ai-config.js"></script>
     <style>
+      /* 兜底：样式框架加载失败时，hidden 仍要生效，避免弹层挡住整个界面 */
+      .hidden {
+        display: none;
+      }
       body {
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
           "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
