@@ -9,10 +9,9 @@ ALLOWED_ORIGIN = "*"
 # 邮箱验证码开关。设成 "true" 需要同时配好 RESEND_API_KEY 与已验证的发件域名。
 # 关闭时：注册只需「邀请码 + 邮箱 + 密码」，登录只用密码。用户体系与作品隔离不受影响。
 EMAIL_OTP_ENABLED = "false"
-# 参考文风功能的白名单，逗号分隔 user id 或邮箱。留空表示不开放给任何人。
-STYLE_WHITELIST = "u_2c8b4d0283a8292b3852dc4e"
-# 管理后台白名单，逗号分隔 user id 或邮箱。留空表示没人能进后台。
-ADMIN_IDS = "u_2c8b4d0283a8292b3852dc4e"
+# 白名单（参考文风 / 管理后台）不放在这里 —— 这个文件是公开的。
+# 它们存在 D1 的 settings 表里，由管理后台「设置」页维护；
+# 需要给新环境做引导时，可用 `wrangler secret put ADMIN_IDS`（逗号分隔）临时注入。
 
 [[d1_databases]]
 binding = "cijing_db"

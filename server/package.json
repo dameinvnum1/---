@@ -1,0 +1,12 @@
+{
+  "name": "cijing-server",
+  "private": true,
+  "type": "module",
+  "description": "词境国内服务器版本：Node + SQLite，复用 Cloudflare Worker 的业务逻辑",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env index.js"
+  }
+}

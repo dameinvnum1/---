@@ -4,10 +4,16 @@
 .env
 .env.*
 *.local
+# 示例配置要提交，方便别人照着填
+!.env.example
 
 # 依赖与构建产物
 node_modules/
 .wrangler/
+
+# 国内服务器版本（Node + SQLite）的本地数据
+server/data/
+server/node_modules/
 
 # 浏览器测试用的临时 profile 目录
 .chrome-*/

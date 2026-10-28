@@ -399,6 +399,16 @@ ${input.words.map((word) => `- ${word}`).join("\n")}
 3. 正文约 ${minChars} 至 ${maxChars} 个中文字符。
 4. 返回前必须逐个核对目标词表，确认每个词都真的出现在正文里。有任何遗漏，就把它自然地补进合适的位置再返回，绝不能省略，也不要只在 vocab 里写而正文里没有。
 
+【目标词的用法边界（重要）】
+5. 目标词必须按词典义用在句子里，是这句话真实语义的一部分。唯一自然的引入方式是：人物确实会在那个情境下说到、听到或想到这个词。
+6. 以下写法一律禁止，它们对背单词没有价值，也一眼就能看出是硬塞的：
+   - 把目标词当成人名、代号、店名、作品名、品牌或地名；
+   - 让人物"用错"这个词，再让旁白解释他说错了；
+   - 把英文单词本身当成被谈论的对象，例如「他说了一个词 consul」「owing 这个词」「我不认识这个词」；
+   - 用释义去圆一个本身读不通的句子。
+7. 如果按当前剧情这个词确实没法自然出现，请**调整情节**——换场景、换动作、换人物身份，给它一个出现的理由，而不是硬塞进去。
+8. 自检：把含目标词的那句话单独读一遍。如果脱离上下文这句话意思不通，或者删掉这个词句子反而更顺，就重写这句。
+
 ${buildStyleBlock(style)}
 
 【格式要求】
@@ -408,7 +418,7 @@ ${buildStyleBlock(style)}
 4. 只返回一个合法 JSON 对象，字段必须是：
 {"title":"标题","hook":"一句话简介","summary":"不超过120字的简介","content":"小说正文","vocab":[{"word":"原形小写","pos":"词性缩写","meaning":"中文语境释义","forms":["正文中出现的变形"]}]}
 5. vocab 必须为每一个目标单词返回一条记录，顺序与上面「目标单词」给出的顺序完全一致，不多不少。
-6. meaning 不超过 40 个中文字符：先写词典义，再用「这里指……」结合本篇正文的具体情节补充说明。不要复制粘贴正文原句。
+6. meaning 不超过 40 个中文字符：先写这个单词本身的词典义；如果正文里的用法有具体指向，再用「这里指……」补充说明。但它只能补充语境，不能用来给一个语义不通的句子圆场。不要复制粘贴正文原句。
 7. pos 使用 n. / v. / adj. / adv. / prep. 等缩写，多个词性用 / 连接，总长不超过 8 个字符。
 8. forms 只填正文中真实出现过的变形（把原形也写进去），最多 6 个；正文里没有变形就返回空数组。
 `;
@@ -429,6 +439,28 @@ function missingWords(content, words) {
   return countWordOccurrences(content, words)
     .filter((item) => item.count === 0)
     .map((item) => item.word);
+}
+
+// 模型偷懒时会把目标词当成"被讨论的对象"塞进正文：让人物说个错词再解释，
+// 或者把英文原词用引号括起来讨论。这类用法对背词没有价值，命中就重试。
+function metaWordUsage(content, words) {
+  const text = String(content || "");
+  const hits = [];
+  for (const word of words) {
+    const escaped = String(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // 被引号括起来的英文词（中文引号与英文引号都算）
+    const quoted = new RegExp(
+      `[「『"“][^」』"”]{0,20}\\b${escaped}[a-z]{0,3}\\b[^」』"”]{0,20}[」』"”]`,
+      "i"
+    );
+    // 直接把单词当成被讨论的对象（含「他说了一个词 consul」这种不带引号的写法）
+    const discussed = new RegExp(
+      `\\b${escaped}[a-z]{0,3}\\b\\s*(这个词|这词|这个单词|这个英文词|的英文|的意思是)|(单词|词|英文)\\s*[「『"“]?\\s*${escaped}[a-z]{0,3}`,
+      "i"
+    );
+    if (quoted.test(text) || discussed.test(text)) hits.push(word);
+  }
+  return hits;
 }
 
 // 锚点是参考文本的原文片段，模型很容易原样搬进正文，尤其是拿它当结尾。
@@ -1069,6 +1101,17 @@ async function handleGenerate(request, env, auth) {
         prompt += `\n\n【上一版的问题，必须修正】\n漏掉了这些目标词：${missing.join("、")}。请把它们自然地补进正文，尽量不要打乱已经通顺的段落。`;
       }
       continue;   // 核心重试条件
+    }
+
+    // 目标词被当成"被讨论的对象"硬塞：重试一次，让它真正融入剧情
+    const metaWords = metaWordUsage(parsed.content, words);
+    if (metaWords.length) {
+      console.warn(`[generate] 第 ${attempt}/${MAX_ATTEMPTS} 次把人名/被讨论的词当目标词: ${metaWords.join(",")}，重试`);
+      lastError = `这些目标词被硬塞进了正文：${metaWords.join("、")}`;
+      if (attempt < MAX_ATTEMPTS) {
+        prompt += `\n\n【上一版的问题，必须修正】\n这些目标词被硬塞进了正文：${metaWords.join("、")}。不要把它们当成人名、代号、品牌，也不要让人物"说错"再用旁白解释，更不要把英文单词本身当作讨论对象。请调整情节，让它们在句子里承担真实的语义。`;
+      }
+      continue;
     }
 
     // 风格锚点只借语感，不许逐字复用。提示词压不住时用这道检查兜底。
